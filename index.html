@@ -194,6 +194,17 @@ table.mk{width:100%;border-collapse:collapse}
 .modal td,.modal th{padding:var(--s1) 6px;text-align:left;border-bottom:1px solid var(--row);vertical-align:top}
 .modal th{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--dim);font-weight:600}
 .modal td.r,.modal th.r{text-align:right}
+.back.enc-back{background:rgba(2,4,10,.66)}
+/* Encounters are the drama: a heading coloured by who's in front of you. */
+.modal.encounter{max-width:580px;box-shadow:0 24px 70px rgba(0,0,0,.7)}
+.modal.encounter h1{font-size:22px;letter-spacing:.12em;padding-bottom:var(--s2);margin-bottom:var(--s3);border-bottom:1px solid currentColor}
+.modal.t-watchers h1{color:var(--danger)}
+.modal.t-boss h1,.modal.t-goons h1{color:var(--warn)}
+.modal.t-rival h1{color:var(--violet)}
+.modal.t-stray h1{color:var(--accent)}
+.modal.enter{animation:encIn .32s cubic-bezier(.22,1,.36,1) both}
+@keyframes encIn{from{opacity:0;transform:translateY(10px) scale(.985)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.modal.enter{animation:none}}
 .foes{margin:var(--s3) 0}
 .choices{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:var(--s2) var(--s3);align-items:center;margin-top:var(--s4)}
 .choices button{text-align:left}
@@ -1710,7 +1721,7 @@ function choiceCost(st, o) {
     }
     case 'deal': {
       const d = e.deal, q = dealQty(st, d), g = GOOD[d.good];
-      return d.side === 'buy' ? `+${fmt(q * d.price)} for ${q} ${g.name}.` : `${fmt(q * d.price)} for ${q} ${g.name}, ${priceStanding(g, d.price).word} for ${g.name}.`;
+      return d.side === 'buy' ? `+${fmt(q * d.price)} for ${q} ${g.name}.` : `${fmt(q * d.price)} for ${q} ${g.name}: a ${priceStanding(g, d.price).word} price.`;
     }
     case 'leave': return 'Nothing happens.';
     case 'sell': return `+${fmt(e.qty * e.price)} for all ${e.qty} Skooma.`;
@@ -1761,7 +1772,9 @@ function encHTML() {
     body = `<p>${it.name} for <b>${fmt(e.price)}</b> (${fmt(it.price)} in the shops). <span class="note">${it.blurb}</span></p>`;
   }
   const lines = st.log.filter(l => l.n > (e.from || 0)).map(l => `<p class="${l.cls}">${esc(l.text)}</p>`).join('');
-  return `<div class="back"><div class="modal" role="alertdialog" aria-modal="true" aria-labelledby="pc-mt">
+  const enter = ui.encFresh ? ' enter' : '';
+  ui.encFresh = false;
+  return `<div class="back enc-back"><div class="modal encounter t-${e.type}${enter}" role="alertdialog" aria-modal="true" aria-labelledby="pc-mt">
     <h1 id="pc-mt">${esc(title)}</h1>${body}
     <div class="elog" id="pc-elog">${lines}</div>
     <div class="choices">${opts.map(o => `<button data-act="enc" data-v="${o}" aria-describedby="pc-c-${o}" class="${o === 'fight' || o === 'deal' || o === 'pay' || o === 'sell' || o === 'buy' ? 'primary' : ''}"><kbd>${keyOf(o)}</kbd>${LABEL[o]}</button><span class="cost" id="pc-c-${o}">${choiceCost(st, o)}</span>`).join('')}</div>
