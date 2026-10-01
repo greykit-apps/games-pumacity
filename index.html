@@ -40,6 +40,7 @@ html{color-scheme:dark}
 body{margin:0;min-height:100dvh;background:var(--bg);color:var(--ink);font:14px/1.5 ui-monospace,Menlo,Consolas,monospace;
   -webkit-text-size-adjust:100%}
 .boot{padding:var(--s5)}
+.sr-only{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
 button{font:inherit;color:var(--text);background:var(--panel2);border:1px solid var(--line);border-radius:3px;
   padding:5px 10px;cursor:pointer;min-height:34px}
 button:hover:not(:disabled){border-color:var(--lit)}
@@ -257,6 +258,7 @@ table.mk{width:100%;border-collapse:collapse}
 </head>
 <body>
 <div class="scene" id="pc-scene" aria-hidden="true"></div>
+<div class="sr-only" id="pc-live" aria-live="polite" aria-atomic="false"></div>
 <div data-pumacity-game><p class="boot">Hitting the streets…</p></div>
 <script>
 'use strict';
@@ -425,7 +427,8 @@ function newGame(opts) {
   opts = opts || {};
   const days = CONFIG.lengths.includes(opts.days) ? opts.days : CONFIG.lengths[0];
   const seed = (opts.seed == null ? 1 : opts.seed) | 0;
-  const name = String(opts.name || '').trim().slice(0, 16) || 'Stray';
+  // Count characters, not UTF-16 units, so a cut never splits an emoji in half.
+  const name = Array.from(String(opts.name || '').trim()).slice(0, 16).join('') || 'Stray';
   const st = {
     v: 1, version: VERSION, seed, rng: seed, name, days, day: 1, loc: CONFIG.startLoc,
     cash: CONFIG.startCash, bank: 0, debt: CONFIG.startDebt, debtAge: 0,
@@ -1072,10 +1075,18 @@ let ui = { sel: 0, modal: null, flash: '' };
 let prefs = Object.assign({ name: '', days: 30 }, load(KEY_PREFS, {}));
 let scoreTab = prefs.days;
 
+/* A save from an older build, or one edited by hand, must not crash the screen:
+ * anything that doesn't look like a live run is treated as no save at all. */
+function validSave(st) {
+  return !!st && st.v === 1 && !st.over && PLACE[st.loc] && CONFIG.lengths.includes(st.days)
+    && Number.isInteger(st.day) && st.day >= 1 && st.day <= st.days
+    && ['cash', 'bank', 'debt', 'hp', 'heat', 'rng', 'logN'].every(k => Number.isFinite(st[k]))
+    && st.stash && st.cost && st.gear && st.prices && st.prev && st.stats && Array.isArray(st.log)
+    && (st.enc == null || typeof st.enc.type === 'string');
+}
 function loadGame() {
   const st = load(KEY_GAME, null);
-  if (!st || st.v !== 1 || st.over) return null;
-  return st;
+  return validSave(st) ? st : null;
 }
 
 function scores() {
@@ -1098,9 +1109,10 @@ function act(a) {
   if (!S) return;
   const before = S;
   const r = step(S, a);
-  if (r.refused) { ui.flash = r.refused; render(); return; }
+  if (r.refused) { ui.flash = r.refused; announce([r.refused]); render(); return; }
   S = r.state;
   ui.flash = '';
+  announce(r.events.map(l => l.text));
   if (S.over && !before.over) {
     ui.rank = recordScore(S);
     save(KEY_GAME, null);
@@ -1116,7 +1128,7 @@ function act(a) {
 
 function startRun() {
   const nameEl = document.getElementById('pc-name');
-  if (nameEl) prefs.name = nameEl.value.trim().slice(0, 16);
+  if (nameEl) prefs.name = Array.from(nameEl.value.trim()).slice(0, 16).join('');
   save(KEY_PREFS, prefs);
   const seed = (Date.now() ^ Math.floor(Math.random() * 0x7fffffff)) | 0;
   S = newGame({ seed, days: prefs.days, name: prefs.name });
@@ -1519,7 +1531,7 @@ function gameHTML() {
         <p class="gear">${gear.length ? 'Gear: ' + gear.join(' · ') : 'No gear yet. Without a weapon you can only run or give up.'}</p>
         ${tip}
       </div>
-      <div class="logwrap"><div class="log" id="pc-log" aria-live="polite">${log}</div></div>
+      <div class="logwrap"><div class="log" id="pc-log" tabindex="0" aria-label="Log">${log}</div></div>
     </aside>
   </div>
 </div>`;
@@ -1539,12 +1551,12 @@ function modalHTML() {
     case 'gearview': body = gearViewHTML(); break;
     case 'help': body = helpHTML(m.tab || 'basics'); break;
     case 'menu': body = menuHTML(); break;
-    case 'confirmNew': body = `<h1>Abandon this run?</h1><p>Your current run will not be scored.</p>
+    case 'confirmNew': body = `<h1 id="pc-mt">Abandon this run?</h1><p>Your current run will not be scored.</p>
       <div class="acts"><button class="danger" data-act="newconfirm"><kbd>Y</kbd>Abandon and start over</button><button data-act="close"><kbd>Esc</kbd>Keep playing</button></div>`; break;
-    case 'finish': body = `<h1>Cash out?</h1><p>The run ends now. The Boss collects what you owe, and anything still in your pouch is worth nothing.</p>
+    case 'finish': body = `<h1 id="pc-mt">Cash out?</h1><p>The run ends now. The Boss collects what you owe, and anything still in your pouch is worth nothing.</p>
       <div class="acts"><button class="primary" data-act="finishconfirm"><kbd>Y</kbd>Cash out</button><button data-act="close"><kbd>Esc</kbd>Not yet</button></div>`; break;
   }
-  return `<div class="back" data-act="backdrop"><div class="modal" role="dialog" aria-modal="true">${body}</div></div>`;
+  return `<div class="back" data-act="backdrop"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="pc-mt">${body}</div></div>`;
 }
 
 function qtyMax(m) {
@@ -1561,7 +1573,7 @@ function qtyHTML(m) {
   const info = m.side === 'buy'
     ? `You can afford ${Math.floor(S.cash / p)} · room for ${free(S)}`
     : `You hold ${S.stash[g.id] || 0}${S.cost[g.id] ? `, paid ${fmt(Math.round(S.cost[g.id] / S.stash[g.id]))} each on average` : ''}`;
-  return `<h1>${verb} ${g.name}</h1>
+  return `<h1 id="pc-mt">${verb} ${g.name}</h1>
   <p>${fmt(p)} each. <span class="note">${info}</span></p>
   <p class="note">${g.blurb}</p>
   ${m.side === 'buy' && S.day === S.days ? '<p class="warn">It\'s your last day. Anything you can\'t sell today is worth nothing.</p>' : ''}
@@ -1578,7 +1590,7 @@ function qtyHTML(m) {
 }
 
 function travelHTML() {
-  return `<h1>Travel</h1><p class="note">Every trip takes a day. The Boss's interest grows 10% each day you're out.</p>
+  return `<h1 id="pc-mt">Travel</h1><p class="note">Every trip takes a day. The Boss's interest grows 10% each day you're out.</p>
   <table>${PLACES.map((P, i) => `<tr><td><button style="width:100%;text-align:left" data-act="go" data-v="${P.id}" ${P.id === S.loc ? 'disabled' : ''}><kbd>${i + 1}</kbd>${P.name}${P.id === S.loc ? ' (you are here)' : ''}</button></td>
     <td class="note">${P.special}</td></tr>`).join('')}</table>
   <div class="acts"><button data-act="close"><kbd>Esc</kbd>Stay</button></div>`;
@@ -1593,7 +1605,7 @@ function moneyForm(kind, label, max, hint) {
 function serviceHTML() {
   const st = S;
   const P = here(st);
-  let out = `<h1>${esc(P.serviceName)}</h1>`;
+  let out = `<h1 id="pc-mt">${esc(P.serviceName)}</h1>`;
   if (P.service === 'loan') {
     out += `<p>Casey Benton looks up from a desk the size of a car. "Back so soon?"</p>
     <p>You owe <b>${fmt(st.debt)}</b>.${st.debt > 0 ? ` <span class="note">${st.debtAge} ${plural(st.debtAge, 'day')} since your last real payment (a payment of at least 10% of the debt). Her goons come at ${CONFIG.goonDays}.</span>` : ''}</p>
@@ -1628,7 +1640,7 @@ function serviceHTML() {
 function gearViewHTML() {
   const st = S;
   const held = GOODS.filter(g => st.stash[g.id]);
-  return `<h1>Gear &amp; stash</h1>
+  return `<h1 id="pc-mt">Gear &amp; stash</h1>
   <h2>Gear</h2><table>${SLOTS.map(s => {
     const id = st.gear[s];
     return `<tr><td class="dim">${s}</td><td>${id ? `<b>${GEAR[id].name}</b> <span class="note">${GEAR[id].blurb}</span>` : '<span class="dim">none</span>'}</td></tr>`;
@@ -1677,8 +1689,8 @@ function encHTML() {
     body = `<p>${it.name} for <b>${fmt(e.price)}</b> (${fmt(it.price)} in the shops). <span class="note">${it.blurb}</span></p>`;
   }
   const lines = st.log.filter(l => l.n > (e.from || 0)).map(l => `<p class="${l.cls}">${esc(l.text)}</p>`).join('');
-  return `<div class="back"><div class="modal" role="alertdialog" aria-modal="true">
-    <h1>${esc(title)}</h1>${body}
+  return `<div class="back"><div class="modal" role="alertdialog" aria-modal="true" aria-labelledby="pc-mt">
+    <h1 id="pc-mt">${esc(title)}</h1>${body}
     <div class="elog" id="pc-elog">${lines}</div>
     <div class="acts">${opts.map(o => `<button data-act="enc" data-v="${o}" class="${o === 'fight' || o === 'deal' || o === 'pay' || o === 'sell' || o === 'buy' ? 'primary' : ''}"><kbd>${LABEL[o][0]}</kbd>${LABEL[o][1]}</button>`).join('')}</div>
   </div></div>`;
@@ -1689,8 +1701,8 @@ function overHTML() {
   const o = st.over;
   const list = scores()[st.days] || [];
   const dead = o.reason === 'dead';
-  return `<div class="back"><div class="modal" role="alertdialog" aria-modal="true">
-    <h1>${dead ? 'You died' : 'The run is over'}</h1>
+  return `<div class="back"><div class="modal" role="alertdialog" aria-modal="true" aria-labelledby="pc-mt">
+    <h1 id="pc-mt">${dead ? 'You died' : 'The run is over'}</h1>
     ${dead ? `<p class="bad">${esc(o.why)}</p><p>Day ${o.day} of ${st.days}. A death scores nothing.</p>` : `
     <table><tr><td>Cash</td><td class="r">${fmt(st.cash)}</td></tr><tr><td>Bank</td><td class="r">${fmt(st.bank)}</td></tr>
     <tr><td>Still owed to The Boss</td><td class="r">${fmt(-st.debt)}</td></tr>
@@ -1703,7 +1715,7 @@ function overHTML() {
 }
 
 function menuHTML() {
-  return `<h1>Menu</h1>
+  return `<h1 id="pc-mt">Menu</h1>
   <div class="acts" style="flex-direction:column;align-items:stretch">
     <button data-act="close"><kbd>Esc</kbd>Back to the game</button>
     <button data-act="help"><kbd>?</kbd>How to play</button>
@@ -1739,15 +1751,43 @@ function helpHTML(tab) {
     <tr><td><kbd>G</kbd></td><td>Gear and stash</td></tr>
     <tr><td><kbd>R</kbd> <kbd>F</kbd> <kbd>G</kbd></td><td>Encounters: run, fight, give up (other choices show their key)</td></tr>
     <tr><td><kbd>Enter</kbd> / <kbd>Esc</kbd></td><td>Confirm / close</td></tr></table>`;
-  return `<h1>How to play</h1>
+  return `<h1 id="pc-mt">How to play</h1>
   <div class="tabs">${tabs.map(([k, l]) => `<button data-act="helptab" data-v="${k}" aria-pressed="${tab === k}">${l}</button>`).join('')}</div>
   ${body}
   <div class="acts"><button data-act="close"><kbd>Esc</kbd>Close</button></div>`;
 }
 
+/* Every render rebuilds the page, which would drop keyboard focus to <body>
+ * after each move. Remember what had focus by what it does (data-act and
+ * data-v, or its id) and put focus back on the same control afterwards.
+ * Opening a dialog focuses its first control; closing one returns focus to
+ * whatever opened it. */
+function focusKey(el) {
+  if (!el || el === document.body || !root.contains(el)) return null;
+  if (el.id) return { id: el.id };
+  const a = el.closest('[data-act]');
+  return a ? { act: a.dataset.act, v: a.dataset.v } : null;
+}
+function findFocus(k, within) {
+  if (!k) return null;
+  if (k.id) return document.getElementById(k.id);
+  const sel = `[data-act="${k.act}"]` + (k.v != null ? `[data-v="${CSS.escape(k.v)}"]` : '');
+  const el = (within || root).querySelector(sel);
+  return el && !el.disabled ? el : null;
+}
+const FOCUSABLE = 'button:not(:disabled),input,[tabindex="0"],a[href]';
+function announce(lines) {
+  const live = document.getElementById('pc-live');
+  if (!live || !lines.length) return;
+  live.textContent = '';
+  setTimeout(() => { live.textContent = lines.join(' '); }, 30);
+}
+
 function render() {
+  const before = focusKey(document.activeElement);
+  const hadModal = !!root.querySelector('.back');
   const modal = S ? modalHTML() : (ui.modal && ui.modal.kind === 'help'
-    ? `<div class="back" data-act="backdrop"><div class="modal" role="dialog" aria-modal="true">${helpHTML(ui.modal.tab || 'basics')}</div></div>` : '');
+    ? `<div class="back" data-act="backdrop"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="pc-mt">${helpHTML(ui.modal.tab || 'basics')}</div></div>` : '');
   setScene(S ? S.loc : 'pvn');
   root.innerHTML = `<div class="stage">${S ? gameHTML() : setupHTML()}</div>` + modal;
   if (ui.arrived) { const h = root.querySelector('.place-name'); if (h) h.classList.add('arrive'); ui.arrived = false; }
@@ -1755,8 +1795,24 @@ function render() {
   if (log) log.scrollTop = log.scrollHeight;
   const elog = document.getElementById('pc-elog');
   if (elog) elog.scrollTop = elog.scrollHeight;
+  const dlg = root.querySelector('.back .modal');
   const q = document.getElementById('pc-qty');
-  if (q) { q.focus(); q.select(); }
+  let target = null;
+  if (dlg && !hadModal) {
+    ui.opener = before;
+    // An encounter opens on its cautious choice (run, walk away, decline,
+    // refuse), so a stray Enter can't start a brawl or spend your money.
+    target = q || dlg.querySelector('input')
+      || (S && S.enc ? ['run', 'leave', 'decline', 'refuse'].map(v => dlg.querySelector(`[data-act="enc"][data-v="${v}"]`)).find(Boolean) : null)
+      || dlg.querySelector('button.primary:not(:disabled)') || dlg.querySelector(FOCUSABLE);
+  } else if (dlg) {
+    target = findFocus(before, dlg) || q || dlg.querySelector(FOCUSABLE);
+  } else {
+    target = findFocus(hadModal ? ui.opener : before) || (hadModal ? findFocus(before) : null);
+    if (hadModal) ui.opener = null;
+  }
+  if (target) target.focus({ preventScroll: true });
+  if (target === q && q) q.select();
 }
 
 // ---- input
@@ -1849,6 +1905,18 @@ function helpKey(k) {
 
 document.addEventListener('keydown', e => {
   if (e.metaKey || e.ctrlKey || e.altKey) return;
+  // Keep Tab inside an open dialog.
+  if (e.key === 'Tab') {
+    const dlg = root.querySelector('.back .modal');
+    if (!dlg) return;
+    const items = [...dlg.querySelectorAll(FOCUSABLE)].filter(el => el.offsetParent !== null);
+    if (!items.length) return;
+    const i = items.indexOf(document.activeElement);
+    const next = e.shiftKey ? (i <= 0 ? items.length - 1 : i - 1) : (i === -1 || i === items.length - 1 ? 0 : i + 1);
+    e.preventDefault();
+    items[next].focus();
+    return;
+  }
   const k = e.key.length === 1 ? e.key.toLowerCase() : e.key;
   const inInput = e.target && e.target.tagName === 'INPUT';
   const m = ui.modal;

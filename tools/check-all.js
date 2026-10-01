@@ -111,6 +111,13 @@ scenario('start: run length is one of 30, 60 or 90', () => {
   for (const d of [30, 60, 90]) assert.strictEqual(C.newGame({ seed: 1, days: d }).days, d);
   assert.strictEqual(C.newGame({ seed: 1, days: 45 }).days, 30);
 });
+scenario('start: a long name is cut by characters, never mid-emoji', () => {
+  const { C } = fresh();
+  const st = C.newGame({ seed: 1, name: 'abcdefghijklmno\u{1F406}xyz' });
+  assert.strictEqual(Array.from(st.name).length, 16);
+  assert.ok(st.name.endsWith('\u{1F406}'), JSON.stringify(st.name));
+  assert.strictEqual(C.newGame({ seed: 1, name: '   ' }).name, 'Stray');
+});
 scenario('replay: the same seed and moves give the same run', () => {
   const { C } = fresh();
   const play = () => {
