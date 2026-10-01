@@ -33,15 +33,17 @@
 :root{--bg:#05070f;--panel:#0a0e1a;--panel2:#0d1424;--line:#1b2540;--lit:#47609c;
   --text:#dbe4fb;--ink:#8b96b8;--dim:#7d8aa8;--accent:#54f2ff;--warn:#ffb000;--danger:#ff5266;
   --good:#4ade6a;--violet:#b47dff;--steel:#94a0c4;--blue:#4c8dff}
+:root{--s1:4px;--s2:8px;--s3:12px;--s4:16px;--s5:24px;--s6:32px;--s7:48px;--term:1100px;
+  --row:#0f1628;--z-scene:0;--z-stage:1;--z-sticky:5;--z-modal:10}
 *{box-sizing:border-box}
 html{color-scheme:dark}
 body{margin:0;min-height:100dvh;background:var(--bg);color:var(--ink);font:14px/1.5 ui-monospace,Menlo,Consolas,monospace;
   -webkit-text-size-adjust:100%}
-.boot{padding:24px}
+.boot{padding:var(--s5)}
 button{font:inherit;color:var(--text);background:var(--panel2);border:1px solid var(--line);border-radius:3px;
   padding:5px 10px;cursor:pointer;min-height:34px}
 button:hover:not(:disabled){border-color:var(--lit)}
-button:focus-visible,input:focus-visible{outline:1px solid var(--accent);outline-offset:1px}
+button:focus-visible,input:focus-visible,tr:focus-visible{outline:1px solid var(--accent);outline-offset:1px}
 button:disabled{opacity:.4;cursor:default}
 button.primary{border-color:var(--accent);color:var(--accent)}
 button.danger{border-color:var(--danger);color:var(--danger)}
@@ -49,122 +51,161 @@ button[aria-pressed=true]{border-color:var(--accent);color:var(--accent)}
 input{font:inherit;color:var(--text);background:var(--panel2);border:1px solid var(--line);border-radius:3px;padding:5px 8px;min-height:34px}
 kbd{font:inherit;font-size:11px;color:var(--dim);border:1px solid var(--line);border-radius:2px;padding:0 4px;margin-right:6px}
 h1{font-size:14px;letter-spacing:.2em;text-transform:uppercase;color:var(--accent);margin:0;font-weight:600}
-h2{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);margin:14px 0 6px;font-weight:600}
+h2{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);margin:var(--s4) 0 var(--s2);font-weight:600}
 h2:first-child{margin-top:0}
-p{margin:0 0 8px}
-.pc{max-width:1200px;margin:0 auto}
-.top{display:flex;align-items:center;gap:14px;padding:10px 16px;border-bottom:1px solid var(--line)}
-.top .where{color:var(--text)}
-.top .grow{flex:1}
+p{margin:0 0 var(--s2)}
+
+/* The stage centres the terminal in the window, both ways, over the scenery. */
+.stage{position:relative;z-index:var(--z-stage);min-height:100dvh;display:flex;align-items:center;justify-content:center;
+  padding:var(--s6) var(--s5)}
+.pc{width:min(var(--term),100%);background:var(--bg);border:1px solid var(--line);border-radius:4px;
+  box-shadow:0 0 0 1px rgba(5,7,15,.6),0 30px 90px rgba(0,0,0,.65)}
+
+/* Header: where you are and when, together, because that is what changed. */
+.top{display:flex;align-items:baseline;gap:var(--s4);padding:var(--s4) var(--s5) var(--s3)}
+.top .place-name{margin:0;font-size:20px;letter-spacing:.04em;text-transform:none;color:var(--text);font-weight:600}
 .top .day{color:var(--dim);white-space:nowrap}
 .top .day b{color:var(--text);font-weight:600}
-.top .day.last b{color:var(--warn)}
-.status{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));border-bottom:1px solid var(--line)}
-.stat{padding:8px 16px;border-right:1px solid var(--line);min-width:0}
+.top .day.last b,.top .day.last{color:var(--warn)}
+.top .grow{flex:1}
+.top .brand{font-size:12px;letter-spacing:.3em;text-transform:uppercase;color:var(--accent);font-weight:600}
+.dayline{height:2px;background:var(--line)}
+.dayline i{display:block;height:100%;background:var(--accent)}
+.dayline.last i{background:var(--warn)}
+
+/* Status: cash and debt lead; the rest support. */
+.status{display:grid;grid-template-columns:repeat(2,minmax(0,1.3fr)) repeat(4,minmax(0,1fr));border-bottom:1px solid var(--line)}
+.stat{padding:var(--s3) var(--s4);border-right:1px solid var(--line);min-width:0}
 .stat:last-child{border-right:0}
-.stat small{display:block;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim)}
+.stat small{display:block;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--dim)}
 .stat span{color:var(--text);white-space:nowrap}
-.stat.bad span{color:var(--danger)}
+.stat.lead span{font-size:20px;font-weight:600;line-height:1.3}
+.stat em{display:block;font-style:normal;font-size:12px;color:var(--dim)}
+.stat.bad span,.stat.bad em{color:var(--danger)}
 .stat.warn span{color:var(--warn)}
-.meter{display:block;height:6px;margin-top:5px;background:var(--panel2);border:1px solid var(--line)}
+.meter{display:block;height:6px;margin-top:var(--s1);background:var(--panel2);border:1px solid var(--line)}
 .meter i{display:block;height:100%;background:var(--good)}
 .meter.heat i{background:var(--warn)}
 .meter.low i{background:var(--danger)}
+
 /* The market column sets the row height; the log is taken out of flow so it
  * fills whatever height that is and scrolls, instead of stretching the page. */
-.main{display:grid;grid-template-columns:minmax(0,1fr) 400px;border-bottom:1px solid var(--line)}
-.market{padding:12px 16px;min-width:0}
+.main{display:grid;grid-template-columns:minmax(0,1fr) 380px}
+.market{padding:var(--s4) var(--s5) var(--s5);min-width:0}
 table.mk{width:100%;border-collapse:collapse}
-.mk th{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);text-align:right;font-weight:600;
-  padding:4px 6px;border-bottom:1px solid var(--line)}
-.mk th.name{text-align:left}
-.mk td{padding:4px 6px;text-align:right;border-bottom:1px solid #0f1628;white-space:nowrap}
-.mk td.name{text-align:left;color:var(--text);white-space:normal}
-.mk td.key{color:var(--dim);width:1.5em;text-align:left}
+.mk th{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--dim);text-align:right;font-weight:600;
+  padding:var(--s1) var(--s2);border-bottom:1px solid var(--line)}
+.mk th.name,.mk th.held{text-align:left}
+.mk td{padding:5px var(--s2);text-align:right;border-bottom:1px solid var(--row);white-space:nowrap}
+.mk td.key{color:var(--dim);width:1.5em;text-align:left;padding-left:0}
+.mk td.name{text-align:left;color:var(--text);width:8.5em}
+.mk td.price{width:7.5em;font-variant-numeric:tabular-nums}
+.mk td.held{text-align:left;color:var(--text)}
+.mk td.held small{color:var(--dim);font-size:12px;margin-left:var(--s1)}
 .mk tr{cursor:pointer}
+.mk tr:hover td{background:rgba(13,20,36,.6)}
 .mk tr.sel td{background:var(--panel2)}
 .mk tr.sel td.name{color:var(--accent)}
 .mk tr.news td.name::after{content:" !";color:var(--warn)}
-.mk td.btns{width:1%}
-.mk td.btns button{min-width:52px;padding:3px 8px;min-height:30px}
+.mk td.btns{width:1%;padding-right:0}
+/* Eighteen trade buttons are noise until you're on their row: ghosted, then solid. */
+.mk td.btns button{min-width:52px;padding:3px 8px;min-height:30px;background:transparent;border-color:transparent;color:var(--steel)}
+.mk td.btns button:disabled{color:var(--dim)}
+.mk tr:hover td.btns button:not(:disabled),.mk tr.sel td.btns button:not(:disabled),
+.mk td.btns button:focus-visible{background:var(--panel2);border-color:var(--line);color:var(--text)}
 .mk .out{color:var(--dim)}
 .up{color:var(--good)}.down{color:var(--danger)}
-.flash{margin-top:8px;color:var(--danger)}
+.flash{margin-top:var(--s2);color:var(--danger)}
 .flash:empty{display:none}
-.market .bar{margin-top:10px}
+.market .bar{margin-top:var(--s4)}
 .side{border-left:1px solid var(--line);display:flex;flex-direction:column;min-height:0;min-width:0}
-.place{padding:12px 16px;border-bottom:1px solid var(--line)}
+.place{padding:var(--s4) var(--s5);border-bottom:1px solid var(--line)}
 .place .blurb{color:var(--ink)}
 .place .spec{color:var(--steel)}
-.place .gear{color:var(--dim);font-size:12px}
-.tip{margin-top:8px;padding:6px 8px;border:1px dashed var(--line);font-size:12px;color:var(--steel)}
+.place .gear{color:var(--dim);font-size:12px;margin:0}
+.tip{margin-top:var(--s2);padding:6px var(--s2);border:1px dashed var(--line);font-size:12px;color:var(--steel)}
 .tip b{color:var(--accent);font-weight:600}
 .logwrap{flex:1;position:relative;min-height:180px}
-.log{position:absolute;inset:0;overflow:auto;padding:10px 16px}
+.log{position:absolute;inset:0;overflow:auto;padding:var(--s3) var(--s5)}
 .log p{margin:0 0 3px}
-.log .day{color:var(--accent);margin-top:10px}
+.log .day{color:var(--accent);margin-top:var(--s3)}
 .log p:first-child{margin-top:0}
 .news{color:var(--warn)}.bad{color:var(--danger)}.good{color:var(--good)}.enc{color:var(--violet)}
 .trade{color:var(--steel)}.dim{color:var(--dim)}.warn{color:var(--warn)}
-.bar{display:flex;gap:8px;flex-wrap:wrap;padding:8px;border:1px solid var(--line);border-radius:3px;background:var(--panel)}
+.bar{display:flex;gap:var(--s2);flex-wrap:wrap;padding:var(--s2);border:1px solid var(--line);border-radius:3px;background:var(--panel)}
 .bar .grow{flex:1}
-.back{position:fixed;inset:0;background:rgba(2,4,10,.8);display:flex;align-items:center;justify-content:center;padding:16px;z-index:10}
+
+.back{position:fixed;inset:0;background:rgba(2,4,10,.8);display:flex;align-items:center;justify-content:center;padding:var(--s4);z-index:var(--z-modal)}
 .modal{background:var(--panel);border:1px solid var(--lit);border-radius:4px;max-width:540px;width:100%;
-  max-height:calc(100dvh - 32px);overflow:auto;padding:16px 18px}
-.modal h1{margin-bottom:10px}
-.modal .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:8px 0}
+  max-height:calc(100dvh - 32px);overflow:auto;padding:var(--s4) var(--s5)}
+.modal h1{margin-bottom:var(--s3)}
+.modal .row{display:flex;gap:var(--s2);align-items:center;flex-wrap:wrap;margin:var(--s2) 0}
 .modal .row input{width:9em}
-.modal .acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.modal .acts{display:flex;gap:var(--s2);flex-wrap:wrap;margin-top:var(--s4)}
 .modal .note{color:var(--dim);font-size:12px}
 .modal table{width:100%;border-collapse:collapse}
-.modal td,.modal th{padding:4px 6px;text-align:left;border-bottom:1px solid #0f1628;vertical-align:top}
-.modal th{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);font-weight:600}
+.modal td,.modal th{padding:var(--s1) 6px;text-align:left;border-bottom:1px solid var(--row);vertical-align:top}
+.modal th{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--dim);font-weight:600}
 .modal td.r,.modal th.r{text-align:right}
-.foes{margin:10px 0}
-.foe{display:grid;grid-template-columns:minmax(0,1fr) 120px;gap:10px;align-items:center;margin:4px 0;color:var(--text)}
-.elog{margin-top:10px;padding:8px;background:var(--bg);border:1px solid var(--line);max-height:150px;overflow:auto;font-size:13px}
+.foes{margin:var(--s3) 0}
+.foe{display:grid;grid-template-columns:minmax(0,1fr) 120px;gap:var(--s3);align-items:center;margin:var(--s1) 0;color:var(--text)}
+.elog{margin-top:var(--s3);padding:var(--s2);background:var(--bg);border:1px solid var(--line);max-height:150px;overflow:auto;font-size:13px}
 .elog p{margin:0 0 2px}
-.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:var(--s3)}
 .help dt{color:var(--text)}
-.help dd{margin:0 0 8px 0;color:var(--ink)}
-.setup{max-width:640px;margin:0 auto;padding:32px 16px}
-.setup .sky{display:block;width:100%;height:auto;margin:6px 0 4px}
+.help dd{margin:0 0 var(--s2) 0;color:var(--ink)}
+
+.setup{width:min(640px,100%);padding:var(--s6) var(--s6) var(--s5)}
+.setup .sky{display:block;width:100%;height:auto;margin:0 0 var(--s1)}
 .setup .title{font-size:26px;letter-spacing:.35em;color:var(--accent);margin:0}
-.setup .tag{color:var(--steel);margin:4px 0 22px}
-.setup .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:10px 0}
+.setup .tag{color:var(--steel);margin:var(--s1) 0 var(--s5)}
+.setup .row{display:flex;gap:var(--s2);align-items:center;flex-wrap:wrap;margin:var(--s3) 0}
 .setup .row label{width:7em;color:var(--dim)}
 .setup .row input{flex:1;min-width:10em;max-width:20em}
-.setup .acts{display:flex;gap:8px;flex-wrap:wrap;margin:20px 0 26px}
+.setup .acts{display:flex;gap:var(--s2);flex-wrap:wrap;margin:var(--s5) 0 var(--s6)}
 .setup table.scores{border-collapse:collapse;width:100%}
-.setup .scores td,.setup .scores th{padding:4px 8px;text-align:left;border-bottom:1px solid #0f1628}
-.setup .scores th{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);font-weight:600}
+.setup .scores td,.setup .scores th{padding:var(--s1) var(--s2);text-align:left;border-bottom:1px solid var(--row)}
+.setup .scores th{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--dim);font-weight:600}
 .scores td.r,.scores th.r{text-align:right}
 .scores td:last-child{white-space:nowrap}
 .scores .rip{color:var(--danger)}
-.foot{color:var(--dim);font-size:12px;margin-top:28px}
+.foot{color:var(--dim);font-size:12px;margin-top:var(--s6)}
 .foot a{color:var(--steel)}
+
 @media (max-width:900px){
+  .stage{display:block;padding:0}
+  .pc{border:0;border-radius:0;box-shadow:none}
+  .setup{margin:0 auto}
   .main{grid-template-columns:minmax(0,1fr)}
   .side{border-left:0;border-top:1px solid var(--line)}
   .logwrap{min-height:0}
   .log{position:static;max-height:260px;min-height:140px}
-  .status{grid-template-columns:repeat(3,minmax(0,1fr))}
-  .stat:nth-child(3){border-right:0}
-  .stat:nth-child(-n+3){border-bottom:1px solid var(--line)}
+  .status{grid-template-columns:repeat(2,minmax(0,1fr)) repeat(2,minmax(0,1fr))}
+  .stat.lead{grid-column:span 2}
+  .stat:nth-child(2){border-right:0}
+  .stat:nth-child(-n+2){border-bottom:1px solid var(--line)}
+  .stat:nth-child(n+3){padding:var(--s2) var(--s3)}
 }
 @media (max-width:700px){
   body{font-size:13px}
   button{min-height:44px}
-  .mk td.btns button{min-height:40px;min-width:46px;padding:2px 6px}
-  .mk .avg,.mk .key{display:none}
-  .mk td,.mk th{padding:4px 3px}
-  .top{padding:8px 12px;gap:10px;flex-wrap:wrap}
-  .stat{padding:6px 12px}
-  .market,.place,.log{padding-left:12px;padding-right:12px}
-  .bar{position:sticky;bottom:6px;z-index:5}
+  .top{padding:var(--s3) var(--s3) var(--s2);gap:var(--s3);flex-wrap:wrap}
+  .top .place-name{font-size:18px}
+  .top .brand{display:none}
+  .stat{padding:var(--s2) var(--s3)}
+  .stat.lead span{font-size:17px}
+  .status{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .mk td.btns button{min-height:40px;min-width:46px;padding:2px 6px;background:var(--panel2);border-color:var(--line);color:var(--text)}
+  .mk .key{display:none}
+  .mk td,.mk th{padding:var(--s1) 3px}
+  .mk td.name{width:auto}
+  .mk td.held small{display:block;margin:0;font-size:11px}
+  .market,.place,.log{padding-left:var(--s3);padding-right:var(--s3)}
+  .bar{position:sticky;bottom:6px;z-index:var(--z-sticky)}
   .bar button{flex:1 1 auto}
   kbd{display:none}
   .modal{padding:14px}
+  .setup{padding:var(--s5) var(--s4)}
 }
 </style>
 </head>
@@ -1045,7 +1086,7 @@ function setupHTML() {
   const saved = loadGame();
   const all = scores();
   const list = Array.isArray(all[scoreTab]) ? all[scoreTab] : [];
-  return `<div class="setup">
+  return `<div class="pc setup">
   ${skyline()}
   <h1 class="title">PUMACITY</h1>
   <p class="tag">Buy low. Sell high. Stay one step ahead of the Watchers.</p>
@@ -1080,12 +1121,12 @@ function gameHTML() {
     const held = st.stash[g.id] || 0;
     const prev = st.prev[g.id];
     const arrow = p != null && prev != null && p !== prev ? (p > prev ? ' <span class="up">▲</span>' : ' <span class="down">▼</span>') : ' <span class="dim"> </span>';
-    const avg = held && st.cost[g.id] ? fmt(Math.round(st.cost[g.id] / held)) : '';
+    const avg = held && st.cost[g.id] ? `<small>@ ${fmt(Math.round(st.cost[g.id] / held))}</small>` : held ? '<small>found</small>' : '';
     const cls = [i === ui.sel ? 'sel' : '', st.news && st.news.good === g.id ? 'news' : ''].join(' ');
     return `<tr class="${cls}" data-act="sel" data-v="${i}">
       <td class="key">${i + 1}</td><td class="name">${g.name}</td>
-      <td>${p == null ? '<span class="out">—</span>' : fmt(p) + arrow}</td>
-      <td>${held || '<span class="dim">0</span>'}</td><td class="avg dim">${avg}</td>
+      <td class="price">${p == null ? '<span class="out">—</span>' : fmt(p) + arrow}</td>
+      <td class="held">${held ? held + avg : '<span class="dim">—</span>'}</td>
       <td class="btns"><button data-act="buy" data-v="${i}" ${p == null ? 'disabled' : ''}>Buy</button>
       <button data-act="sell" data-v="${i}" ${p == null || !held ? 'disabled' : ''}>Sell</button></td></tr>`;
   }).join('');
@@ -1094,22 +1135,25 @@ function gameHTML() {
   const tip = st.tip ? `<div class="tip"><b>Pawphone</b>: tomorrow at ${PLACE[st.tip.loc].name}<br>${GOODS.map(g =>
     `${g.name} ${st.tip.prices[g.id] == null ? '—' : fmt(st.tip.prices[g.id])}`).join(' · ')}</div>` : '';
   const log = st.log.map(l => `<p class="${l.cls}">${esc(l.text)}</p>`).join('');
+  const left = st.days - st.day;
   return `<div class="pc">
   <header class="top">
-    <h1>PumaCity</h1><span class="where">${P.name}</span><span class="grow"></span>
-    <span class="day${last ? ' last' : ''}">Day <b>${st.day}</b> of ${st.days}</span>
+    <h1 class="place-name">${P.name}</h1>
+    <span class="day${last ? ' last' : ''}">${last ? 'Last day' : `Day <b>${st.day}</b> of ${st.days} · ${left} left`}</span>
+    <span class="grow"></span><span class="brand">PumaCity</span>
   </header>
+  <div class="dayline${last ? ' last' : ''}"><i style="width:${Math.round(st.day / st.days * 100)}%"></i></div>
   <div class="status">
-    <div class="stat"><small>Cash</small><span>${fmt(st.cash)}</span></div>
+    <div class="stat lead"><small>Cash</small><span>${fmt(st.cash)}</span></div>
+    <div class="stat lead${st.debt > 0 ? (st.debtAge >= CONFIG.goonDays - 2 ? ' bad' : ' warn') : ''}"><small>Debt</small><span>${fmt(st.debt)}</span></div>
     <div class="stat"><small>Bank</small><span>${fmt(st.bank)}</span></div>
-    <div class="stat${st.debt > 0 ? (st.debtAge >= CONFIG.goonDays - 2 ? ' bad' : ' warn') : ''}"><small>Debt</small><span>${fmt(st.debt)}</span></div>
     <div class="stat${st.hp <= 30 ? ' bad' : ''}"><small>Health</small><span>${st.hp} / ${CONFIG.maxHp}</span>${meter(st.hp, CONFIG.maxHp, st.hp <= 30 ? 'low' : '')}</div>
     <div class="stat"><small>Pouch</small><span>${u} / ${cap}</span>${meter(u, cap, 'heat')}</div>
     <div class="stat${st.heat >= 50 ? ' bad' : ''}"><small>Heat</small><span>${st.heat}</span>${meter(st.heat, 100, st.heat >= 50 ? 'low' : 'heat')}</div>
   </div>
   <div class="main">
     <section class="market">
-      <table class="mk"><thead><tr><th class="key"></th><th class="name">Good</th><th>Price</th><th>Held</th><th class="avg">Avg paid</th><th></th></tr></thead>
+      <table class="mk"><thead><tr><th class="key"></th><th class="name">Good</th><th>Price</th><th class="held">Held</th><th></th></tr></thead>
       <tbody>${goods}</tbody></table>
       <div class="flash" role="status">${esc(ui.flash)}</div>
       <nav class="bar">
@@ -1123,7 +1167,6 @@ function gameHTML() {
     </section>
     <aside class="side">
       <div class="place">
-        <h2>${P.name}</h2>
         <p class="blurb">${P.blurb}</p>
         <p class="spec">${P.special}</p>
         <p class="gear">${gear.length ? 'Gear: ' + gear.join(' · ') : 'No gear yet. Without a weapon you can only run or surrender.'}</p>
@@ -1357,7 +1400,7 @@ function helpHTML(tab) {
 function render() {
   const modal = S ? modalHTML() : (ui.modal && ui.modal.kind === 'help'
     ? `<div class="back" data-act="backdrop"><div class="modal" role="dialog" aria-modal="true">${helpHTML(ui.modal.tab || 'basics')}</div></div>` : '');
-  root.innerHTML = (S ? gameHTML() : setupHTML()) + modal;
+  root.innerHTML = `<div class="stage">${S ? gameHTML() : setupHTML()}</div>` + modal;
   const log = document.getElementById('pc-log');
   if (log) log.scrollTop = log.scrollHeight;
   const elog = document.getElementById('pc-elog');
