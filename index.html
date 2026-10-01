@@ -243,6 +243,25 @@ table.mk{width:100%;border-collapse:collapse}
 .foot{color:var(--dim);font-size:12px;margin-top:var(--s6)}
 .foot a{color:var(--steel)}
 
+/* Laptops (1280x800 is the common case): a narrower, shorter terminal, so
+ * the district's landmarks keep real space at the sides and above. */
+@media (min-width:901px) and (max-width:1400px){
+  :root{--term:1000px}
+  .stage{padding:var(--s4)}
+  .main{grid-template-columns:minmax(0,1fr) 330px}
+  .mk td.range{width:11em}
+  .track{width:52px}
+  .market,.place,.log{padding-left:var(--s4);padding-right:var(--s4)}
+  .top{padding-left:var(--s4);padding-right:var(--s4)}
+}
+@media (min-width:901px) and (max-height:860px){
+  .top{padding-top:var(--s3);padding-bottom:var(--s2)}
+  .stat{padding-top:var(--s2);padding-bottom:var(--s2)}
+  .stat.lead span{font-size:18px}
+  .market{padding-top:var(--s3);padding-bottom:var(--s4)}
+  .mk td{padding-top:3px;padding-bottom:3px}
+  .market .bar{margin-top:var(--s3)}
+}
 @media (max-width:900px){
   .scene{position:relative;height:clamp(120px,34vw,220px);border-bottom:1px solid var(--line)}
   .stage{display:block;padding:0}
