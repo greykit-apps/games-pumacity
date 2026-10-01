@@ -1,0 +1,1524 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>PumaCity</title>
+<meta name="description" content="Buy low, sell high, and keep one step ahead of the Watchers. A puma-flavoured trading game in the spirit of Dope Wars, set on the streets of PumaCity.">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#05070f">
+<meta name="referrer" content="no-referrer">
+<meta property="og:title" content="PumaCity">
+<meta property="og:description" content="Buy low, sell high, and keep one step ahead of the Watchers. A puma-flavoured trading game in the spirit of Dope Wars, set on the streets of PumaCity.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://greykit.com/games/pumacity/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Buy low, sell high, and keep one step ahead of the Watchers. A puma-flavoured trading game in the spirit of Dope Wars, set on the streets of PumaCity.">
+<meta property="og:url" content="https://greykit.com/games/pumacity/">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="PumaCity">
+<meta name="twitter:description" content="Buy low, sell high, and keep one step ahead of the Watchers. A puma-flavoured trading game in the spirit of Dope Wars, set on the streets of PumaCity.">
+<meta name="twitter:image" content="https://greykit.com/games/pumacity/og.png">
+<meta name="twitter:image:alt" content="Buy low, sell high, and keep one step ahead of the Watchers. A puma-flavoured trading game in the spirit of Dope Wars, set on the streets of PumaCity.">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/svg+xml" href="icon.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
+<link rel="icon" href="favicon.ico" sizes="16x16 32x32 48x48">
+<style>
+/* Tactical tribe, PumaRally's palette: the same TOKENS table, retyped here
+ * because this is a single file and imports nothing. */
+:root{--bg:#05070f;--panel:#0a0e1a;--panel2:#0d1424;--line:#1b2540;--lit:#47609c;
+  --text:#dbe4fb;--ink:#8b96b8;--dim:#7d8aa8;--accent:#54f2ff;--warn:#ffb000;--danger:#ff5266;
+  --good:#4ade6a;--violet:#b47dff;--steel:#94a0c4;--blue:#4c8dff}
+*{box-sizing:border-box}
+html{color-scheme:dark}
+body{margin:0;min-height:100dvh;background:var(--bg);color:var(--ink);font:14px/1.5 ui-monospace,Menlo,Consolas,monospace;
+  -webkit-text-size-adjust:100%}
+.boot{padding:24px}
+button{font:inherit;color:var(--text);background:var(--panel2);border:1px solid var(--line);border-radius:3px;
+  padding:5px 10px;cursor:pointer;min-height:34px}
+button:hover:not(:disabled){border-color:var(--lit)}
+button:focus-visible,input:focus-visible{outline:1px solid var(--accent);outline-offset:1px}
+button:disabled{opacity:.4;cursor:default}
+button.primary{border-color:var(--accent);color:var(--accent)}
+button.danger{border-color:var(--danger);color:var(--danger)}
+button[aria-pressed=true]{border-color:var(--accent);color:var(--accent)}
+input{font:inherit;color:var(--text);background:var(--panel2);border:1px solid var(--line);border-radius:3px;padding:5px 8px;min-height:34px}
+kbd{font:inherit;font-size:11px;color:var(--dim);border:1px solid var(--line);border-radius:2px;padding:0 4px;margin-right:6px}
+h1{font-size:14px;letter-spacing:.2em;text-transform:uppercase;color:var(--accent);margin:0;font-weight:600}
+h2{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);margin:14px 0 6px;font-weight:600}
+h2:first-child{margin-top:0}
+p{margin:0 0 8px}
+.pc{max-width:1200px;margin:0 auto;height:100dvh;display:flex;flex-direction:column}
+.top{display:flex;align-items:center;gap:14px;padding:10px 16px;border-bottom:1px solid var(--line)}
+.top .where{color:var(--text)}
+.top .grow{flex:1}
+.top .day{color:var(--dim);white-space:nowrap}
+.top .day b{color:var(--text);font-weight:600}
+.top .day.last b{color:var(--warn)}
+.status{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));border-bottom:1px solid var(--line)}
+.stat{padding:8px 16px;border-right:1px solid var(--line);min-width:0}
+.stat:last-child{border-right:0}
+.stat small{display:block;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim)}
+.stat span{color:var(--text);white-space:nowrap}
+.stat.bad span{color:var(--danger)}
+.stat.warn span{color:var(--warn)}
+.meter{display:block;height:6px;margin-top:5px;background:var(--panel2);border:1px solid var(--line)}
+.meter i{display:block;height:100%;background:var(--good)}
+.meter.heat i{background:var(--warn)}
+.meter.low i{background:var(--danger)}
+.main{display:grid;grid-template-columns:minmax(0,1fr) 400px;flex:1;min-height:0;overflow:hidden}
+.market{overflow:auto}
+.market{padding:12px 16px;min-width:0}
+table.mk{width:100%;border-collapse:collapse}
+.mk th{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);text-align:right;font-weight:600;
+  padding:4px 6px;border-bottom:1px solid var(--line)}
+.mk th.name{text-align:left}
+.mk td{padding:4px 6px;text-align:right;border-bottom:1px solid #0f1628;white-space:nowrap}
+.mk td.name{text-align:left;color:var(--text);white-space:normal}
+.mk td.key{color:var(--dim);width:1.5em;text-align:left}
+.mk tr{cursor:pointer}
+.mk tr.sel td{background:var(--panel2)}
+.mk tr.sel td.name{color:var(--accent)}
+.mk tr.news td.name::after{content:" !";color:var(--warn)}
+.mk td.btns{width:1%}
+.mk td.btns button{min-width:52px;padding:3px 8px;min-height:30px}
+.mk .out{color:var(--dim)}
+.up{color:var(--good)}.down{color:var(--danger)}
+.flash{margin-top:10px;color:var(--danger);min-height:1.5em}
+.side{border-left:1px solid var(--line);display:flex;flex-direction:column;min-height:0;min-width:0}
+.place{padding:12px 16px;border-bottom:1px solid var(--line)}
+.place .blurb{color:var(--ink)}
+.place .spec{color:var(--steel)}
+.place .gear{color:var(--dim);font-size:12px}
+.tip{margin-top:8px;padding:6px 8px;border:1px dashed var(--line);font-size:12px;color:var(--steel)}
+.tip b{color:var(--accent);font-weight:600}
+.log{flex:1;overflow:auto;padding:10px 16px;min-height:0}
+.log p{margin:0 0 3px}
+.log .day{color:var(--accent);margin-top:10px}
+.log p:first-child{margin-top:0}
+.news{color:var(--warn)}.bad{color:var(--danger)}.good{color:var(--good)}.enc{color:var(--violet)}
+.trade{color:var(--steel)}.dim{color:var(--dim)}.warn{color:var(--warn)}
+.bar{display:flex;gap:8px;flex-wrap:wrap;padding:10px 16px;border-top:1px solid var(--line);background:var(--panel)}
+.bar .grow{flex:1}
+.back{position:fixed;inset:0;background:rgba(2,4,10,.8);display:flex;align-items:center;justify-content:center;padding:16px;z-index:10}
+.modal{background:var(--panel);border:1px solid var(--lit);border-radius:4px;max-width:540px;width:100%;
+  max-height:calc(100dvh - 32px);overflow:auto;padding:16px 18px}
+.modal h1{margin-bottom:10px}
+.modal .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:8px 0}
+.modal .row input{width:9em}
+.modal .acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.modal .note{color:var(--dim);font-size:12px}
+.modal table{width:100%;border-collapse:collapse}
+.modal td,.modal th{padding:4px 6px;text-align:left;border-bottom:1px solid #0f1628;vertical-align:top}
+.modal th{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);font-weight:600}
+.modal td.r,.modal th.r{text-align:right}
+.foes{margin:10px 0}
+.foe{display:grid;grid-template-columns:minmax(0,1fr) 120px;gap:10px;align-items:center;margin:4px 0;color:var(--text)}
+.elog{margin-top:10px;padding:8px;background:var(--bg);border:1px solid var(--line);max-height:150px;overflow:auto;font-size:13px}
+.elog p{margin:0 0 2px}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.help dt{color:var(--text)}
+.help dd{margin:0 0 8px 0;color:var(--ink)}
+.setup{max-width:640px;margin:0 auto;padding:32px 16px}
+.setup .sky{display:block;width:100%;height:auto;margin:6px 0 4px}
+.setup .title{font-size:26px;letter-spacing:.35em;color:var(--accent);margin:0}
+.setup .tag{color:var(--steel);margin:4px 0 22px}
+.setup .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:10px 0}
+.setup .row label{width:7em;color:var(--dim)}
+.setup .row input{flex:1;min-width:10em;max-width:20em}
+.setup .acts{display:flex;gap:8px;flex-wrap:wrap;margin:20px 0 26px}
+.setup table.scores{border-collapse:collapse;width:100%}
+.setup .scores td,.setup .scores th{padding:4px 8px;text-align:left;border-bottom:1px solid #0f1628}
+.setup .scores th{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);font-weight:600}
+.scores td.r,.scores th.r{text-align:right}
+.scores td:last-child{white-space:nowrap}
+.scores .rip{color:var(--danger)}
+.foot{color:var(--dim);font-size:12px;margin-top:28px}
+.foot a{color:var(--steel)}
+@media (max-width:900px){
+  .pc{height:auto;min-height:100dvh}
+  .main{grid-template-columns:minmax(0,1fr);overflow:visible}
+  .market{overflow:visible}
+  .side{border-left:0;border-top:1px solid var(--line)}
+  .log{max-height:260px;min-height:140px}
+  .status{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .stat:nth-child(3){border-right:0}
+  .stat:nth-child(-n+3){border-bottom:1px solid var(--line)}
+}
+@media (max-width:700px){
+  body{font-size:13px}
+  button{min-height:44px}
+  .mk td.btns button{min-height:40px;min-width:46px;padding:2px 6px}
+  .mk .avg,.mk .key{display:none}
+  .mk td,.mk th{padding:4px 3px}
+  .top{padding:8px 12px;gap:10px;flex-wrap:wrap}
+  .stat{padding:6px 12px}
+  .market,.place,.log{padding-left:12px;padding-right:12px}
+  .bar{position:sticky;bottom:0;padding:8px 12px;z-index:5}
+  .bar button{flex:1 1 auto}
+  kbd{display:none}
+  .modal{padding:14px}
+}
+</style>
+</head>
+<body>
+<div data-pumacity-game><p class="boot">Hitting the streets…</p></div>
+<script>
+'use strict';
+// ===== @core-begin =====
+/* Everything between the core markers is data and rules with no DOM. The tools
+ * under tools/ cut this block out of the page and run it under Node, so the
+ * browser and the tests play exactly the same game. Nothing in here may touch
+ * the page, the clock or browser storage -- all randomness comes from st.rng. */
+
+const VERSION = '1.0.0';
+
+const CONFIG = {
+  lengths: [30, 60, 90],
+  startCash: 2000,
+  startDebt: 5500,
+  startLoc: 'plaza',
+  baseCap: 100,
+  maxHp: 100,
+  debtRate: 0.10,     // per day, compounding
+  bankRate: 0.01,     // per day, compounding
+  debtCap: 50000,     // the most The Boss will have on her books for you
+  goonDays: 10,       // days without a real repayment before the goons come
+  repayReset: 0.10,   // a repayment of at least this share of the debt counts as "real"
+  heatDecay: 4,       // per day
+  eventChance: 0.2,   // a market headline on any given day
+  vetPerHp: 15,
+  logMax: 150,
+};
+
+const GOODS = [
+  { id: 'nip',        name: 'Catnip',     lo: 10,    hi: 60,    blurb: "Ditch-grade 'nip. Cheap, bulky, everywhere." },
+  { id: 'feathers',   name: 'Feathers',   lo: 40,    hi: 150,   blurb: 'Wand-toy plumage. Kittens go wild for it.' },
+  { id: 'nappers',    name: 'Nappers',    lo: 100,   hi: 400,   blurb: 'Sleepy pills, for the cat who has had enough of today.' },
+  { id: 'zoomers',    name: 'Zoomers',    lo: 200,   hi: 700,   blurb: 'Three in the morning, in capsule form.' },
+  { id: 'silvervine', name: 'Silvervine', lo: 300,   hi: 900,   blurb: "Refined vine chews. 'nip's classier cousin." },
+  { id: 'psychos',    name: 'Psychos',    lo: 600,   hi: 1800,  blurb: 'Mushrooms that make the wallpaper move.' },
+  { id: 'reddot',     name: 'Red Dot',    lo: 1000,  hi: 4500,  blurb: 'You will never catch it. You will never stop trying.' },
+  { id: 'moonsugar',  name: 'Moonsugar',  lo: 5000,  hi: 14000, blurb: 'Crystal sugar off the moon freighters. Pricey.' },
+  { id: 'skooma',     name: 'Skooma',     lo: 10000, hi: 28000, blurb: "Moonsugar, cooked down. The Boss's favourite." },
+];
+const GOOD = Object.fromEntries(GOODS.map(g => [g.id, g]));
+
+/* mods multiply a good's price here; `all` multiplies every good. watch, mug
+ * and boss scale those encounters; cool is extra heat shed per day here. */
+const PLACES = [
+  { id: 'plaza', name: 'Market Plaza', service: null, serviceName: 'Shades stall', shop: ['shades'],
+    mods: { psychos: 1.2, reddot: 1.3, moonsugar: 1.3, skooma: 1.3 }, watch: 1, mug: 1.5,
+    blurb: 'Fountains, food carts and tour groups with fat wallets.',
+    special: 'Tourists pay a premium for luxury goods.' },
+  { id: 'pvn', name: 'PVN Tower', service: 'loan', serviceName: "The Boss's office", shop: [],
+    mods: { skooma: 1.5 }, watch: 1, boss: 3,
+    blurb: "Glass, steel, and Casey Benton's name on every floor.",
+    special: 'The Boss lends money from the penthouse. Skooma sells high.' },
+  { id: 'vault', name: 'The Vault', service: 'bank', serviceName: "Overseer's terminal", shop: [],
+    mods: {}, watch: 0.8, mug: 0.3,
+    blurb: 'An old fallout shelter under the city: a cog-shaped blast door, humming terminals, and an Overseer who runs it as a bank.',
+    special: 'Money in the Vault is safe from muggers and the Watchers.' },
+  { id: 'ranch', name: 'The Ranch', service: null, serviceName: '', shop: [],
+    mods: { nip: 0.45 }, watch: 0.5, cool: 6,
+    blurb: "Rows of 'nip to the horizon, and nobody around to ask questions.",
+    special: "Catnip is cheap, and the Watchers rarely drive out this far." },
+  { id: 'starport', name: 'Starport', service: null, serviceName: 'Outfitter, Bay 9', shop: ['hovercrate', 'mech'],
+    mods: { moonsugar: 0.6, skooma: 0.6 }, watch: 1.3,
+    blurb: 'Freighters from the moons, and customs officers who look the other way.',
+    special: 'Off-world Moonsugar and Skooma come in cheap. The outfitter sells gear you cannot get planetside.' },
+  { id: 'convention', name: 'The Convention Center', service: null, serviceName: 'Tech expo', shop: ['pawphone'],
+    all: 1.2, mods: {}, watch: 1.1, mug: 3,
+    blurb: 'There is always an expo on, and the crowds never thin.',
+    special: 'Crowds pay over the odds for everything. Pickpockets work the crowd.' },
+  { id: 'suburbs', name: 'Suburbs', service: 'vet', serviceName: 'Pet store & vet', shop: ['fanny', 'saddle', 'spray', 'laser', 'claws', 'collar', 'mittens'],
+    mods: {}, watch: 0.9,
+    blurb: 'Lawns, cul-de-sacs, a pet store, and a vet who does not ask questions.',
+    special: 'The vet patches you up. The pet store sells pouches, weapons and accessories.' },
+];
+const PLACE = Object.fromEntries(PLACES.map(p => [p.id, p]));
+
+/* Within a slot, later entries outrank earlier ones: you can trade up, never down. */
+const GEAR = {
+  fanny:      { slot: 'pouch',    a: 'a', name: 'Fanny Pouch',     price: 400,   cap: 30,  blurb: '+30 carrying space.' },
+  saddle:     { slot: 'pouch',    a: 'some', name: 'Saddlebags',      price: 1500,  cap: 60,  blurb: '+60 carrying space.' },
+  hovercrate: { slot: 'pouch',    a: 'a', name: 'Hover-Crate',     price: 9000,  cap: 120, blurb: '+120 carrying space. Floats along behind you.' },
+  spray:      { slot: 'weapon',   a: 'a', name: 'Spray Bottle',    price: 300,   dmg: [4, 9],   blurb: 'Nobody likes getting wet. Hits for 4–9.' },
+  laser:      { slot: 'weapon',   a: 'a', name: 'Laser Pointer',   price: 900,   dmg: [7, 13],  blurb: 'They cannot help chasing it. Hits for 7–13.' },
+  claws:      { slot: 'weapon',   a: 'some', name: 'Sharpened Claws', price: 2500,  dmg: [11, 19], blurb: 'A professional manicure. Hits for 11–19.' },
+  mech:       { slot: 'weapon',   a: 'some', name: 'Mech-Claws',      price: 12000, dmg: [18, 30], blurb: 'Off-world hydraulics. Hits for 18–30.' },
+  collar:     { slot: 'armour',   a: 'a', name: 'Kevlar Collar',   price: 2000,  guard: 0.4, blurb: 'Takes 40% off every hit.' },
+  pawphone:   { slot: 'pawphone', a: 'a', name: 'Pawphone',        price: 1200,  blurb: "Each day, shows tomorrow's prices somewhere else in town." },
+  mittens:    { slot: 'mittens',  a: 'some', name: 'Sneaky Mittens',  price: 800,   blurb: 'Kittens wear them. Much better odds when you run.' },
+  shades:     { slot: 'shades',   a: 'some', name: 'Shades',          price: 600,   blurb: 'Heat builds half as fast.' },
+};
+const SLOTS = ['pouch', 'weapon', 'armour', 'pawphone', 'mittens', 'shades'];
+
+const RIVALS = ['Tomcat Tony', 'Scraps McGee', 'Velvet', 'One-Ear Ollie', 'Duchess', 'Big Ginger', 'Mister Whiskers'];
+
+/* Market headlines. {g} is the good's name. Specific lines win over generic ones. */
+const NEWS = {
+  up: [
+    'Watchers raid a {g} den downtown. Prices are through the roof!',
+    'Kittens are paying crazy money for {g}!',
+    'A {g} shortage hits PumaCity. Sellers name their price!',
+  ],
+  down: [
+    'A {g} shipment slips past customs. Prices crash!',
+    'Somebody dumped a crate of {g} in the park. Prices hit the floor!',
+    'Cheap {g} floods the streets!',
+  ],
+  nip: { down: "The Ranch harvest floods the market with cheap 'nip!" },
+  feathers: { down: 'A pillow factory explodes. Feathers everywhere, prices crash!' },
+  reddot: { up: 'The Boss bans laser pointers! Red Dot prices go wild!' },
+  moonsugar: { up: 'Starport customs seize a Moonsugar freighter. Prices skyrocket!' },
+  skooma: { up: 'The Boss is throwing a party at PVN Tower. Skooma prices soar!' },
+};
+
+// ---- randomness: one 32-bit LCG whose whole state is st.rng (from pumarally's rng.js)
+function nextState(s) { return (Math.imul(s | 0, 1664525) + 1013904223) | 0; }
+function rnd(st) { st.rng = nextState(st.rng); return ((st.rng >>> 8) & 0xffffff) / 0x1000000; }
+function rndInt(st, n) { return Math.floor(rnd(st) * n); }
+function rndRange(st, a, b) { return a + rndInt(st, b - a + 1); }
+function pick(st, arr) { return arr[rndInt(st, arr.length)]; }
+/* Deterministic hash, for bot choices that must not move the game's RNG. */
+function hash32(n) {
+  let x = n | 0;
+  x = Math.imul(x ^ (x >>> 16), 0x7feb352d);
+  x = Math.imul(x ^ (x >>> 15), 0x846ca68b);
+  x = x ^ (x >>> 16);
+  return x >>> 0;
+}
+
+// ---- small helpers
+function fmt(n) {
+  const s = String(Math.round(Math.abs(n))).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  return (n < 0 ? '-$' : '$') + s;
+}
+function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
+function here(st) { return PLACE[st.loc]; }
+function capacity(st) { return CONFIG.baseCap + (st.gear.pouch ? GEAR[st.gear.pouch].cap : 0); }
+function used(st) { let n = 0; for (const g of GOODS) n += st.stash[g.id] || 0; return n; }
+function free(st) { return capacity(st) - used(st); }
+function netWorth(st) { return st.cash + st.bank - st.debt; }
+function slotItems(slot) { return Object.keys(GEAR).filter(id => GEAR[id].slot === slot); }
+function gearRank(id) { return slotItems(GEAR[id].slot).indexOf(id); }
+function canUpgrade(st, id) {
+  const cur = st.gear[GEAR[id].slot];
+  return !cur || gearRank(id) > gearRank(cur);
+}
+function guard(st, dmg) { return st.gear.armour ? Math.round(dmg * (1 - GEAR[st.gear.armour].guard)) : dmg; }
+function heatUp(st, n) {
+  if (n <= 0) return;
+  if (st.gear.shades) n = Math.ceil(n / 2);
+  st.heat = Math.min(100, st.heat + n);
+}
+function addLog(st, text, cls) {
+  st.logN++;
+  st.log.push({ n: st.logN, d: st.day, text, cls: cls || '' });
+  if (st.log.length > CONFIG.logMax) st.log.splice(0, st.log.length - CONFIG.logMax);
+}
+function plural(n, one, many) { return n === 1 ? one : (many || one + 's'); }
+
+// ---- new run
+function newGame(opts) {
+  opts = opts || {};
+  const days = CONFIG.lengths.includes(opts.days) ? opts.days : CONFIG.lengths[0];
+  const seed = (opts.seed == null ? 1 : opts.seed) | 0;
+  const name = String(opts.name || '').trim().slice(0, 16) || 'Stray';
+  const st = {
+    v: 1, version: VERSION, seed, rng: seed, name, days, day: 1, loc: CONFIG.startLoc,
+    cash: CONFIG.startCash, bank: 0, debt: CONFIG.startDebt, debtAge: 0,
+    hp: CONFIG.maxHp, heat: 0,
+    stash: {}, cost: {},
+    gear: { pouch: null, weapon: null, armour: null, pawphone: null, mittens: null, shades: null },
+    prices: {}, prev: {}, news: null, tip: null, enc: null, over: null,
+    log: [], logN: 0,
+    stats: { bought: 0, sold: 0, fights: 0, won: 0, fled: 0, busted: 0, peak: CONFIG.startCash - CONFIG.startDebt },
+  };
+  addLog(st, `Day 1: ${PLACE[st.loc].name}.`, 'day');
+  addLog(st, `Welcome to PumaCity, ${name}. You owe The Boss ${fmt(st.debt)}, and her interest runs at 10% a day.`, '');
+  addLog(st, `You have ${days} days. Buy low, sell high, and pay her back at PVN Tower.`, '');
+  rollMarket(st);
+  rollTip(st);
+  return st;
+}
+
+// ---- prices
+function basePrice(st, g, P) {
+  const m = (P.mods[g.id] || 1) * (P.all || 1);
+  return Math.max(1, Math.round((g.lo + rnd(st) * (g.hi - g.lo)) * m));
+}
+function basePrices(st, P) {
+  const prices = {};
+  for (const g of GOODS) prices[g.id] = basePrice(st, g, P);
+  const gone = 1 + rndInt(st, 2);
+  for (let i = 0; i < gone; i++) prices[pick(st, GOODS).id] = null;
+  return prices;
+}
+function headline(st, g, up) {
+  const special = NEWS[g.id] && NEWS[g.id][up ? 'up' : 'down'];
+  const line = special && rnd(st) < 0.6 ? special : pick(st, NEWS[up ? 'up' : 'down']);
+  return line.replace('{g}', g.name);
+}
+function rollMarket(st) {
+  const P = here(st);
+  for (const g of GOODS) if (st.prices[g.id] != null) st.prev[g.id] = st.prices[g.id];
+  const tipped = st.tip && st.tip.loc === st.loc && st.tip.day === st.day;
+  const prices = tipped ? Object.assign({}, st.tip.prices) : basePrices(st, P);
+  st.tip = null;
+  st.news = null;
+  if (rnd(st) < CONFIG.eventChance) {
+    const g = pick(st, GOODS);
+    const up = rnd(st) < 0.5;
+    const base = prices[g.id] != null ? prices[g.id] : basePrice(st, g, P);
+    prices[g.id] = Math.max(1, Math.round(base * (up ? 2.5 + rnd(st) * 1.5 : 0.25 + rnd(st) * 0.2)));
+    st.news = { good: g.id, up };
+    addLog(st, headline(st, g, up), 'news');
+  }
+  st.prices = prices;
+}
+/* The Pawphone pre-rolls tomorrow's prices at one other place. If you go there
+ * tomorrow, those ARE the prices (a headline can still move one good). */
+function rollTip(st) {
+  if (!st.gear.pawphone || st.day >= st.days) return;
+  const others = PLACES.filter(p => p.id !== st.loc);
+  const P = pick(st, others);
+  st.tip = { loc: P.id, day: st.day + 1, prices: basePrices(st, P) };
+}
+
+// ---- encounters
+function rollEncounter(st) {
+  const P = here(st);
+  const table = [
+    ['goons',    st.debt > 0 && st.debtAge >= CONFIG.goonDays && P.id !== 'pvn' ? 0.3 : 0],
+    ['watchers', (0.05 + st.heat / 250) * P.watch],
+    ['rival',    0.07],
+    ['boss',     0.035 * (P.boss || 1)],
+    ['mugging',  0.04 * (P.mug == null ? 1 : P.mug)],
+    ['stash',    0.04],
+    ['stray',    0.04],
+  ];
+  const r = rnd(st);
+  let acc = 0;
+  for (const [type, p] of table) {
+    acc += p;
+    if (r < acc) { startEncounter(st, type); return; }
+  }
+}
+
+/* enc.from marks where this encounter's log lines begin, so the screen can show
+ * just them however the encounter was reached (arrival, resume or debug). */
+function startEncounter(st, type) {
+  const from = st.logN;
+  beginEncounter(st, type);
+  if (st.enc) st.enc.from = from;
+}
+function beginEncounter(st, type) {
+  switch (type) {
+    case 'watchers': {
+      const n = clamp(1 + Math.floor(st.heat / 30) + rndInt(st, 2), 1, 5);
+      const foes = [];
+      if (st.heat >= 40) foes.push({ name: 'Watch-Captain Hardclaw', hp: 24, max: 24 });
+      while (foes.length < n) foes.push({ name: 'Watcher', hp: 12, max: 12 });
+      st.enc = { type, foes, n, hitP: 0.3, dmg: [3, 8], loot: [80, 250] };
+      const lead = foes[0].name === 'Watcher' ? '' : 'Watch-Captain Hardclaw and ';
+      const rest = foes.filter(f => f.name === 'Watcher').length;
+      addLog(st, n === 1 ? 'A Watcher spots you and gives chase!' : `${lead}${rest} ${plural(rest, 'Watcher')} are on your tail!`, 'enc');
+      return;
+    }
+    case 'rival': {
+      const n = 1 + rndInt(st, 3);
+      const boss = pick(st, RIVALS);
+      const foes = [{ name: boss, hp: 14, max: 14 }];
+      while (foes.length < n) foes.push({ name: 'Henchcat', hp: 10, max: 10 });
+      const hostile = rnd(st) < 0.45;
+      const deal = hostile ? null : makeDeal(st);
+      st.enc = { type, foes, n, hostile, deal, boss, hitP: 0.28, dmg: [3, 7], loot: [150, 600] };
+      if (hostile) addLog(st, `${boss}'s crew jumps you! "This is our turf."`, 'enc');
+      else addLog(st, `${boss} waves you into a doorway. "Got a deal for you."`, 'enc');
+      return;
+    }
+    case 'boss': {
+      const sk = st.stash.skooma || 0;
+      if (sk > 0 && rnd(st) < 0.6) {
+        const price = Math.round(GOOD.skooma.hi * (1.05 + rnd(st) * 0.3));
+        st.enc = { type, ask: 'skooma', qty: sk, price };
+        addLog(st, `Casey Benton's limo pulls up and a tinted window slides down. "I hear you're carrying Skooma. I'll take all ${sk} at ${fmt(price)} each. Between friends."`, 'enc');
+      } else if (st.heat >= 15) {
+        const amount = Math.max(300, Math.round(((st.cash + st.bank) * 0.06 + st.heat * 30) / 50) * 50);
+        st.enc = { type, ask: 'bribe', amount };
+        addLog(st, `Casey Benton's limo pulls up and a tinted window slides down. "The Watchers have been asking about you. For ${fmt(amount)}, they could stop asking."`, 'enc');
+      } else {
+        addLog(st, "Casey Benton's motorcade sweeps past. You keep your head down.", 'dim');
+      }
+      return;
+    }
+    case 'goons': {
+      const demand = Math.min(st.debt, Math.max(500, Math.round(st.debt * 0.25)));
+      st.enc = { type, demand };
+      addLog(st, `Two of The Boss's goons step out of a car. "The Boss hasn't seen her money in a while. ${fmt(demand)}. Now."`, 'enc');
+      return;
+    }
+    case 'stray': {
+      const next = ['pouch', 'weapon'].map(slot => slotItems(slot).find(id => canUpgrade(st, id))).filter(Boolean);
+      if (!next.length) { addLog(st, 'A scruffy stray looks you over, decides you have everything, and wanders off.', 'dim'); return; }
+      const item = pick(st, next);
+      const price = Math.round(GEAR[item].price * (0.4 + rnd(st) * 0.2));
+      st.enc = { type, item, price };
+      addLog(st, `A scruffy stray sidles up. "Psst. Want ${GEAR[item].a} ${GEAR[item].name}? Fell off a hover-truck. ${fmt(price)}, no questions."`, 'enc');
+      return;
+    }
+    case 'stash': {
+      const g = GOODS[rndInt(st, 6)];
+      const q = Math.min(3 + rndInt(st, 13), free(st));
+      if (q <= 0) addLog(st, `You find a bag of ${g.name}, but you have no room to carry it.`, 'dim');
+      else { st.stash[g.id] = (st.stash[g.id] || 0) + q; addLog(st, `You find ${q} ${g.name} stuffed in a drainpipe!`, 'good'); }
+      return;
+    }
+    case 'mugging': {
+      if (st.cash <= 0) { addLog(st, 'A mugger corners you, finds empty pockets, and leaves in disgust.', 'dim'); return; }
+      const lose = Math.max(1, Math.round(st.cash * (0.15 + rnd(st) * 0.25)));
+      st.cash -= lose;
+      addLog(st, st.loc === 'convention' ? `A pickpocket in the crowd lifts ${fmt(lose)}!` : `You're mugged in an alley! They take ${fmt(lose)}.`, 'bad');
+      return;
+    }
+  }
+}
+
+function makeDeal(st) {
+  const held = GOODS.filter(g => (st.stash[g.id] || 0) > 0);
+  if (held.length && rnd(st) < 0.5) {
+    const g = pick(st, held);
+    const mkt = st.prices[g.id] != null ? st.prices[g.id] : (g.lo + g.hi) / 2;
+    return { side: 'buy', good: g.id, qty: st.stash[g.id], price: Math.round(mkt * (1.2 + rnd(st) * 0.3)) };
+  }
+  const g = pick(st, GOODS);
+  const mkt = st.prices[g.id] != null ? st.prices[g.id] : (g.lo + g.hi) / 2;
+  return { side: 'sell', good: g.id, qty: 5 + rndInt(st, 21), price: Math.max(1, Math.round(mkt * (0.5 + rnd(st) * 0.2))) };
+}
+/* How many units the rival's offer would actually move, given room, cash and stock. */
+function dealQty(st, deal) {
+  if (deal.side === 'buy') return Math.min(deal.qty, st.stash[deal.good] || 0);
+  return Math.max(0, Math.min(deal.qty, free(st), Math.floor(st.cash / deal.price)));
+}
+
+function encOptions(st) {
+  const e = st.enc;
+  const armed = !!st.gear.weapon;
+  switch (e.type) {
+    case 'watchers': return ['run'].concat(armed ? ['fight'] : [], ['surrender']);
+    case 'rival':
+      if (e.hostile) return ['run'].concat(armed ? ['fight'] : [], ['surrender']);
+      return (dealQty(st, e.deal) > 0 ? ['deal'] : []).concat(['leave'], armed ? ['fight'] : []);
+    case 'boss': return e.ask === 'skooma' ? ['sell', 'decline'] : (st.cash >= e.amount ? ['pay'] : []).concat(['refuse']);
+    case 'goons': return (st.cash >= e.demand ? ['pay'] : []).concat(['refuse']);
+    case 'stray': return (st.cash >= e.price && canUpgrade(st, e.item) ? ['buy'] : []).concat(['decline']);
+  }
+  return [];
+}
+
+function die(st, why) {
+  st.hp = 0;
+  st.enc = null;
+  st.over = { reason: 'dead', why, score: 0, net: netWorth(st), day: st.day };
+  addLog(st, `${why} Your run ends on day ${st.day}.`, 'bad');
+}
+
+/* Rank-and-file foes read as 'a Watcher'; named ones as themselves. */
+function foeName(f) { return /^(Watcher|Henchcat)$/.test(f.name) ? 'a ' + f.name : f.name; }
+
+function foesStrike(st) {
+  const e = st.enc;
+  let total = 0;
+  for (let i = 0; i < e.foes.length; i++) if (rnd(st) < e.hitP) total += rndRange(st, e.dmg[0], e.dmg[1]);
+  if (total > 0) {
+    total = Math.max(1, guard(st, total));
+    st.hp = Math.max(0, st.hp - total);
+    addLog(st, `They hit you for ${total} HP.`, 'bad');
+  } else {
+    addLog(st, 'They swing and miss.', 'dim');
+  }
+  if (st.hp <= 0) die(st, e.type === 'watchers' ? 'The Watchers take you down.' : `${e.boss}'s crew takes you down.`);
+}
+
+function winFight(st) {
+  const e = st.enc;
+  let cash = 0;
+  for (let i = 0; i < e.n; i++) cash += rndRange(st, e.loot[0], e.loot[1]);
+  st.cash += cash;
+  st.stats.won++;
+  heatUp(st, e.type === 'watchers' ? 15 : 6);
+  addLog(st, `${e.type === 'watchers' ? 'The Watchers are down' : `${e.boss}'s crew is down`}. You go through their pockets: ${fmt(cash)}.`, 'good');
+  st.enc = null;
+}
+
+const ENC = {
+  run(st) {
+    const e = st.enc;
+    const p = clamp(0.55 + (st.gear.mittens ? 0.25 : 0) - 0.05 * e.foes.length, 0.15, 0.9);
+    if (rnd(st) < p) {
+      st.stats.fled++;
+      addLog(st, 'You slip away down an alley.', 'good');
+      st.enc = null;
+      return;
+    }
+    addLog(st, "You can't shake them!", 'bad');
+    foesStrike(st);
+  },
+  fight(st) {
+    const e = st.enc;
+    const W = GEAR[st.gear.weapon];
+    if (e.type === 'rival' && !e.hostile) {
+      e.hostile = true;
+      e.deal = null;
+      addLog(st, `You go for ${e.boss}. The deal's off!`, 'enc');
+    }
+    if (!e.fought) { e.fought = true; st.stats.fights++; }
+    const f = e.foes[e.foes.length - 1];
+    if (rnd(st) < 0.75) {
+      const d = rndRange(st, W.dmg[0], W.dmg[1]);
+      f.hp -= d;
+      if (f.hp <= 0) { e.foes.pop(); addLog(st, `You take down ${foeName(f)} with your ${W.name}!`, 'good'); }
+      else addLog(st, `You hit ${foeName(f)} for ${d}.`, '');
+    } else {
+      addLog(st, 'You miss!', 'dim');
+    }
+    if (!e.foes.length) { winFight(st); return; }
+    foesStrike(st);
+  },
+  surrender(st) {
+    const e = st.enc;
+    const held = used(st);
+    if (e.type === 'watchers') {
+      st.stats.busted++;
+      const fine = Math.round(st.cash * (held > 0 ? 0.25 : 0.1));
+      st.cash -= fine;
+      if (held > 0) addLog(st, `You put your paws up. The Watchers confiscate your whole stash (${held} ${plural(held, 'unit')}) and fine you ${fmt(fine)}.`, 'bad');
+      else addLog(st, `You put your paws up. You're clean, but they fine you ${fmt(fine)} for loitering.`, 'bad');
+      st.stash = {};
+      st.cost = {};
+      st.heat = Math.min(st.heat, 10);
+    } else if (held > 0) {
+      let took = 0;
+      for (const g of GOODS) {
+        const q = st.stash[g.id] || 0;
+        if (!q) continue;
+        const t = Math.ceil(q / 2);
+        took += t;
+        takeGoods(st, g.id, t);
+      }
+      addLog(st, `You hand it over. ${e.boss}'s crew walks off with ${took} ${plural(took, 'unit')} of your stash.`, 'bad');
+    } else {
+      const lose = Math.round(st.cash * 0.3);
+      st.cash -= lose;
+      addLog(st, `Your pouch is empty, so ${e.boss} takes ${fmt(lose)} instead.`, 'bad');
+    }
+    st.enc = null;
+  },
+  deal(st) {
+    const e = st.enc;
+    const d = e.deal;
+    const g = GOOD[d.good];
+    const q = dealQty(st, d);
+    if (d.side === 'buy') {
+      takeGoods(st, g.id, q);
+      st.cash += q * d.price;
+      st.stats.sold += q * d.price;
+      addLog(st, `You sell ${e.boss} ${q} ${g.name} at ${fmt(d.price)}.`, 'trade');
+    } else {
+      st.cash -= q * d.price;
+      st.stash[g.id] = (st.stash[g.id] || 0) + q;
+      st.cost[g.id] = (st.cost[g.id] || 0) + q * d.price;
+      st.stats.bought += q * d.price;
+      addLog(st, `You buy ${q} ${g.name} from ${e.boss} at ${fmt(d.price)}.`, 'trade');
+    }
+    st.enc = null;
+  },
+  leave(st) {
+    addLog(st, `You tell ${st.enc.boss} you'll pass.`, 'dim');
+    st.enc = null;
+  },
+  sell(st) {
+    const e = st.enc;
+    const q = Math.min(e.qty, st.stash.skooma || 0);
+    takeGoods(st, 'skooma', q);
+    st.cash += q * e.price;
+    st.stats.sold += q * e.price;
+    addLog(st, `The Boss takes ${q} Skooma off your paws for ${fmt(q * e.price)}. The window slides up.`, 'good');
+    st.enc = null;
+  },
+  decline(st) {
+    if (st.enc.type === 'boss') addLog(st, '"Pity." The window slides up.', 'dim');
+    else addLog(st, 'The stray shrugs and vanishes.', 'dim');
+    st.enc = null;
+  },
+  pay(st) {
+    const e = st.enc;
+    if (e.type === 'boss') {
+      st.cash -= e.amount;
+      st.heat = 0;
+      addLog(st, `You hand over ${fmt(e.amount)}. "Pleasure." The Watchers lose interest in you.`, 'good');
+    } else {
+      st.cash -= e.demand;
+      st.debt -= e.demand;
+      st.debtAge = 0;
+      addLog(st, `You pay the goons ${fmt(e.demand)} toward your debt. They drive off.`, 'warn');
+    }
+    st.enc = null;
+  },
+  refuse(st) {
+    const e = st.enc;
+    if (e.type === 'boss') {
+      st.heat = Math.min(100, st.heat + 20);
+      addLog(st, '"Suit yourself." The window rolls up. The Watchers will be keen now.', 'bad');
+      st.enc = null;
+      return;
+    }
+    const dmg = Math.max(1, guard(st, rndRange(st, 12, 28)));
+    const take = Math.min(st.debt, Math.round(st.cash * 0.2));
+    st.hp = Math.max(0, st.hp - dmg);
+    st.cash -= take;
+    st.debt -= take;
+    st.debtAge = CONFIG.goonDays - 4;
+    st.enc = null;
+    addLog(st, `The goons rough you up (${dmg} HP)${take ? ` and take ${fmt(take)} toward the debt` : ''}. "We'll be back."`, 'bad');
+    if (st.hp <= 0) die(st, "The Boss's goons go too far.");
+  },
+  buy(st) {
+    const e = st.enc;
+    const it = GEAR[e.item];
+    st.cash -= e.price;
+    st.gear[it.slot] = e.item;
+    addLog(st, `You buy the ${it.name} for ${fmt(e.price)}. Bargain.`, 'good');
+    st.enc = null;
+  },
+};
+
+function takeGoods(st, id, q) {
+  const have = st.stash[id] || 0;
+  if (q <= 0 || have <= 0) return;
+  const basis = st.cost[id] || 0;
+  st.cost[id] = basis - Math.round(basis * q / have);
+  st.stash[id] = have - q;
+  if (!st.stash[id]) { delete st.stash[id]; delete st.cost[id]; }
+}
+
+// ---- market actions
+function intAmt(v) { const n = Math.floor(Number(v)); return Number.isFinite(n) ? n : 0; }
+
+const MARKET = {
+  buy(st, a) {
+    const g = GOOD[a.good];
+    if (!g) return 'Unknown good.';
+    const p = st.prices[g.id];
+    if (p == null) return `Nobody is selling ${g.name} here today.`;
+    const q = intAmt(a.qty);
+    if (q < 1) return 'Buy at least one.';
+    if (q > free(st)) return `Your pouch only has room for ${free(st)} more.`;
+    if (q * p > st.cash) return `You can't afford ${q} ${g.name}.`;
+    st.cash -= q * p;
+    st.stash[g.id] = (st.stash[g.id] || 0) + q;
+    st.cost[g.id] = (st.cost[g.id] || 0) + q * p;
+    st.stats.bought += q * p;
+    addLog(st, `Bought ${q} ${g.name} at ${fmt(p)}.`, 'trade');
+  },
+  sell(st, a) {
+    const g = GOOD[a.good];
+    if (!g) return 'Unknown good.';
+    const p = st.prices[g.id];
+    if (p == null) return `Nobody is buying ${g.name} here today.`;
+    const q = intAmt(a.qty);
+    const have = st.stash[g.id] || 0;
+    if (q < 1) return 'Sell at least one.';
+    if (q > have) return `You only have ${have} ${g.name}.`;
+    const value = q * p;
+    takeGoods(st, g.id, q);
+    st.cash += value;
+    st.stats.sold += value;
+    heatUp(st, Math.min(8, Math.floor(value / 4000)));
+    addLog(st, `Sold ${q} ${g.name} at ${fmt(p)}.`, 'trade');
+  },
+  travel(st, a) {
+    const P = PLACE[a.to];
+    if (!P) return 'No such place.';
+    if (P.id === st.loc) return 'You are already here.';
+    if (st.day >= st.days) return 'This is your last day. Cash out.';
+    st.day++;
+    st.loc = P.id;
+    if (st.debt > 0) { st.debt = Math.round(st.debt * (1 + CONFIG.debtRate)); st.debtAge++; }
+    if (st.bank > 0) st.bank = Math.floor(st.bank * (1 + CONFIG.bankRate));
+    st.heat = Math.max(0, st.heat - CONFIG.heatDecay - (P.cool || 0));
+    addLog(st, `Day ${st.day}: ${P.name}.`, 'day');
+    rollMarket(st);
+    rollTip(st);
+    rollEncounter(st);
+    if (st.day === st.days && !st.over) addLog(st, 'Last day! Sell everything, then cash out. Unsold goods are worth nothing.', 'warn');
+  },
+  finish(st) {
+    if (st.debt > 0) {
+      const fromCash = Math.min(st.cash, st.debt);
+      st.cash -= fromCash; st.debt -= fromCash;
+      const fromBank = Math.min(st.bank, st.debt);
+      st.bank -= fromBank; st.debt -= fromBank;
+      if (fromCash + fromBank > 0) addLog(st, `The Boss collects ${fmt(fromCash + fromBank)}.`, 'warn');
+    }
+    const unsold = used(st);
+    const score = st.cash + st.bank - st.debt;
+    st.over = { reason: 'days', score, unsold, day: st.day };
+    if (score < 0) addLog(st, `You still owe The Boss ${fmt(st.debt)}. Leaving town would be wise.`, 'bad');
+    addLog(st, `You cash out with ${fmt(score)}.`, score > 0 ? 'good' : 'bad');
+  },
+  borrow(st, a) {
+    const amt = intAmt(a.amt);
+    if (amt < 1) return 'Borrow at least $1.';
+    if (st.debt + amt > CONFIG.debtCap) return `The Boss won't carry more than ${fmt(CONFIG.debtCap)} for you.`;
+    if (st.debt === 0) st.debtAge = 0;
+    st.debt += amt;
+    st.cash += amt;
+    addLog(st, `The Boss lends you ${fmt(amt)}. "Ten percent a day. Don't make me send anyone."`, 'warn');
+  },
+  repay(st, a) {
+    const amt = intAmt(a.amt);
+    if (st.debt <= 0) return "You don't owe The Boss anything.";
+    if (amt < 1) return 'Repay at least $1.';
+    if (amt > st.cash) return "You don't have that much cash on you.";
+    if (amt > st.debt) return `You only owe ${fmt(st.debt)}.`;
+    if (amt >= st.debt * CONFIG.repayReset) st.debtAge = 0;
+    st.debt -= amt;
+    st.cash -= amt;
+    addLog(st, st.debt === 0 ? `You pay The Boss off in full. "Pleasure doing business."` : `You pay The Boss ${fmt(amt)}. You still owe ${fmt(st.debt)}.`, 'good');
+  },
+  deposit(st, a) {
+    const amt = intAmt(a.amt);
+    if (amt < 1) return 'Deposit at least $1.';
+    if (amt > st.cash) return "You don't have that much cash on you.";
+    st.cash -= amt; st.bank += amt;
+    addLog(st, `Deposited ${fmt(amt)}.`, 'trade');
+  },
+  withdraw(st, a) {
+    const amt = intAmt(a.amt);
+    if (amt < 1) return 'Withdraw at least $1.';
+    if (amt > st.bank) return `You only have ${fmt(st.bank)} in the Vault.`;
+    st.bank -= amt; st.cash += amt;
+    addLog(st, `Withdrew ${fmt(amt)}.`, 'trade');
+  },
+  gear(st, a) {
+    const it = GEAR[a.item];
+    if (!it || !here(st).shop.includes(a.item)) return "That isn't sold here.";
+    if (!canUpgrade(st, a.item)) return st.gear[it.slot] === a.item ? `You already have the ${it.name}.` : `You already have something better than the ${it.name}.`;
+    if (st.cash < it.price) return `The ${it.name} costs ${fmt(it.price)}.`;
+    st.cash -= it.price;
+    st.gear[it.slot] = a.item;
+    addLog(st, `You buy the ${it.name} for ${fmt(it.price)}.`, 'good');
+    if (it.slot === 'pawphone') rollTip(st);
+  },
+  heal(st) {
+    const missing = CONFIG.maxHp - st.hp;
+    if (missing <= 0) return 'The vet says you are in perfect health.';
+    const hp = Math.min(missing, Math.floor(st.cash / CONFIG.vetPerHp));
+    if (hp < 1) return `The vet charges ${fmt(CONFIG.vetPerHp)} per HP.`;
+    st.cash -= hp * CONFIG.vetPerHp;
+    st.hp += hp;
+    addLog(st, `The vet patches you up: +${hp} HP for ${fmt(hp * CONFIG.vetPerHp)}.`, 'good');
+  },
+};
+
+// ---- the one way in
+function waiting(st) {
+  if (st.over) return { kind: 'over', options: [] };
+  if (st.enc) return { kind: 'encounter', type: st.enc.type, options: encOptions(st) };
+  const P = here(st);
+  const o = [];
+  if (GOODS.some(g => st.prices[g.id] != null)) o.push('buy');
+  if (used(st) > 0) o.push('sell');
+  o.push(st.day < st.days ? 'travel' : 'finish');
+  if (P.service === 'loan') o.push('borrow', 'repay');
+  if (P.service === 'bank') o.push('deposit', 'withdraw');
+  if (P.service === 'vet') o.push('heal');
+  if (P.shop.length) o.push('gear');
+  return { kind: 'market', options: o };
+}
+
+/* step(state, action) -> {state, events, refused}. The input state is never
+ * modified; a refused action returns it unchanged along with the reason. */
+function step(st0, a) {
+  const w = waiting(st0);
+  if (!a || !w.options.includes(a.t)) {
+    return { state: st0, events: [], refused: w.kind === 'over' ? 'The run is over.' : `You can't do that right now.` };
+  }
+  const st = JSON.parse(JSON.stringify(st0));
+  const n0 = st.logN;
+  const fn = (w.kind === 'encounter' ? ENC : MARKET)[a.t];
+  const err = fn(st, a);
+  if (typeof err === 'string') return { state: st0, events: [], refused: err };
+  if (!st.over) st.stats.peak = Math.max(st.stats.peak, netWorth(st));
+  return { state: st, events: st.log.filter(l => l.n > n0), refused: null };
+}
+
+/* For the debug hook and the tests: the same state with a given encounter started. */
+function forceEncounter(st0, type) {
+  const st = JSON.parse(JSON.stringify(st0));
+  st.enc = null;
+  startEncounter(st, type);
+  return st;
+}
+
+// ---- bot: plays through the same door. Pure: it reads the state and never
+// advances st.rng, so a bot's thinking cannot change what happens next.
+function ratio(g, p) { return (p - g.lo) / (g.hi - g.lo); }
+function botAct(st, style) {
+  style = style || 'careful';
+  const w = waiting(st);
+  if (w.kind === 'over') return null;
+  const has = t => w.options.includes(t);
+  if (w.kind === 'encounter') {
+    const e = st.enc;
+    switch (e.type) {
+      case 'watchers':
+      case 'rival':
+        if (e.type === 'rival' && !e.hostile) {
+          if (has('deal') && (e.deal.side === 'buy' || ratio(GOOD[e.deal.good], e.deal.price) < 0.3)) return { t: 'deal' };
+          return { t: 'leave' };
+        }
+        if (has('fight') && (style === 'reckless' || st.hp > 50)) return { t: 'fight' };
+        if (style !== 'reckless' && st.hp < 25) return { t: 'surrender' };
+        return { t: 'run' };
+      case 'boss':
+        if (e.ask === 'skooma') return { t: 'sell' };
+        return has('pay') && st.heat >= 30 && st.cash >= e.amount * 2 ? { t: 'pay' } : { t: 'refuse' };
+      case 'goons': return has('pay') ? { t: 'pay' } : { t: 'refuse' };
+      case 'stray': return has('buy') && st.cash >= e.price * 2 ? { t: 'buy' } : { t: 'decline' };
+    }
+  }
+  const P = here(st);
+  const last = st.day === st.days;
+  for (const g of GOODS) {
+    const q = st.stash[g.id] || 0;
+    const p = st.prices[g.id];
+    if (q > 0 && p != null && (last || ratio(g, p) >= 0.6)) return { t: 'sell', good: g.id, qty: q };
+  }
+  if (last) return { t: 'finish' };
+  if (P.service === 'loan' && st.debt > 0 && st.cash > 500) return { t: 'repay', amt: st.cash >= st.debt ? st.debt : st.cash - 500 };
+  if (P.service === 'bank') {
+    if (st.cash > 40000) return { t: 'deposit', amt: st.cash - 20000 };
+    if (st.cash < 3000 && st.bank > 0) return { t: 'withdraw', amt: Math.min(st.bank, 20000) };
+  }
+  if (P.service === 'vet' && st.hp < 60 && st.cash > (CONFIG.maxHp - st.hp) * CONFIG.vetPerHp * 3) return { t: 'heal' };
+  for (const id of P.shop) {
+    const it = GEAR[id];
+    if (['pouch', 'weapon', 'armour'].includes(it.slot) && canUpgrade(st, id) && st.cash >= it.price * 3) return { t: 'gear', item: id };
+  }
+  const reserve = Math.min(500, Math.floor(st.cash * 0.05));
+  let best = null;
+  let bestR = 0.35;
+  for (const g of GOODS) {
+    const p = st.prices[g.id];
+    if (p == null) continue;
+    const q = Math.min(free(st), Math.floor((st.cash - reserve) / p));
+    const r = ratio(g, p);
+    if (q >= 1 && r < bestR) { best = { good: g.id, qty: q }; bestR = r; }
+  }
+  if (best) return { t: 'buy', good: best.good, qty: best.qty };
+  const others = PLACES.filter(p => p.id !== st.loc);
+  let to = others[hash32(st.rng ^ Math.imul(st.day, 7919)) % others.length].id;
+  if (st.debt > 0 && st.cash >= st.debt && st.loc !== 'pvn') to = 'pvn';
+  else if (st.hp < 50 && st.cash > 1500 && st.loc !== 'suburbs') to = 'suburbs';
+  else if (st.cash > 60000 && st.loc !== 'vault') to = 'vault';
+  return { t: 'travel', to };
+}
+// ===== @core-end =====
+
+/* ---------------------------------------------------------------------------
+ * The screen. Everything below talks to the core only through newGame, step,
+ * waiting and the read-only helpers.
+ * ------------------------------------------------------------------------- */
+const KEY_GAME = 'pumacity_game_v1';
+const KEY_SCORES = 'pumacity_scores_v1';
+const KEY_PREFS = 'pumacity_prefs_v1';
+
+function load(key, fallback) {
+  try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; } catch (e) { return fallback; }
+}
+function save(key, value) {
+  try { if (value == null) localStorage.removeItem(key); else localStorage.setItem(key, JSON.stringify(value)); } catch (e) { /* private window */ }
+}
+function esc(s) {
+  return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+const root = document.querySelector('[data-pumacity-game]');
+let S = null;            // the game state, or null on the title screen
+let ui = { sel: 0, modal: null, flash: '' };
+let prefs = Object.assign({ name: '', days: 30 }, load(KEY_PREFS, {}));
+let scoreTab = prefs.days;
+
+function loadGame() {
+  const st = load(KEY_GAME, null);
+  if (!st || st.v !== 1 || st.over) return null;
+  return st;
+}
+
+function scores() {
+  const s = load(KEY_SCORES, {});
+  return s && typeof s === 'object' ? s : {};
+}
+function recordScore(st) {
+  const all = scores();
+  const list = Array.isArray(all[st.days]) ? all[st.days] : [];
+  const entry = { name: st.name, score: st.over.score, dead: st.over.reason === 'dead', day: st.over.day, at: new Date().toISOString().slice(0, 10), id: st.seed + ':' + st.logN };
+  list.push(entry);
+  list.sort((a, b) => b.score - a.score);
+  all[st.days] = list.slice(0, 10);
+  save(KEY_SCORES, all);
+  return all[st.days].findIndex(e => e.id === entry.id);
+}
+
+// ---- actions
+function act(a) {
+  if (!S) return;
+  const before = S;
+  const r = step(S, a);
+  if (r.refused) { ui.flash = r.refused; render(); return; }
+  S = r.state;
+  ui.flash = '';
+  if (S.over && !before.over) {
+    ui.rank = recordScore(S);
+    save(KEY_GAME, null);
+    ui.modal = { kind: 'over' };
+  } else {
+    save(KEY_GAME, S);
+  }
+  if (a.t === 'travel' || a.t === 'finish') ui.modal = S.over ? { kind: 'over' } : null;
+  else if (ui.modal && ui.modal.kind === 'qty') ui.modal = null;
+  render();
+}
+
+function startRun() {
+  const nameEl = document.getElementById('pc-name');
+  if (nameEl) prefs.name = nameEl.value.trim().slice(0, 16);
+  save(KEY_PREFS, prefs);
+  const seed = (Date.now() ^ Math.floor(Math.random() * 0x7fffffff)) | 0;
+  S = newGame({ seed, days: prefs.days, name: prefs.name });
+  ui = { sel: 0, modal: null, flash: '' };
+  save(KEY_GAME, S);
+  render();
+}
+
+function resume() {
+  S = loadGame();
+  ui = { sel: 0, modal: null, flash: '' };
+  render();
+}
+
+function quitToTitle() {
+  S = null;
+  ui = { sel: 0, modal: null, flash: '' };
+  render();
+}
+
+// ---- rendering
+function meter(v, max, cls) {
+  const pct = clamp(Math.round(v / max * 100), 0, 100);
+  return `<span class="meter ${cls || ''}"><i style="width:${pct}%"></i></span>`;
+}
+
+function skyline() {
+  return `<svg class="sky" viewBox="0 0 600 120" aria-hidden="true" fill="none" stroke="#54f2ff" stroke-width="1.5">
+  <circle cx="520" cy="30" r="14" fill="#ffb000" stroke="none"/><circle cx="526" cy="25" r="12" fill="#05070f" stroke="none"/>
+  <path d="M0 118h600" stroke="#1b2540"/>
+  <path d="M10 118V80h30v38M50 118V60h22v58M80 118V90h26v28M116 118V40h28v78M130 40V22M154 118V72h34v46M198 118V54l18-14 18 14v64
+    M244 118V84h24v34M278 118V30h36v88M296 30V10M324 118V66h28v52M362 118V88h40v30M412 118V48h26v70M448 118V76h30v42
+    M488 118V62h20v56M518 118V86h36v32M564 118V70h26v48"/>
+  <path d="M286 44h20M286 58h20M286 72h20M286 86h20M122 54h16M122 68h16M122 82h16M418 60h14M418 74h14" stroke="#47609c"/>
+</svg>`;
+}
+
+function setupHTML() {
+  const saved = loadGame();
+  const all = scores();
+  const list = Array.isArray(all[scoreTab]) ? all[scoreTab] : [];
+  return `<div class="setup">
+  ${skyline()}
+  <h1 class="title">PUMACITY</h1>
+  <p class="tag">Buy low. Sell high. Stay one step ahead of the Watchers.</p>
+  <div class="row"><label for="pc-name">Name</label><input id="pc-name" maxlength="16" autocomplete="off" placeholder="Stray" value="${esc(prefs.name)}"></div>
+  <div class="row"><label>Run length</label>${CONFIG.lengths.map(d => `<button data-act="days" data-v="${d}" aria-pressed="${prefs.days === d}">${d} days</button>`).join('')}</div>
+  <div class="acts">
+    <button class="primary" data-act="start"><kbd>N</kbd>New run</button>
+    ${saved ? `<button data-act="resume"><kbd>R</kbd>Resume: ${esc(saved.name)}, day ${saved.day} of ${saved.days}</button>` : ''}
+    <button data-act="help"><kbd>?</kbd>How to play</button>
+  </div>
+  <h2>High scores</h2>
+  <div class="tabs">${CONFIG.lengths.map(d => `<button data-act="scoretab" data-v="${d}" aria-pressed="${scoreTab === d}">${d} days</button>`).join('')}</div>
+  ${scoreTable(list, -1)}
+  <p class="foot">Inspired by <i>Dope Wars</i> (John E. Dell, 1984). v${VERSION} · <a href="https://greykit.com/games/">More games</a></p>
+</div>`;
+}
+
+function scoreTable(list, hi) {
+  if (!list.length) return '<p class="dim">No runs finished yet.</p>';
+  return `<table class="scores"><tr><th>#</th><th>Name</th><th class="r">Score</th><th>Date</th></tr>${list.map((e, i) =>
+    `<tr${i === hi ? ' class="warn"' : ''}><td>${i + 1}</td><td>${esc(e.name)}${e.dead ? ` <span class="rip">RIP, day ${e.day}</span>` : ''}</td><td class="r">${fmt(e.score)}</td><td class="dim">${esc(e.at || '')}</td></tr>`).join('')}</table>`;
+}
+
+function gameHTML() {
+  const st = S;
+  const P = here(st);
+  const last = st.day === st.days;
+  const cap = capacity(st);
+  const u = used(st);
+  const goods = GOODS.map((g, i) => {
+    const p = st.prices[g.id];
+    const held = st.stash[g.id] || 0;
+    const prev = st.prev[g.id];
+    const arrow = p != null && prev != null && p !== prev ? (p > prev ? ' <span class="up">▲</span>' : ' <span class="down">▼</span>') : ' <span class="dim"> </span>';
+    const avg = held && st.cost[g.id] ? fmt(Math.round(st.cost[g.id] / held)) : '';
+    const cls = [i === ui.sel ? 'sel' : '', st.news && st.news.good === g.id ? 'news' : ''].join(' ');
+    return `<tr class="${cls}" data-act="sel" data-v="${i}">
+      <td class="key">${i + 1}</td><td class="name">${g.name}</td>
+      <td>${p == null ? '<span class="out">—</span>' : fmt(p) + arrow}</td>
+      <td>${held || '<span class="dim">0</span>'}</td><td class="avg dim">${avg}</td>
+      <td class="btns"><button data-act="buy" data-v="${i}" ${p == null ? 'disabled' : ''}>Buy</button>
+      <button data-act="sell" data-v="${i}" ${p == null || !held ? 'disabled' : ''}>Sell</button></td></tr>`;
+  }).join('');
+  const gear = SLOTS.filter(s => st.gear[s]).map(s => GEAR[st.gear[s]].name);
+  const svc = P.service || P.shop.length;
+  const tip = st.tip ? `<div class="tip"><b>Pawphone</b>: tomorrow at ${PLACE[st.tip.loc].name}<br>${GOODS.map(g =>
+    `${g.name} ${st.tip.prices[g.id] == null ? '—' : fmt(st.tip.prices[g.id])}`).join(' · ')}</div>` : '';
+  const log = st.log.map(l => `<p class="${l.cls}">${esc(l.text)}</p>`).join('');
+  return `<div class="pc">
+  <header class="top">
+    <h1>PumaCity</h1><span class="where">${P.name}</span><span class="grow"></span>
+    <span class="day${last ? ' last' : ''}">Day <b>${st.day}</b> of ${st.days}</span>
+  </header>
+  <div class="status">
+    <div class="stat"><small>Cash</small><span>${fmt(st.cash)}</span></div>
+    <div class="stat"><small>Bank</small><span>${fmt(st.bank)}</span></div>
+    <div class="stat${st.debt > 0 ? (st.debtAge >= CONFIG.goonDays - 2 ? ' bad' : ' warn') : ''}"><small>Debt</small><span>${fmt(st.debt)}</span></div>
+    <div class="stat${st.hp <= 30 ? ' bad' : ''}"><small>Health</small><span>${st.hp} / ${CONFIG.maxHp}</span>${meter(st.hp, CONFIG.maxHp, st.hp <= 30 ? 'low' : '')}</div>
+    <div class="stat"><small>Pouch</small><span>${u} / ${cap}</span>${meter(u, cap, 'heat')}</div>
+    <div class="stat${st.heat >= 50 ? ' bad' : ''}"><small>Heat</small><span>${st.heat}</span>${meter(st.heat, 100, st.heat >= 50 ? 'low' : 'heat')}</div>
+  </div>
+  <div class="main">
+    <section class="market">
+      <table class="mk"><thead><tr><th class="key"></th><th class="name">Good</th><th>Price</th><th>Held</th><th class="avg">Avg paid</th><th></th></tr></thead>
+      <tbody>${goods}</tbody></table>
+      <div class="flash" role="status">${esc(ui.flash)}</div>
+    </section>
+    <aside class="side">
+      <div class="place">
+        <h2>${P.name}</h2>
+        <p class="blurb">${P.blurb}</p>
+        <p class="spec">${P.special}</p>
+        <p class="gear">${gear.length ? 'Gear: ' + gear.join(' · ') : 'No gear yet. Without a weapon you can only run or surrender.'}</p>
+        ${tip}
+      </div>
+      <div class="log" id="pc-log" aria-live="polite">${log}</div>
+    </aside>
+  </div>
+  <nav class="bar">
+    ${last ? '<button class="primary" data-act="finish"><kbd>E</kbd>Cash out</button>' : '<button class="primary" data-act="travel"><kbd>T</kbd>Travel</button>'}
+    ${svc ? `<button data-act="service"><kbd>V</kbd>${esc(P.serviceName)}</button>` : ''}
+    <button data-act="gearview"><kbd>G</kbd>Gear</button>
+    <span class="grow"></span>
+    <button data-act="help"><kbd>?</kbd>Help</button>
+    <button data-act="menu"><kbd>Esc</kbd>Menu</button>
+  </nav>
+</div>`;
+}
+
+// ---- modals
+function modalHTML() {
+  const m = ui.modal;
+  if (S && S.over) return overHTML();
+  if (S && S.enc) return encHTML();
+  if (!m) return '';
+  let body = '';
+  switch (m.kind) {
+    case 'qty': body = qtyHTML(m); break;
+    case 'travel': body = travelHTML(); break;
+    case 'service': body = serviceHTML(); break;
+    case 'gearview': body = gearViewHTML(); break;
+    case 'help': body = helpHTML(m.tab || 'basics'); break;
+    case 'menu': body = menuHTML(); break;
+    case 'confirmNew': body = `<h1>Abandon this run?</h1><p>Your current run will not be scored.</p>
+      <div class="acts"><button class="danger" data-act="newconfirm"><kbd>Y</kbd>Abandon and start over</button><button data-act="close"><kbd>Esc</kbd>Keep playing</button></div>`; break;
+    case 'finish': body = `<h1>Cash out?</h1><p>The run ends now. The Boss collects what you owe, and anything still in your pouch is worth nothing.</p>
+      <div class="acts"><button class="primary" data-act="finishconfirm"><kbd>Y</kbd>Cash out</button><button data-act="close"><kbd>Esc</kbd>Not yet</button></div>`; break;
+  }
+  return `<div class="back" data-act="backdrop"><div class="modal" role="dialog" aria-modal="true">${body}</div></div>`;
+}
+
+function qtyMax(m) {
+  const g = GOODS[m.good];
+  const p = S.prices[g.id];
+  if (m.side === 'buy') return p ? Math.max(0, Math.min(free(S), Math.floor(S.cash / p))) : 0;
+  return S.stash[g.id] || 0;
+}
+function qtyHTML(m) {
+  const g = GOODS[m.good];
+  const p = S.prices[g.id];
+  const max = qtyMax(m);
+  const verb = m.side === 'buy' ? 'Buy' : 'Sell';
+  const info = m.side === 'buy'
+    ? `You can afford ${Math.floor(S.cash / p)} · room for ${free(S)}`
+    : `You hold ${S.stash[g.id] || 0}${S.cost[g.id] ? `, paid ${fmt(Math.round(S.cost[g.id] / S.stash[g.id]))} each on average` : ''}`;
+  return `<h1>${verb} ${g.name}</h1>
+  <p>${fmt(p)} each. <span class="note">${info}</span></p>
+  <p class="note">${g.blurb}</p>
+  <form data-form="qty">
+  <div class="row">
+    <button type="button" data-act="qadj" data-v="-10">−10</button><button type="button" data-act="qadj" data-v="-1">−1</button>
+    <input id="pc-qty" inputmode="numeric" autocomplete="off" value="${m.qty}" aria-label="Quantity">
+    <button type="button" data-act="qadj" data-v="1">+1</button><button type="button" data-act="qadj" data-v="10">+10</button>
+    <button type="button" data-act="qmax"><kbd>M</kbd>Max ${max}</button>
+  </div>
+  <p>Total: <b id="pc-total">${fmt((intAmt(m.qty) || 0) * p)}</b></p>
+  <div class="acts"><button class="primary" type="submit"><kbd>Enter</kbd>${verb}</button><button type="button" data-act="close"><kbd>Esc</kbd>Cancel</button></div>
+  </form>`;
+}
+
+function travelHTML() {
+  return `<h1>Travel</h1><p class="note">Every trip takes a day. The Boss's interest grows 10% each day you're out.</p>
+  <table>${PLACES.map((P, i) => `<tr><td><button style="width:100%;text-align:left" data-act="go" data-v="${P.id}" ${P.id === S.loc ? 'disabled' : ''}><kbd>${i + 1}</kbd>${P.name}${P.id === S.loc ? ' (you are here)' : ''}</button></td>
+    <td class="note">${P.special}</td></tr>`).join('')}</table>
+  <div class="acts"><button data-act="close"><kbd>Esc</kbd>Stay</button></div>`;
+}
+
+function moneyForm(kind, label, max, hint) {
+  return `<form data-form="${kind}" class="row"><input inputmode="numeric" autocomplete="off" name="amt" placeholder="amount" aria-label="${label} amount">
+    <button type="button" data-act="mmax" data-v="${max}">Max ${fmt(max)}</button><button class="primary" type="submit">${label}</button>
+    ${hint ? `<span class="note">${hint}</span>` : ''}</form>`;
+}
+
+function serviceHTML() {
+  const st = S;
+  const P = here(st);
+  let out = `<h1>${esc(P.serviceName)}</h1>`;
+  if (P.service === 'loan') {
+    out += `<p>Casey Benton looks up from a desk the size of a car. "Back so soon?"</p>
+    <p>You owe <b>${fmt(st.debt)}</b>.${st.debt > 0 ? ` <span class="note">${st.debtAge} ${plural(st.debtAge, 'day')} since your last real payment (a payment of at least 10% of the debt). Her goons come at ${CONFIG.goonDays}.</span>` : ''}</p>
+    ${st.debt > 0 ? moneyForm('repay', 'Repay', Math.min(st.cash, st.debt)) : ''}
+    ${moneyForm('borrow', 'Borrow', Math.max(0, CONFIG.debtCap - st.debt), `She'll carry up to ${fmt(CONFIG.debtCap)}.`)}`;
+  }
+  if (P.service === 'bank') {
+    out += `<p>The blast door rolls aside and the Overseer's terminal flickers awake. WELCOME BACK, DWELLER.</p>
+    <p>Cash on you: <b>${fmt(st.cash)}</b> · In the Vault: <b>${fmt(st.bank)}</b>. <span class="note">The Vault pays 1% a day.</span></p>
+    ${moneyForm('deposit', 'Deposit', st.cash)}
+    ${moneyForm('withdraw', 'Withdraw', st.bank)}`;
+  }
+  if (P.service === 'vet') {
+    const missing = CONFIG.maxHp - st.hp;
+    out += `<h2>Vet</h2><p>Health ${st.hp} / ${CONFIG.maxHp}. ${fmt(CONFIG.vetPerHp)} per HP.</p>
+    <div class="row"><button class="primary" data-act="heal" ${missing <= 0 || st.cash < CONFIG.vetPerHp ? 'disabled' : ''}>Patch me up${missing > 0 ? ` (${fmt(Math.min(missing, Math.floor(st.cash / CONFIG.vetPerHp)) * CONFIG.vetPerHp)})` : ''}</button></div>`;
+  }
+  if (P.shop.length) {
+    out += `<h2>For sale</h2><table>${P.shop.map(id => {
+      const it = GEAR[id];
+      const owned = st.gear[it.slot] === id;
+      const ok = canUpgrade(st, id);
+      const label = owned ? 'Owned' : ok ? 'Buy' : 'Have better';
+      return `<tr><td><b>${it.name}</b><br><span class="note">${it.blurb}</span></td><td class="r">${fmt(it.price)}</td>
+        <td class="r"><button data-act="buygear" data-v="${id}" ${!ok || st.cash < it.price ? 'disabled' : ''}>${label}</button></td></tr>`;
+    }).join('')}</table>`;
+  }
+  out += `<div class="flash">${esc(ui.flash)}</div><div class="acts"><button data-act="close"><kbd>Esc</kbd>Done</button></div>`;
+  return out;
+}
+
+function gearViewHTML() {
+  const st = S;
+  const held = GOODS.filter(g => st.stash[g.id]);
+  return `<h1>Gear &amp; stash</h1>
+  <h2>Gear</h2><table>${SLOTS.map(s => {
+    const id = st.gear[s];
+    return `<tr><td class="dim">${s}</td><td>${id ? `<b>${GEAR[id].name}</b> <span class="note">${GEAR[id].blurb}</span>` : '<span class="dim">none</span>'}</td></tr>`;
+  }).join('')}</table>
+  <p class="note">Pouch: ${used(st)} of ${capacity(st)} used. ${st.gear.weapon ? '' : 'With no weapon you can only run or surrender.'}</p>
+  <h2>Stash</h2>${held.length ? `<table><tr><th>Good</th><th class="r">Held</th><th class="r">Avg paid</th><th class="r">Here</th></tr>${held.map(g =>
+    `<tr><td>${g.name}</td><td class="r">${st.stash[g.id]}</td><td class="r">${st.cost[g.id] ? fmt(Math.round(st.cost[g.id] / st.stash[g.id])) : 'found'}</td>
+    <td class="r">${st.prices[g.id] == null ? '—' : fmt(st.prices[g.id])}</td></tr>`).join('')}</table>` : '<p class="dim">Empty.</p>'}
+  <div class="acts"><button data-act="close"><kbd>Esc</kbd>Close</button></div>`;
+}
+
+function encHTML() {
+  const st = S;
+  const e = st.enc;
+  const opts = encOptions(st);
+  const LABEL = { run: ['R', 'Run'], fight: ['F', 'Fight'], surrender: ['S', 'Surrender'], deal: ['D', 'Deal'], leave: ['L', 'Walk away'],
+    sell: ['S', 'Sell'], decline: ['N', 'Decline'], pay: ['P', 'Pay'], refuse: ['N', 'Refuse'], buy: ['B', 'Buy'] };
+  let title = '';
+  let body = '';
+  if (e.type === 'watchers' || e.type === 'rival') {
+    title = e.type === 'watchers' ? 'Watchers!' : (e.hostile ? 'Rival crew' : 'A rival dealer');
+    if (e.type === 'rival' && !e.hostile) {
+      const d = e.deal;
+      const g = GOOD[d.good];
+      const q = dealQty(st, d);
+      body += d.side === 'buy'
+        ? `<p>${esc(e.boss)} wants your ${g.name}: up to ${d.qty} at <b>${fmt(d.price)}</b> each${st.prices[g.id] != null ? ` (${fmt(st.prices[g.id])} on the street here)` : ''}.</p>`
+        : `<p>${esc(e.boss)} is offloading ${d.qty} ${g.name} at <b>${fmt(d.price)}</b> each${st.prices[g.id] != null ? ` (${fmt(st.prices[g.id])} on the street here)` : ''}.</p>
+          <p class="note">${q > 0 ? `You can take ${q}.` : 'You have no room or no cash for it.'}</p>`;
+    } else {
+      body += `<div class="foes">${e.foes.map(f => `<div class="foe"><span>${esc(f.name)} <span class="dim">${Math.max(0, f.hp)} HP</span></span>${meter(f.hp, f.max, 'low')}</div>`).join('')}</div>`;
+    }
+    body += `<div class="foe"><span>You <span class="dim">${st.hp} HP</span></span>${meter(st.hp, CONFIG.maxHp, st.hp <= 30 ? 'low' : '')}</div>`;
+    if (!st.gear.weapon) body += '<p class="note">You have no weapon, so you can only run or surrender. The pet store in the Suburbs sells them.</p>';
+  } else if (e.type === 'boss') {
+    title = 'The Boss';
+    body = e.ask === 'skooma'
+      ? `<p>Casey Benton wants all ${e.qty} of your Skooma at <b>${fmt(e.price)}</b> each: <b>${fmt(e.qty * e.price)}</b> in total.</p>`
+      : `<p>Casey Benton suggests a <b>${fmt(e.amount)}</b> donation to make your heat go away. Refusing will make it worse.</p>${st.cash < e.amount ? '<p class="note">You don\'t have that much cash on you.</p>' : ''}`;
+  } else if (e.type === 'goons') {
+    title = "The Boss's goons";
+    body = `<p>They want <b>${fmt(e.demand)}</b> toward your debt, now. Refuse and they'll take it out of your hide and your pockets.</p>${st.cash < e.demand ? '<p class="note">You don\'t have that much cash on you.</p>' : ''}`;
+  } else if (e.type === 'stray') {
+    const it = GEAR[e.item];
+    title = 'A stray';
+    body = `<p>${it.name} for <b>${fmt(e.price)}</b> (${fmt(it.price)} in the shops). <span class="note">${it.blurb}</span></p>`;
+  }
+  const lines = st.log.filter(l => l.n > (e.from || 0)).map(l => `<p class="${l.cls}">${esc(l.text)}</p>`).join('');
+  return `<div class="back"><div class="modal" role="alertdialog" aria-modal="true">
+    <h1>${esc(title)}</h1>${body}
+    <div class="elog" id="pc-elog">${lines}</div>
+    <div class="acts">${opts.map(o => `<button data-act="enc" data-v="${o}" class="${o === 'fight' || o === 'deal' || o === 'pay' || o === 'sell' || o === 'buy' ? 'primary' : ''}"><kbd>${LABEL[o][0]}</kbd>${LABEL[o][1]}</button>`).join('')}</div>
+  </div></div>`;
+}
+
+function overHTML() {
+  const st = S;
+  const o = st.over;
+  const list = scores()[st.days] || [];
+  const dead = o.reason === 'dead';
+  return `<div class="back"><div class="modal" role="alertdialog" aria-modal="true">
+    <h1>${dead ? 'You died' : 'The run is over'}</h1>
+    ${dead ? `<p class="bad">${esc(o.why)}</p><p>Day ${o.day} of ${st.days}. A death scores nothing.</p>` : `
+    <table><tr><td>Cash</td><td class="r">${fmt(st.cash)}</td></tr><tr><td>Bank</td><td class="r">${fmt(st.bank)}</td></tr>
+    <tr><td>Still owed to The Boss</td><td class="r">${fmt(-st.debt)}</td></tr>
+    ${o.unsold ? `<tr><td class="dim">Unsold goods (worth nothing)</td><td class="r dim">${o.unsold} ${plural(o.unsold, 'unit')}</td></tr>` : ''}
+    <tr><td><b>Final score</b></td><td class="r"><b>${fmt(o.score)}</b></td></tr></table>`}
+    <p class="note">Best net worth during the run: ${fmt(st.stats.peak)}. Fights won: ${st.stats.won}. Escapes: ${st.stats.fled}. Busts: ${st.stats.busted}.</p>
+    <h2>High scores, ${st.days} days</h2>${scoreTable(list, ui.rank)}
+    <div class="acts"><button class="primary" data-act="again"><kbd>N</kbd>New run</button><button data-act="title"><kbd>Esc</kbd>Title screen</button></div>
+  </div></div>`;
+}
+
+function menuHTML() {
+  return `<h1>Menu</h1>
+  <div class="acts" style="flex-direction:column;align-items:stretch">
+    <button data-act="close"><kbd>Esc</kbd>Back to the game</button>
+    <button data-act="help"><kbd>?</kbd>How to play</button>
+    <button data-act="title"><kbd>Q</kbd>Title screen (your run is saved)</button>
+    <button class="danger" data-act="newrun"><kbd>N</kbd>Abandon run and start over</button>
+  </div>`;
+}
+
+function helpHTML(tab) {
+  const tabs = [['basics', 'Basics'], ['places', 'Places'], ['goods', 'Goods'], ['gear', 'Gear'], ['keys', 'Keys']];
+  let body = '';
+  if (tab === 'basics') body = `<dl class="help">
+    <dt>The goal</dt><dd>Finish the run with as much money as you can. Your score is your cash plus your bank balance, minus whatever you still owe The Boss.</dd>
+    <dt>The debt</dt><dd>You start owing Casey Benton, The Boss, ${fmt(CONFIG.startDebt)}. It grows 10% every day. Pay it down at PVN Tower. Go ${CONFIG.goonDays} days without a real payment (at least 10% of the debt) and her goons come to collect.</dd>
+    <dt>Trading</dt><dd>Each day you're somewhere new, and prices are new too. Buy cheap, carry it somewhere better, and sell. Your pouch holds ${CONFIG.baseCap} units until you buy a bigger one. A ▲ or ▼ compares a price with the last one you saw. Headlines (marked !) send one good's price wild.</dd>
+    <dt>Travel</dt><dd>Each trip takes one day. On your last day you can't travel; sell everything and cash out. Goods left in your pouch are worth nothing.</dd>
+    <dt>Heat</dt><dd>Big sales and fights raise your heat. The more heat, the more often the Watchers come for you. It cools a little every day, faster at The Ranch, and The Boss will make it vanish for a price.</dd>
+    <dt>Encounters</dt><dd>Watchers and rival crews: run, fight (you need a weapon), or surrender. Surrendering to the Watchers costs your whole stash and a fine. If your health hits zero, the run is over and scores nothing. Money in the bank is safe from muggers.</dd>
+  </dl>`;
+  if (tab === 'places') body = `<dl class="help">${PLACES.map(P => `<dt>${P.name}</dt><dd>${P.blurb} ${P.special}</dd>`).join('')}</dl>`;
+  if (tab === 'goods') body = `<table><tr><th>Good</th><th class="r">Usual price</th><th></th></tr>${GOODS.map(g => `<tr><td>${g.name}</td><td class="r">${fmt(g.lo)}–${fmt(g.hi)}</td><td class="note">${g.blurb}</td></tr>`).join('')}</table>`;
+  if (tab === 'gear') body = `<table><tr><th>Item</th><th class="r">Price</th><th>Where</th></tr>${Object.keys(GEAR).map(id => {
+    const where = PLACES.filter(P => P.shop.includes(id)).map(P => P.name).join(', ');
+    return `<tr><td><b>${GEAR[id].name}</b><br><span class="note">${GEAR[id].blurb}</span></td><td class="r">${fmt(GEAR[id].price)}</td><td class="note">${where}</td></tr>`;
+  }).join('')}</table><p class="note">Pouches and weapons only trade up: a new one replaces the old. Strays sometimes sell them cheap.</p>`;
+  if (tab === 'keys') body = `<table>
+    <tr><td><kbd>1</kbd>–<kbd>9</kbd></td><td>Select a good</td></tr>
+    <tr><td><kbd>B</kbd> / <kbd>S</kbd></td><td>Buy or sell the selected good</td></tr>
+    <tr><td><kbd>M</kbd></td><td>In the quantity box: the most you can</td></tr>
+    <tr><td><kbd>T</kbd></td><td>Travel, then <kbd>1</kbd>–<kbd>7</kbd> to pick a place</td></tr>
+    <tr><td><kbd>E</kbd></td><td>Cash out (last day)</td></tr>
+    <tr><td><kbd>V</kbd></td><td>Visit this place's shop or office</td></tr>
+    <tr><td><kbd>G</kbd></td><td>Gear and stash</td></tr>
+    <tr><td><kbd>R</kbd> <kbd>F</kbd> <kbd>S</kbd></td><td>Encounters: run, fight, surrender (other choices show their key)</td></tr>
+    <tr><td><kbd>Enter</kbd> / <kbd>Esc</kbd></td><td>Confirm / close</td></tr></table>`;
+  return `<h1>How to play</h1>
+  <div class="tabs">${tabs.map(([k, l]) => `<button data-act="helptab" data-v="${k}" aria-pressed="${tab === k}">${l}</button>`).join('')}</div>
+  ${body}
+  <div class="acts"><button data-act="close"><kbd>Esc</kbd>Close</button></div>`;
+}
+
+function render() {
+  const modal = S ? modalHTML() : (ui.modal && ui.modal.kind === 'help'
+    ? `<div class="back" data-act="backdrop"><div class="modal" role="dialog" aria-modal="true">${helpHTML(ui.modal.tab || 'basics')}</div></div>` : '');
+  root.innerHTML = (S ? gameHTML() : setupHTML()) + modal;
+  const log = document.getElementById('pc-log');
+  if (log) log.scrollTop = log.scrollHeight;
+  const elog = document.getElementById('pc-elog');
+  if (elog) elog.scrollTop = elog.scrollHeight;
+  const q = document.getElementById('pc-qty');
+  if (q) { q.focus(); q.select(); }
+}
+
+// ---- input
+function openQty(i, side) {
+  const g = GOODS[i];
+  if (S.prices[g.id] == null) { ui.flash = `Nobody is trading ${g.name} here today.`; render(); return; }
+  if (side === 'sell' && !S.stash[g.id]) { ui.flash = `You don't have any ${g.name}.`; render(); return; }
+  ui.sel = i;
+  const m = { kind: 'qty', good: i, side, qty: 0 };
+  m.qty = qtyMax(m);
+  ui.modal = m;
+  ui.flash = '';
+  render();
+}
+function setQty(n) {
+  const m = ui.modal;
+  m.qty = clamp(n, 0, qtyMax(m));
+  const input = document.getElementById('pc-qty');
+  if (input) input.value = m.qty;
+  updateTotal();
+}
+function updateTotal() {
+  const m = ui.modal;
+  const input = document.getElementById('pc-qty');
+  const t = document.getElementById('pc-total');
+  if (!m || !input || !t) return;
+  m.qty = intAmt(input.value.replace(/[^\d]/g, ''));
+  t.textContent = fmt(m.qty * S.prices[GOODS[m.good].id]);
+}
+function closeModal() { ui.modal = null; ui.flash = ''; render(); }
+
+root.addEventListener('click', e => {
+  const el = e.target.closest('[data-act]');
+  if (!el) return;
+  const v = el.dataset.v;
+  switch (el.dataset.act) {
+    case 'backdrop': if (e.target === el) closeModal(); return;
+    case 'days': prefs.days = Number(v); scoreTab = prefs.days; save(KEY_PREFS, prefs); render(); return;
+    case 'scoretab': scoreTab = Number(v); render(); return;
+    case 'start': startRun(); return;
+    case 'resume': resume(); return;
+    case 'help': ui.modal = { kind: 'help', tab: 'basics' }; render(); return;
+    case 'helptab': ui.modal = { kind: 'help', tab: v }; render(); return;
+    case 'close': closeModal(); return;
+    case 'sel': if (e.target.closest('button')) return; ui.sel = Number(v); render(); return;
+    case 'buy': openQty(Number(v), 'buy'); return;
+    case 'sell': openQty(Number(v), 'sell'); return;
+    case 'qadj': setQty(ui.modal.qty + Number(v)); return;
+    case 'qmax': setQty(qtyMax(ui.modal)); return;
+    case 'mmax': { const inp = el.closest('form').querySelector('input'); inp.value = v; inp.focus(); return; }
+    case 'travel': ui.modal = { kind: 'travel' }; ui.flash = ''; render(); return;
+    case 'go': act({ t: 'travel', to: v }); return;
+    case 'finish': ui.modal = { kind: 'finish' }; render(); return;
+    case 'finishconfirm': act({ t: 'finish' }); return;
+    case 'service': ui.modal = { kind: 'service' }; ui.flash = ''; render(); return;
+    case 'buygear': act({ t: 'gear', item: v }); return;
+    case 'heal': act({ t: 'heal' }); return;
+    case 'gearview': ui.modal = { kind: 'gearview' }; render(); return;
+    case 'menu': ui.modal = { kind: 'menu' }; render(); return;
+    case 'newrun': ui.modal = { kind: 'confirmNew' }; render(); return;
+    case 'newconfirm': save(KEY_GAME, null); S = null; startRun(); return;
+    case 'enc': act({ t: v }); return;
+    case 'again': S = null; startRun(); return;
+    case 'title': quitToTitle(); return;
+  }
+});
+
+root.addEventListener('submit', e => {
+  e.preventDefault();
+  const form = e.target;
+  const kind = form.dataset.form;
+  if (kind === 'qty') {
+    updateTotal();
+    const m = ui.modal;
+    act({ t: m.side, good: GOODS[m.good].id, qty: m.qty });
+    return;
+  }
+  const amt = intAmt(String(form.querySelector('input').value).replace(/[^\d]/g, ''));
+  act({ t: kind, amt });
+});
+
+root.addEventListener('input', e => { if (e.target.id === 'pc-qty') updateTotal(); });
+
+function helpKey(k) {
+  const tabs = ['basics', 'places', 'goods', 'gear', 'keys'];
+  const i = tabs.indexOf(ui.modal.tab || 'basics');
+  if (k === 'ArrowRight') { ui.modal = { kind: 'help', tab: tabs[(i + 1) % tabs.length] }; render(); }
+  if (k === 'ArrowLeft') { ui.modal = { kind: 'help', tab: tabs[(i + tabs.length - 1) % tabs.length] }; render(); }
+}
+
+document.addEventListener('keydown', e => {
+  if (e.metaKey || e.ctrlKey || e.altKey) return;
+  const k = e.key.length === 1 ? e.key.toLowerCase() : e.key;
+  const inInput = e.target && e.target.tagName === 'INPUT';
+  const m = ui.modal;
+
+  if (!S) {
+    if (m && m.kind === 'help') { if (k === 'Escape') closeModal(); else helpKey(k); return; }
+    if (inInput) { if (k === 'Enter') { e.preventDefault(); startRun(); } return; }
+    if (k === 'n' || k === 'Enter') { e.preventDefault(); startRun(); }
+    else if (k === 'r' && loadGame()) resume();
+    else if (k === '?' || k === '/') { ui.modal = { kind: 'help', tab: 'basics' }; render(); }
+    return;
+  }
+  if (S.over) {
+    if (k === 'n') { S = null; startRun(); } else if (k === 'Escape') quitToTitle();
+    return;
+  }
+  if (S.enc) {
+    const keyFor = { r: 'run', f: 'fight', d: 'deal', l: 'leave', p: 'pay', b: 'buy' };
+    const opts = encOptions(S);
+    let t = keyFor[k];
+    if (k === 's') t = opts.includes('surrender') ? 'surrender' : 'sell';
+    if (k === 'n') t = opts.includes('refuse') ? 'refuse' : 'decline';
+    if (t && opts.includes(t)) { e.preventDefault(); act({ t }); }
+    return;
+  }
+  if (m) {
+    if (k === 'Escape') { e.preventDefault(); closeModal(); return; }
+    if (m.kind === 'qty') {
+      if (k === 'm') { e.preventDefault(); setQty(qtyMax(m)); }
+      else if (k === 'ArrowUp' || k === '+') { e.preventDefault(); setQty(m.qty + 1); }
+      else if (k === 'ArrowDown' || k === '-') { e.preventDefault(); setQty(m.qty - 1); }
+      return;
+    }
+    if (inInput) return;
+    if (m.kind === 'travel' && /^[1-7]$/.test(k)) { const P = PLACES[Number(k) - 1]; if (P.id !== S.loc) act({ t: 'travel', to: P.id }); return; }
+    if (m.kind === 'confirmNew' && k === 'y') { save(KEY_GAME, null); S = null; startRun(); return; }
+    if (m.kind === 'finish' && (k === 'y' || k === 'Enter')) { e.preventDefault(); act({ t: 'finish' }); return; }
+    if (m.kind === 'menu') { if (k === '?' || k === '/') { ui.modal = { kind: 'help', tab: 'basics' }; render(); } else if (k === 'q') quitToTitle(); else if (k === 'n') { ui.modal = { kind: 'confirmNew' }; render(); } }
+    if (m.kind === 'help') helpKey(k);
+    return;
+  }
+  if (inInput) return;
+  if (/^[1-9]$/.test(k)) { ui.sel = Number(k) - 1; ui.flash = ''; render(); return; }
+  if (k === 'ArrowDown') { e.preventDefault(); ui.sel = (ui.sel + 1) % GOODS.length; render(); return; }
+  if (k === 'ArrowUp') { e.preventDefault(); ui.sel = (ui.sel + GOODS.length - 1) % GOODS.length; render(); return; }
+  if (k === 'b') { openQty(ui.sel, 'buy'); return; }
+  if (k === 's') { openQty(ui.sel, 'sell'); return; }
+  if (k === 't' && S.day < S.days) { ui.modal = { kind: 'travel' }; ui.flash = ''; render(); return; }
+  if (k === 'e' && S.day === S.days) { ui.modal = { kind: 'finish' }; render(); return; }
+  if (k === 'v' && (here(S).service || here(S).shop.length)) { ui.modal = { kind: 'service' }; ui.flash = ''; render(); return; }
+  if (k === 'g') { ui.modal = { kind: 'gearview' }; render(); return; }
+  if (k === '?' || k === '/' || k === 'h') { ui.modal = { kind: 'help', tab: 'basics' }; render(); return; }
+  if (k === 'Escape') { ui.modal = { kind: 'menu' }; render(); }
+});
+
+/* Debug and test hook. __PC.force('watchers') starts an encounter now. */
+window.__PC = {
+  get state() { return S; },
+  act,
+  force(type) { if (!S) return; S = forceEncounter(S, type); save(KEY_GAME, S); render(); },
+  bot(n) { for (let i = 0; i < (n || 1) && S && !S.over; i++) act(botAct(S)); return S && S.over; },
+  set(patch) { if (!S) return; S = Object.assign(JSON.parse(JSON.stringify(S)), patch); save(KEY_GAME, S); render(); },
+};
+
+S = null;
+render();
+</script>
+</body>
+</html>
