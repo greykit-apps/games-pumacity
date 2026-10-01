@@ -74,9 +74,8 @@ getting away, what a failed run spills, and exactly what giving up loses.
 | `B` / `S` | buy / sell it: the quantity opens under the good (`M` for the most you can) |
 | `A` | sell all: everything you carry that someone here is buying |
 | `T`, then `1`–`7` | travel (the destinations open beside the market) |
-| `E` | cash out (last day) |
-| `V` | this place's shop or office |
-| `G` | gear and stash |
+| `E` | cash out on the last day; `E` again confirms |
+| `V` | this place's shop or office (opens beside the market) |
 | `R` `F` `U`, `Y` / `N` | encounters: run, fight, give up; accept or turn down an offer |
 | `?` | how to play · `Esc` menu / close |
 

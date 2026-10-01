@@ -172,7 +172,15 @@ table.mk{width:100%;border-collapse:collapse}
 .qrow{display:flex;flex-wrap:wrap;gap:6px;align-items:center;width:100%;margin-top:var(--s1)}
 .qrow input{width:6em}
 .qrow .total{margin-left:auto;margin-right:var(--s2)}
-.travel{position:absolute;inset:0;overflow:auto;padding:var(--s4) var(--s5)}
+.travel,.sidepanel{position:absolute;inset:0;overflow:auto;padding:var(--s4) var(--s5)}
+.sidepanel .row{display:flex;gap:var(--s2);align-items:center;flex-wrap:wrap;margin:var(--s2) 0}
+.sidepanel .row input{width:8em}
+.sidepanel table{width:100%;border-collapse:collapse}
+.sidepanel td{padding:var(--s1) 0;vertical-align:top;border-bottom:1px solid var(--row)}
+.sidepanel td.r{text-align:right;padding-left:var(--s2)}
+.sidepanel .note{color:var(--dim);font-size:12px}
+.sidepanel .acts{margin-top:var(--s3)}
+.confirm-note{margin:var(--s3) 0 0;color:var(--warn)}
 .dest{list-style:none;margin:0 0 var(--s3);padding:0;display:grid;gap:6px}
 .dest button{width:100%;text-align:left;display:grid;grid-template-columns:auto minmax(0,1fr);gap:0 var(--s2);padding:6px var(--s3)}
 .dest button kbd{grid-row:span 2;align-self:center}
@@ -283,7 +291,7 @@ table.mk{width:100%;border-collapse:collapse}
   .side{border-left:0;border-top:1px solid var(--line)}
   .logwrap{min-height:0}
   .log{position:static;max-height:260px;min-height:140px}
-  .travel{position:static}
+  .travel,.sidepanel{position:static}
   .status{grid-template-columns:repeat(2,minmax(0,1fr)) repeat(2,minmax(0,1fr))}
   .stat.lead{grid-column:span 2}
   .stat:nth-child(2){border-right:0}
@@ -306,7 +314,7 @@ table.mk{width:100%;border-collapse:collapse}
   .mk td,.mk th{padding:var(--s1) 3px}
   .mk td.name{width:auto}
   .mk td.held small{display:block;margin:0;font-size:11px}
-  .market,.place,.log,.travel{padding-left:var(--s3);padding-right:var(--s3)}
+  .market,.place,.log,.travel,.sidepanel{padding-left:var(--s3);padding-right:var(--s3)}
   .qrow .total{margin-left:0}
   .bar{position:sticky;bottom:6px;z-index:var(--z-sticky)}
   .bar button{flex:1 1 auto}
@@ -404,17 +412,17 @@ const PLACE = Object.fromEntries(PLACES.map(p => [p.id, p]));
 
 /* Within a slot, later entries outrank earlier ones: you can trade up, never down. */
 const GEAR = {
-  fanny:      { slot: 'pouch',    a: 'a', name: 'Fanny Pouch',     price: 400,   cap: 30,  blurb: '+30 carrying space.' },
-  saddle:     { slot: 'pouch',    a: 'some', name: 'Saddlebags',      price: 1500,  cap: 60,  blurb: '+60 carrying space.' },
-  hovercrate: { slot: 'pouch',    a: 'a', name: 'Hover-Crate',     price: 9000,  cap: 120, blurb: '+120 carrying space. Floats along behind you.' },
-  spray:      { slot: 'weapon',   a: 'a', name: 'Spray Bottle',    price: 300,   dmg: [4, 9],   blurb: 'Nobody likes getting wet. Hits for 4–9.' },
-  laser:      { slot: 'weapon',   a: 'a', name: 'Laser Pointer',   price: 900,   dmg: [7, 13],  blurb: 'They cannot help chasing it. Hits for 7–13.' },
-  claws:      { slot: 'weapon',   a: 'some', name: 'Sharpened Claws', price: 2500,  dmg: [11, 19], blurb: 'A professional manicure. Hits for 11–19.' },
-  mech:       { slot: 'weapon',   a: 'some', name: 'Mech-Claws',      price: 12000, dmg: [18, 30], blurb: 'Off-world hydraulics. Hits for 18–30.' },
-  collar:     { slot: 'armour',   a: 'a', name: 'Kevlar Collar',   price: 2000,  guard: 0.4, blurb: 'Takes 40% off every hit.' },
-  pawphone:   { slot: 'pawphone', a: 'a', name: 'Pawphone',        price: 1200,  blurb: "Each day, shows tomorrow's prices somewhere else in town." },
-  mittens:    { slot: 'mittens',  a: 'some', name: 'Sneaky Mittens',  price: 800,   blurb: 'Kittens wear them. Much better odds when you run.' },
-  shades:     { slot: 'shades',   a: 'some', name: 'Shades',          price: 600,   blurb: 'Heat builds half as fast.' },
+  fanny:      { slot: 'pouch',    a: 'a', name: 'Fanny Pouch',     price: 400,   cap: 30,  short: "+30 space", blurb: '+30 carrying space.' },
+  saddle:     { slot: 'pouch',    a: 'some', name: 'Saddlebags',      price: 1500,  cap: 60,  short: "+60 space", blurb: '+60 carrying space.' },
+  hovercrate: { slot: 'pouch',    a: 'a', name: 'Hover-Crate',     price: 9000,  cap: 120, short: "+120 space", blurb: '+120 carrying space. Floats along behind you.' },
+  spray:      { slot: 'weapon',   a: 'a', name: 'Spray Bottle',    price: 300,   dmg: [4, 9],   short: "4–9 a hit", blurb: 'Nobody likes getting wet. Hits for 4–9.' },
+  laser:      { slot: 'weapon',   a: 'a', name: 'Laser Pointer',   price: 900,   dmg: [7, 13],  short: "7–13 a hit", blurb: 'They cannot help chasing it. Hits for 7–13.' },
+  claws:      { slot: 'weapon',   a: 'some', name: 'Sharpened Claws', price: 2500,  dmg: [11, 19], short: "11–19 a hit", blurb: 'A professional manicure. Hits for 11–19.' },
+  mech:       { slot: 'weapon',   a: 'some', name: 'Mech-Claws',      price: 12000, dmg: [18, 30], short: "18–30 a hit", blurb: 'Off-world hydraulics. Hits for 18–30.' },
+  collar:     { slot: 'armour',   a: 'a', name: 'Kevlar Collar',   price: 2000,  guard: 0.4, short: "−40% damage", blurb: 'Takes 40% off every hit.' },
+  pawphone:   { slot: 'pawphone', a: 'a', name: 'Pawphone',        price: 1200,  short: "tomorrow's prices", blurb: "Each day, shows tomorrow's prices somewhere else in town." },
+  mittens:    { slot: 'mittens',  a: 'some', name: 'Sneaky Mittens',  price: 800,   short: "better getaways", blurb: 'Kittens wear them. Much better odds when you run.' },
+  shades:     { slot: 'shades',   a: 'some', name: 'Shades',          price: 600,   short: "half the heat", blurb: 'Heat builds half as fast.' },
 };
 const SLOTS = ['pouch', 'weapon', 'armour', 'pawphone', 'mittens', 'shades'];
 
@@ -1207,7 +1215,7 @@ function act(a) {
   }
   if (a.t === 'travel') ui.arrived = true;
   if (a.t === 'travel' || a.t === 'finish') ui.modal = S.over ? { kind: 'over' } : null;
-  if (['buy', 'sell', 'sellall', 'travel', 'finish'].includes(a.t)) { ui.trade = null; ui.travel = false; }
+  if (['buy', 'sell', 'sellall', 'travel', 'finish'].includes(a.t)) { ui.trade = null; ui.side = null; ui.confirmCash = false; }
   render();
 }
 
@@ -1580,7 +1588,7 @@ function gameHTML() {
       <button data-act="sell" data-v="${i}" ${p == null || !held ? 'disabled' : ''}>Sell</button></td></tr>`
       + (ui.trade && ui.trade.good === i ? tradeRowHTML(ui.trade) : '');
   }).join('');
-  const gear = SLOTS.filter(s => st.gear[s]).map(s => GEAR[st.gear[s]].name);
+  const gear = SLOTS.filter(s => st.gear[s]).map(s => { const it = GEAR[st.gear[s]]; return `<span title="${esc(it.blurb)}">${it.name} <span class="dim">(${it.short})</span></span>`; });
   const svc = P.service || P.shop.length;
   const tip = st.tip ? `<div class="tip"><b>Pawphone</b>: tomorrow at ${PLACE[st.tip.loc].name}<br>${GOODS.map(g =>
     `${g.name} ${st.tip.prices[g.id] == null ? '—' : fmt(st.tip.prices[g.id])}`).join(' · ')}</div>` : '';
@@ -1607,21 +1615,22 @@ function gameHTML() {
       ${headlineToday(st)}
       <table class="mk"><thead><tr><th class="key"></th><th class="name">Good</th><th>Price</th><th class="range">vs usual</th><th class="held">Held</th><th></th></tr></thead>
       <tbody>${goods}</tbody></table>
-      <div class="flash" role="status">${esc(ui.flash)}</div>
+      ${ui.side === 'service' ? '' : `<div class="flash" role="status">${esc(ui.flash)}</div>`}
+      ${ui.confirmCash ? `<p class="confirm-note">Cashing out ends the run. The Boss collects what you owe${u ? `, and the ${u} ${plural(u, 'unit')} you still hold are worth nothing` : ''}.</p>` : ''}
       <nav class="bar">
-        ${last && sellable ? '<button class="primary" data-act="sellall"><kbd>A</kbd>Sell all</button><button data-act="finish"><kbd>E</kbd>Cash out</button>'
+        ${last && ui.confirmCash ? '<button class="danger" data-act="finishconfirm"><kbd>E</kbd>Confirm cash out</button><button data-act="finishcancel"><kbd>Esc</kbd>Not yet</button>'
+          : last && sellable ? '<button class="primary" data-act="sellall"><kbd>A</kbd>Sell all</button><button data-act="finish"><kbd>E</kbd>Cash out</button>'
           : last ? '<button class="primary" data-act="finish"><kbd>E</kbd>Cash out</button>'
-          : `<button class="primary" data-act="travel" aria-pressed="${!!ui.travel}"><kbd>T</kbd>Travel</button>`}
+          : `<button class="primary" data-act="travel" aria-pressed="${ui.side === 'travel'}"><kbd>T</kbd>Travel</button>`}
         ${!last && u > 0 ? `<button data-act="sellall" ${sellable ? '' : 'disabled'} title="Sell everything you carry that someone here is buying"><kbd>A</kbd>Sell all</button>` : ''}
         ${svc && !last ? `<button data-act="service"><kbd>V</kbd>${esc(P.serviceName)}</button>` : ''}
-        <button data-act="gearview"><kbd>G</kbd>Gear</button>
         <span class="grow"></span>
         <button data-act="help" aria-label="Help" title="How to play (?)">?</button>
-        <button data-act="menu"><kbd>Esc</kbd>Menu</button>
+        ${ui.confirmCash ? '' : '<button data-act="menu"><kbd>Esc</kbd>Menu</button>'}
       </nav>
     </section>
     <aside class="side">
-      ${ui.travel ? travelPanelHTML() : `<div class="place">
+      ${ui.side === 'travel' ? travelPanelHTML() : ui.side === 'service' ? servicePanelHTML() : `<div class="place">
         <p class="blurb">${P.blurb}</p>
         <p class="spec">${P.special}</p>
         <p class="gear">${gear.length ? 'Gear: ' + gear.join(' · ') : 'No gear yet. Without a weapon you can only run or give up.'}</p>
@@ -1641,14 +1650,10 @@ function modalHTML() {
   if (!m) return '';
   let body = '';
   switch (m.kind) {
-    case 'service': body = serviceHTML(); break;
-    case 'gearview': body = gearViewHTML(); break;
     case 'help': body = helpHTML(m.tab || 'basics'); break;
     case 'menu': body = menuHTML(); break;
     case 'confirmNew': body = `<h1 id="pc-mt">Abandon this run?</h1><p>Your current run will not be scored.</p>
       <div class="acts"><button class="danger" data-act="newconfirm"><kbd>Y</kbd>Abandon and start over</button><button data-act="close"><kbd>Esc</kbd>Keep playing</button></div>`; break;
-    case 'finish': body = `<h1 id="pc-mt">Cash out?</h1><p>The run ends now. The Boss collects what you owe, and anything still in your pouch is worth nothing.</p>
-      <div class="acts"><button class="primary" data-act="finishconfirm"><kbd>Y</kbd>Cash out</button><button data-act="close"><kbd>Esc</kbd>Not yet</button></div>`; break;
   }
   return `<div class="back" data-act="backdrop"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="pc-mt">${body}</div></div>`;
 }
@@ -1694,10 +1699,10 @@ function moneyForm(kind, label, max, hint) {
     ${hint ? `<span class="note">${hint}</span>` : ''}</form>`;
 }
 
-function serviceHTML() {
+function servicePanelHTML() {
   const st = S;
   const P = here(st);
-  let out = `<h1 id="pc-mt">${esc(P.serviceName)}</h1>`;
+  let out = `<h2>${esc(P.serviceName)}</h2>`;
   if (P.service === 'loan') {
     out += `<p>Casey Benton looks up from a desk the size of a car. "Back so soon?"</p>
     <p>You owe <b>${fmt(st.debt)}</b>.${st.debt > 0 ? ` <span class="note">${st.debtAge} ${plural(st.debtAge, 'day')} since your last real payment (a payment of at least 10% of the debt). Her goons come at ${CONFIG.goonDays}.</span>` : ''}</p>
@@ -1725,24 +1730,10 @@ function serviceHTML() {
         <td class="r"><button data-act="buygear" data-v="${id}" ${!ok || st.cash < it.price ? 'disabled' : ''}>${label}</button></td></tr>`;
     }).join('')}</table>`;
   }
-  out += `<div class="flash">${esc(ui.flash)}</div><div class="acts"><button data-act="close"><kbd>Esc</kbd>Done</button></div>`;
-  return out;
+  out += `<div class="flash" role="status">${esc(ui.flash)}</div><div class="acts"><button data-act="stay"><kbd>Esc</kbd>Done</button></div>`;
+  return `<div class="logwrap"><div class="sidepanel" role="region" aria-label="${esc(P.serviceName)}">${out}</div></div>`;
 }
 
-function gearViewHTML() {
-  const st = S;
-  const held = GOODS.filter(g => st.stash[g.id]);
-  return `<h1 id="pc-mt">Gear &amp; stash</h1>
-  <h2>Gear</h2><table>${SLOTS.map(s => {
-    const id = st.gear[s];
-    return `<tr><td class="dim">${s}</td><td>${id ? `<b>${GEAR[id].name}</b> <span class="note">${GEAR[id].blurb}</span>` : '<span class="dim">none</span>'}</td></tr>`;
-  }).join('')}</table>
-  <p class="note">Pouch: ${used(st)} of ${capacity(st)} used. ${st.gear.weapon ? '' : 'With no weapon you can only run or give up.'}</p>
-  <h2>Stash</h2>${held.length ? `<table><tr><th>Good</th><th class="r">Held</th><th class="r">Avg paid</th><th class="r">Here</th></tr>${held.map(g =>
-    `<tr><td>${g.name}</td><td class="r">${st.stash[g.id]}</td><td class="r">${st.cost[g.id] ? fmt(Math.round(st.cost[g.id] / st.stash[g.id])) : 'found'}</td>
-    <td class="r">${st.prices[g.id] == null ? '—' : fmt(st.prices[g.id])}</td></tr>`).join('')}</table>` : '<p class="dim">Empty.</p>'}
-  <div class="acts"><button data-act="close"><kbd>Esc</kbd>Close</button></div>`;
-}
 
 /* One line per encounter choice: what it will cost or win, in numbers the
  * engine itself uses (runChance, giveUpCost, goonTake). */
@@ -1889,9 +1880,8 @@ function helpHTML(tab) {
     <tr><td><kbd>M</kbd> <kbd>↑</kbd> <kbd>↓</kbd></td><td>In the quantity box: the most you can, one more, one fewer</td></tr>
     <tr><td><kbd>A</kbd></td><td>Sell all: everything you carry that someone here is buying</td></tr>
     <tr><td><kbd>T</kbd></td><td>Travel: the destinations open beside the market; <kbd>1</kbd>–<kbd>7</kbd> picks one</td></tr>
-    <tr><td><kbd>E</kbd></td><td>Cash out (last day)</td></tr>
+    <tr><td><kbd>E</kbd></td><td>Cash out on the last day; <kbd>E</kbd> again confirms</td></tr>
     <tr><td><kbd>V</kbd></td><td>Visit this place's shop or office</td></tr>
-    <tr><td><kbd>G</kbd></td><td>Gear and stash</td></tr>
     <tr><td><kbd>R</kbd> <kbd>F</kbd> <kbd>U</kbd></td><td>Encounters: run, fight, give up. <kbd>Y</kbd> accepts an offer and <kbd>N</kbd> turns it down; every choice shows its key. None of them is a market key, so a key you were already pressing can't answer an encounter by mistake.</td></tr>
     <tr><td><kbd>Enter</kbd> / <kbd>Esc</kbd></td><td>Confirm / close</td></tr></table>`;
   return `<h1 id="pc-mt">How to play</h1>
@@ -1956,10 +1946,16 @@ function render() {
   } else if (dlg) {
     target = findFocus(before, dlg) || q || dlg.querySelector(FOCUSABLE);
   } else if (ui.panelFresh) {
-    target = ui.panelFresh === 'trade' ? q : root.querySelector('.travel [data-act="go"]:not(:disabled)');
-    if (ui.panelFresh === 'travel' && target && window.matchMedia('(max-width:900px)').matches) target.scrollIntoView({ block: 'nearest' });
+    target = ui.panelFresh === 'trade' ? q
+      : ui.panelFresh === 'travel' ? root.querySelector('.travel [data-act="go"]:not(:disabled)')
+      : ui.panelFresh === 'confirm' ? root.querySelector('[data-act="finishconfirm"]')
+      : root.querySelector('.sidepanel input') || root.querySelector('.sidepanel button.primary:not(:disabled)') || root.querySelector('.sidepanel button:not(:disabled)');
+    if ((ui.panelFresh === 'travel' || ui.panelFresh === 'service') && window.matchMedia('(max-width:900px)').matches) {
+      const panel = root.querySelector('.travel, .sidepanel');
+      if (panel) panel.scrollIntoView({ block: 'start' });
+    }
     ui.panelFresh = null;
-  } else if (ui.panelOpener && !ui.trade && !ui.travel) {
+  } else if (ui.panelOpener && !ui.trade && !ui.side) {
     target = findFocus(ui.panelOpener) || findFocus(before);
     ui.panelOpener = null;
   } else {
@@ -1978,23 +1974,28 @@ function openQty(i, side) {
   ui.sel = i;
   const t = { good: i, side, qty: 0 };
   t.qty = qtyMax(t);
-  if (!ui.trade && !ui.travel) ui.panelOpener = focusKey(document.activeElement) || { act: side, v: String(i) };
+  if (!ui.trade && !ui.side) ui.panelOpener = focusKey(document.activeElement) || { act: side, v: String(i) };
   ui.trade = t;
-  ui.travel = false;
+  ui.side = null;
   ui.panelFresh = 'trade';
   ui.flash = '';
   render();
 }
-function closePanels() { ui.trade = null; ui.travel = false; ui.flash = ''; render(); }
-function openTravel() {
+function closePanels() { ui.trade = null; ui.side = null; ui.confirmCash = false; ui.flash = ''; render(); }
+/* Travel and the shop/office share one slot beside the market, in place of
+ * the place panel and log, so the prices and your cash stay in view. */
+function openSide(which) {
   if (S.day >= S.days) return;
-  if (!ui.trade && !ui.travel) ui.panelOpener = focusKey(document.activeElement) || { act: 'travel' };
+  if (which === 'service' && !(here(S).service || here(S).shop.length)) return;
+  if (ui.side === which) { closePanels(); return; }
+  if (!ui.trade && !ui.side) ui.panelOpener = focusKey(document.activeElement) || { act: which };
   ui.trade = null;
-  ui.travel = true;
-  ui.panelFresh = 'travel';
+  ui.side = which;
+  ui.panelFresh = which;
   ui.flash = '';
   render();
 }
+function openTravel() { openSide('travel'); }
 function setQty(n) {
   const m = ui.trade;
   m.qty = clamp(n, 0, qtyMax(m));
@@ -2032,16 +2033,16 @@ root.addEventListener('click', e => {
     case 'qmax': setQty(qtyMax(ui.trade)); return;
     case 'qcancel': closePanels(); return;
     case 'stay': closePanels(); return;
+    case 'finishcancel': ui.confirmCash = false; ui.panelOpener = null; render(); return;
     case 'sellall': act({ t: 'sellall' }); return;
     case 'mmax': { const inp = el.closest('form').querySelector('input'); inp.value = v; inp.focus(); return; }
-    case 'travel': if (ui.travel) closePanels(); else openTravel(); return;
+    case 'travel': openSide('travel'); return;
     case 'go': act({ t: 'travel', to: v }); return;
-    case 'finish': ui.modal = { kind: 'finish' }; render(); return;
+    case 'finish': ui.confirmCash = true; ui.trade = null; ui.panelOpener = null; ui.panelFresh = 'confirm'; render(); return;
     case 'finishconfirm': act({ t: 'finish' }); return;
-    case 'service': ui.modal = { kind: 'service' }; ui.flash = ''; render(); return;
+    case 'service': openSide('service'); return;
     case 'buygear': act({ t: 'gear', item: v }); return;
     case 'heal': act({ t: 'heal' }); return;
-    case 'gearview': ui.modal = { kind: 'gearview' }; render(); return;
     case 'menu': ui.modal = { kind: 'menu' }; render(); return;
     case 'newrun': ui.modal = { kind: 'confirmNew' }; render(); return;
     case 'newconfirm': save(KEY_GAME, null); S = null; startRun(); return;
@@ -2071,7 +2072,7 @@ root.addEventListener('input', e => { if (e.target.id === 'pc-qty') updateTotal(
  * for a market key. So the two key sets share no letters (tools/check-all.js
  * holds them apart), and an encounter ignores input for a moment after it
  * appears, so a key already in flight can't answer it. */
-const MARKET_KEYS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'b', 's', 'a', 't', 'e', 'v', 'g', 'h', '?', '/'];
+const MARKET_KEYS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'b', 's', 'a', 't', 'e', 'v', 'h', '?', '/'];
 const ENC_KEYS = { r: ['run'], f: ['fight'], u: ['surrender'], d: ['deal'], l: ['leave'], p: ['pay'], y: ['sell', 'buy'], n: ['refuse', 'decline'] };
 const ENC_LOCK_MS = 400;
 function encLocked() { return S && S.enc && performance.now() < (ui.encUntil || 0); }
@@ -2124,7 +2125,6 @@ document.addEventListener('keydown', e => {
     if (k === 'Escape') { e.preventDefault(); closeModal(); return; }
     if (inInput) return;
     if (m.kind === 'confirmNew' && k === 'y') { save(KEY_GAME, null); S = null; startRun(); return; }
-    if (m.kind === 'finish' && (k === 'y' || k === 'Enter')) { e.preventDefault(); act({ t: 'finish' }); return; }
     if (m.kind === 'menu') { if (k === '?' || k === '/') { ui.modal = { kind: 'help', tab: 'basics' }; render(); } else if (k === 'q') quitToTitle(); else if (k === 'n') { ui.modal = { kind: 'confirmNew' }; render(); } }
     if (m.kind === 'help') helpKey(k);
     return;
@@ -2135,7 +2135,10 @@ document.addEventListener('keydown', e => {
     if (k === 'ArrowUp' || k === '+') { e.preventDefault(); setQty(ui.trade.qty + 1); return; }
     if (k === 'ArrowDown' || k === '-') { e.preventDefault(); setQty(ui.trade.qty - 1); return; }
   }
-  if (ui.travel) {
+  if (ui.side === 'service') {
+    if (k === 'Escape' || (!inInput && k === 'v')) { e.preventDefault(); closePanels(); return; }
+  }
+  if (ui.side === 'travel') {
     if (k === 'Escape' || k === 't') { e.preventDefault(); closePanels(); return; }
     if (/^[1-7]$/.test(k)) { const P = PLACES[Number(k) - 1]; if (P.id !== S.loc) act({ t: 'travel', to: P.id }); return; }
   }
@@ -2147,9 +2150,13 @@ document.addEventListener('keydown', e => {
   if (k === 'b') { openQty(ui.sel, 'buy'); return; }
   if (k === 's') { openQty(ui.sel, 'sell'); return; }
   if (k === 't' && S.day < S.days) { openTravel(); return; }
-  if (k === 'e' && S.day === S.days) { ui.modal = { kind: 'finish' }; render(); return; }
-  if (k === 'v' && S.day < S.days && (here(S).service || here(S).shop.length)) { ui.modal = { kind: 'service' }; ui.flash = ''; render(); return; }
-  if (k === 'g') { ui.modal = { kind: 'gearview' }; render(); return; }
+  if (k === 'e' && S.day === S.days) {
+    if (ui.confirmCash) act({ t: 'finish' });
+    else { ui.confirmCash = true; ui.trade = null; ui.panelFresh = 'confirm'; render(); }
+    return;
+  }
+  if (k === 'Escape' && ui.confirmCash) { e.preventDefault(); ui.confirmCash = false; render(); return; }
+  if (k === 'v') { openSide('service'); return; }
   if (k === '?' || k === '/' || k === 'h') { ui.modal = { kind: 'help', tab: 'basics' }; render(); return; }
   if (k === 'Escape') { ui.modal = { kind: 'menu' }; render(); }
 });
