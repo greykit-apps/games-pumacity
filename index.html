@@ -52,7 +52,7 @@ h1{font-size:14px;letter-spacing:.2em;text-transform:uppercase;color:var(--accen
 h2{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);margin:14px 0 6px;font-weight:600}
 h2:first-child{margin-top:0}
 p{margin:0 0 8px}
-.pc{max-width:1200px;margin:0 auto;height:100dvh;display:flex;flex-direction:column}
+.pc{max-width:1200px;margin:0 auto}
 .top{display:flex;align-items:center;gap:14px;padding:10px 16px;border-bottom:1px solid var(--line)}
 .top .where{color:var(--text)}
 .top .grow{flex:1}
@@ -70,8 +70,9 @@ p{margin:0 0 8px}
 .meter i{display:block;height:100%;background:var(--good)}
 .meter.heat i{background:var(--warn)}
 .meter.low i{background:var(--danger)}
-.main{display:grid;grid-template-columns:minmax(0,1fr) 400px;flex:1;min-height:0;overflow:hidden}
-.market{overflow:auto}
+/* The market column sets the row height; the log is taken out of flow so it
+ * fills whatever height that is and scrolls, instead of stretching the page. */
+.main{display:grid;grid-template-columns:minmax(0,1fr) 400px;border-bottom:1px solid var(--line)}
 .market{padding:12px 16px;min-width:0}
 table.mk{width:100%;border-collapse:collapse}
 .mk th{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);text-align:right;font-weight:600;
@@ -88,7 +89,9 @@ table.mk{width:100%;border-collapse:collapse}
 .mk td.btns button{min-width:52px;padding:3px 8px;min-height:30px}
 .mk .out{color:var(--dim)}
 .up{color:var(--good)}.down{color:var(--danger)}
-.flash{margin-top:10px;color:var(--danger);min-height:1.5em}
+.flash{margin-top:8px;color:var(--danger)}
+.flash:empty{display:none}
+.market .bar{margin-top:10px}
 .side{border-left:1px solid var(--line);display:flex;flex-direction:column;min-height:0;min-width:0}
 .place{padding:12px 16px;border-bottom:1px solid var(--line)}
 .place .blurb{color:var(--ink)}
@@ -96,13 +99,14 @@ table.mk{width:100%;border-collapse:collapse}
 .place .gear{color:var(--dim);font-size:12px}
 .tip{margin-top:8px;padding:6px 8px;border:1px dashed var(--line);font-size:12px;color:var(--steel)}
 .tip b{color:var(--accent);font-weight:600}
-.log{flex:1;overflow:auto;padding:10px 16px;min-height:0}
+.logwrap{flex:1;position:relative;min-height:180px}
+.log{position:absolute;inset:0;overflow:auto;padding:10px 16px}
 .log p{margin:0 0 3px}
 .log .day{color:var(--accent);margin-top:10px}
 .log p:first-child{margin-top:0}
 .news{color:var(--warn)}.bad{color:var(--danger)}.good{color:var(--good)}.enc{color:var(--violet)}
 .trade{color:var(--steel)}.dim{color:var(--dim)}.warn{color:var(--warn)}
-.bar{display:flex;gap:8px;flex-wrap:wrap;padding:10px 16px;border-top:1px solid var(--line);background:var(--panel)}
+.bar{display:flex;gap:8px;flex-wrap:wrap;padding:8px;border:1px solid var(--line);border-radius:3px;background:var(--panel)}
 .bar .grow{flex:1}
 .back{position:fixed;inset:0;background:rgba(2,4,10,.8);display:flex;align-items:center;justify-content:center;padding:16px;z-index:10}
 .modal{background:var(--panel);border:1px solid var(--lit);border-radius:4px;max-width:540px;width:100%;
@@ -140,11 +144,10 @@ table.mk{width:100%;border-collapse:collapse}
 .foot{color:var(--dim);font-size:12px;margin-top:28px}
 .foot a{color:var(--steel)}
 @media (max-width:900px){
-  .pc{height:auto;min-height:100dvh}
-  .main{grid-template-columns:minmax(0,1fr);overflow:visible}
-  .market{overflow:visible}
+  .main{grid-template-columns:minmax(0,1fr)}
   .side{border-left:0;border-top:1px solid var(--line)}
-  .log{max-height:260px;min-height:140px}
+  .logwrap{min-height:0}
+  .log{position:static;max-height:260px;min-height:140px}
   .status{grid-template-columns:repeat(3,minmax(0,1fr))}
   .stat:nth-child(3){border-right:0}
   .stat:nth-child(-n+3){border-bottom:1px solid var(--line)}
@@ -158,7 +161,7 @@ table.mk{width:100%;border-collapse:collapse}
   .top{padding:8px 12px;gap:10px;flex-wrap:wrap}
   .stat{padding:6px 12px}
   .market,.place,.log{padding-left:12px;padding-right:12px}
-  .bar{position:sticky;bottom:0;padding:8px 12px;z-index:5}
+  .bar{position:sticky;bottom:6px;z-index:5}
   .bar button{flex:1 1 auto}
   kbd{display:none}
   .modal{padding:14px}
@@ -1109,6 +1112,14 @@ function gameHTML() {
       <table class="mk"><thead><tr><th class="key"></th><th class="name">Good</th><th>Price</th><th>Held</th><th class="avg">Avg paid</th><th></th></tr></thead>
       <tbody>${goods}</tbody></table>
       <div class="flash" role="status">${esc(ui.flash)}</div>
+      <nav class="bar">
+        ${last ? '<button class="primary" data-act="finish"><kbd>E</kbd>Cash out</button>' : '<button class="primary" data-act="travel"><kbd>T</kbd>Travel</button>'}
+        ${svc ? `<button data-act="service"><kbd>V</kbd>${esc(P.serviceName)}</button>` : ''}
+        <button data-act="gearview"><kbd>G</kbd>Gear</button>
+        <span class="grow"></span>
+        <button data-act="help"><kbd>?</kbd>Help</button>
+        <button data-act="menu"><kbd>Esc</kbd>Menu</button>
+      </nav>
     </section>
     <aside class="side">
       <div class="place">
@@ -1118,17 +1129,9 @@ function gameHTML() {
         <p class="gear">${gear.length ? 'Gear: ' + gear.join(' · ') : 'No gear yet. Without a weapon you can only run or surrender.'}</p>
         ${tip}
       </div>
-      <div class="log" id="pc-log" aria-live="polite">${log}</div>
+      <div class="logwrap"><div class="log" id="pc-log" aria-live="polite">${log}</div></div>
     </aside>
   </div>
-  <nav class="bar">
-    ${last ? '<button class="primary" data-act="finish"><kbd>E</kbd>Cash out</button>' : '<button class="primary" data-act="travel"><kbd>T</kbd>Travel</button>'}
-    ${svc ? `<button data-act="service"><kbd>V</kbd>${esc(P.serviceName)}</button>` : ''}
-    <button data-act="gearview"><kbd>G</kbd>Gear</button>
-    <span class="grow"></span>
-    <button data-act="help"><kbd>?</kbd>Help</button>
-    <button data-act="menu"><kbd>Esc</kbd>Menu</button>
-  </nav>
 </div>`;
 }
 
