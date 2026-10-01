@@ -2,7 +2,8 @@
 
 **Buy low, sell high, and keep one step ahead of the Watchers.** A
 puma-flavoured trading game in the spirit of *Dope Wars*, set on the streets of
-PumaCity. You owe Casey Benton, The Boss, $5,500 at 10% a day. Ride the
+PumaCity. You start with $1,500 and owe Casey Benton, The Boss, $8,000 at
+10% a day. Ride the
 markets across seven districts, gear up, and survive whatever is waiting when
 you arrive.
 
@@ -25,7 +26,7 @@ Saves stay in your browser's `localStorage`.
 - **Pick a length** (30, 60 or 90 days) and a name.
 - **Every trip takes a day.** Prices roll fresh at each stop. One or two goods
   are out of stock, and a headline sometimes sends one good's price wild.
-- **The debt compounds 10% a day.** Pay it down at PVN Tower. Go ten days
+- **The debt compounds 10% a day.** Pay it down at PVN Tower. Go eight days
   without a real payment (at least 10% of what you owe) and The Boss sends
   her goons.
 - **On the last day you cash out.** The Boss collects what you owe, and
@@ -94,7 +95,7 @@ The rules are data plus a DOM-free engine, which sit between the
 
 ```
 node tools/check-assets.js   # every file index.html references exists
-node tools/check-all.js      # 47 named rule scenarios
+node tools/check-all.js      # 50 named rule scenarios
 node tools/sim.js 20         # bots play whole runs; invariants after every step
 ```
 
@@ -109,19 +110,22 @@ before it was trusted. `check-all.js` refuses to pass with zero scenarios, and
 - an invariant breaks: cash, bank or debt goes negative, the pouch goes over
   capacity, or health or heat leaves its range
 - a run never ends
-- fewer than 40% of careful runs finish in profit at any length
+- the share of careful runs finishing in profit leaves its target band:
+  55–95% at 30 days, at least 60% at 60 and 90. The bot knows every price
+  band, so it's a strong player. The upper bound exists because the first
+  economy let every run win.
 - no reckless run ever dies
 
 Figures for 20 runs per cell:
 
 | Days | Bot | Profit | Deaths | Median score |
 |---|---|---|---|---|
-| 30 | careful | 20/20 | 0 | $472,311 |
-| 30 | reckless | 19/20 | 0 | $494,339 |
-| 60 | careful | 20/20 | 0 | $2,723,988 |
-| 60 | reckless | 18/20 | 2 | $2,012,885 |
-| 90 | careful | 20/20 | 0 | $6,151,416 |
-| 90 | reckless | 20/20 | 0 | $5,137,913 |
+| 30 | careful | 14/20 | 0 | $200,677 |
+| 30 | reckless | 19/20 | 0 | $210,946 |
+| 60 | careful | 14/20 | 2 | $640,822 |
+| 60 | reckless | 13/20 | 5 | $1,920,180 |
+| 90 | careful | 16/20 | 1 | $3,304,987 |
+| 90 | reckless | 12/20 | 6 | $2,485,918 |
 
 ### Debugging
 

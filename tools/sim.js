@@ -11,9 +11,11 @@
  *     over capacity; health outside 0..max; heat outside 0..100; a bad price
  *   - a bot changing st.rng while it thinks (bots must not consume randomness)
  *   - a run that never ends
- *   - too few careful runs finishing in profit at any length, or no deaths at
- *     all among the reckless runs. A sim that only reports "no crashes" cannot
- *     tell a working game from one where winning (or losing) is unreachable.
+ *   - careful runs finishing in profit outside the target band for their
+ *     length, or no deaths at all among the reckless runs. A sim that only
+ *     reports "no crashes" cannot tell a working game from one where winning
+ *     (or losing) is unreachable -- and the upper bound stops the economy
+ *     drifting back to "every run is a win", which it did once already.
  */
 'use strict';
 const { loadCore } = require('./core.js');
@@ -22,7 +24,11 @@ const C = loadCore();
 const args = process.argv.slice(2);
 const N = Number(args.find(a => /^\d+$/.test(a)) || 20);
 const verbose = args.includes('--verbose');
-const MIN_PROFIT_SHARE = 0.4;
+/* Target share of careful-bot runs that finish in profit, per run length. The
+ * bot knows every price band, so it is a strong player: a 30-day run should
+ * still fail for it sometimes. Longer runs leave time to recover, so they may
+ * profit more often, but never trivially. */
+const PROFIT_BAND = { 30: [0.55, 0.95], 60: [0.6, 1], 90: [0.6, 1] };
 const MAX_ACTIONS = 6000;
 
 if (!(N > 0)) { console.error('sim: N must be at least 1; a sim of zero runs proves nothing'); process.exit(1); }
@@ -88,8 +94,9 @@ for (const days of C.CONFIG.lengths) {
     const best = scores.length ? scores[scores.length - 1] : 0;
     rows.push({ days, style, runs: res.length, profit, deaths, median, best });
     if (style === 'reckless') reckDeaths += deaths;
-    if (style === 'careful' && res.length && profit / res.length < MIN_PROFIT_SHARE) {
-      fail(`${days} days, careful: only ${profit}/${res.length} runs finished in profit (want at least ${Math.round(MIN_PROFIT_SHARE * 100)}%)`);
+    const [lo, hi] = PROFIT_BAND[days];
+    if (style === 'careful' && res.length && (profit / res.length < lo || (hi < 1 && profit / res.length > hi))) {
+      fail(`${days} days, careful: ${profit}/${res.length} runs finished in profit; the target band is ${Math.round(lo * 100)}–${Math.round(hi * 100)}%`);
     }
     if (verbose) for (const s of res) console.log(`  ${days}d ${style} seed ${s.seed}: ${s.over.reason} ${C.fmt(s.over.score)} (peak ${C.fmt(s.stats.peak)}, won ${s.stats.won}, fled ${s.stats.fled}, busted ${s.stats.busted})`);
   }

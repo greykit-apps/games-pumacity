@@ -258,18 +258,23 @@ const VERSION = '1.0.0';
 
 const CONFIG = {
   lengths: [30, 60, 90],
-  startCash: 2000,
-  startDebt: 5500,
+  startCash: 1500,
+  startDebt: 8000,
   startLoc: 'plaza',
   baseCap: 100,
   maxHp: 100,
   debtRate: 0.10,     // per day, compounding
   bankRate: 0.01,     // per day, compounding
   debtCap: 50000,     // the most The Boss will have on her books for you
-  goonDays: 10,       // days without a real repayment before the goons come
+  goonDays: 8,        // days without a real repayment before the goons come
   repayReset: 0.10,   // a repayment of at least this share of the debt counts as "real"
   heatDecay: 4,       // per day
-  eventChance: 0.2,   // a market headline on any given day
+  eventChance: 0.12,  // a market headline on any given day: rarer, but sharper
+  eventUp: [3, 5],   // a spike multiplies the price by this range
+  eventDown: [0.2, 0.4],
+  carryWatch: 1 / 150000, // extra Watcher odds per $1 of goods carried (at usual mid prices)
+  carryWatchMax: 0.35,     // ...capped here
+  dropOnFail: 0.4,     // share of each good you drop when a getaway fails
   vetPerHp: 15,
   logMax: 150,
 };
@@ -291,11 +296,11 @@ const GOOD = Object.fromEntries(GOODS.map(g => [g.id, g]));
  * and boss scale those encounters; cool is extra heat shed per day here. */
 const PLACES = [
   { id: 'plaza', name: 'Market Plaza', service: null, serviceName: 'Shades stall', shop: ['shades'],
-    mods: { psychos: 1.2, reddot: 1.3, moonsugar: 1.3, skooma: 1.3 }, watch: 1, mug: 1.5,
+    mods: { psychos: 1.1, reddot: 1.15, moonsugar: 1.15, skooma: 1.15 }, watch: 1, mug: 1.5,
     blurb: 'Fountains, food carts and tour groups with fat wallets.',
     special: 'Tourists pay a premium for luxury goods.' },
   { id: 'pvn', name: 'PVN Tower', service: 'loan', serviceName: "The Boss's office", shop: [],
-    mods: { skooma: 1.5 }, watch: 1, boss: 3,
+    mods: { skooma: 1.25 }, watch: 1, boss: 3,
     blurb: "Glass, steel, and Casey Benton's name on every floor.",
     special: 'The Boss lends money from the penthouse. Skooma sells high.' },
   { id: 'vault', name: 'The Vault', service: 'bank', serviceName: "Overseer's terminal", shop: [],
@@ -307,7 +312,7 @@ const PLACES = [
     blurb: "Rows of 'nip to the horizon, and nobody around to ask questions.",
     special: "Catnip is cheap, and the Watchers rarely drive out this far." },
   { id: 'starport', name: 'Starport', service: null, serviceName: 'Outfitter, Bay 9', shop: ['hovercrate', 'mech'],
-    mods: { moonsugar: 0.6, skooma: 0.6 }, watch: 1.3,
+    mods: { moonsugar: 0.8, skooma: 0.8 }, watch: 1.3,
     blurb: 'Freighters from the moons, and customs officers who look the other way.',
     special: 'Off-world Moonsugar and Skooma come in cheap. The outfitter sells gear you cannot get planetside.' },
   { id: 'convention', name: 'The Convention Center', service: null, serviceName: 'Tech expo', shop: ['pawphone'],
@@ -455,7 +460,8 @@ function rollMarket(st) {
     const g = pick(st, GOODS);
     const up = rnd(st) < 0.5;
     const base = prices[g.id] != null ? prices[g.id] : basePrice(st, g, P);
-    prices[g.id] = Math.max(1, Math.round(base * (up ? 2.5 + rnd(st) * 1.5 : 0.25 + rnd(st) * 0.2)));
+    const [a, b] = up ? CONFIG.eventUp : CONFIG.eventDown;
+    prices[g.id] = Math.max(1, Math.round(base * (a + rnd(st) * (b - a))));
     st.news = { good: g.id, up };
     addLog(st, headline(st, g, up), 'news');
   }
@@ -471,11 +477,16 @@ function rollTip(st) {
 }
 
 // ---- encounters
+/* Carrying a big load draws the Watchers' eye, whatever your heat. Valued at
+ * each good's usual mid price, so the risk doesn't swing with today's market. */
+function carried(st) { let v = 0; for (const g of GOODS) v += (st.stash[g.id] || 0) * (g.lo + g.hi) / 2; return v; }
+function carryRisk(st) { return Math.min(CONFIG.carryWatchMax, carried(st) * CONFIG.carryWatch); }
+
 function rollEncounter(st) {
   const P = here(st);
   const table = [
     ['goons',    st.debt > 0 && st.debtAge >= CONFIG.goonDays && P.id !== 'pvn' ? 0.3 : 0],
-    ['watchers', (0.05 + st.heat / 250) * P.watch],
+    ['watchers', (0.05 + st.heat / 250 + carryRisk(st)) * P.watch],
     ['rival',    0.07],
     ['boss',     0.035 * (P.boss || 1)],
     ['mugging',  0.04 * (P.mug == null ? 1 : P.mug)],
@@ -646,7 +657,8 @@ const ENC = {
       st.enc = null;
       return;
     }
-    addLog(st, "You can't shake them!", 'bad');
+    const lost = dropGoods(st, CONFIG.dropOnFail);
+    addLog(st, lost ? `You can't shake them, and ${lost} ${plural(lost, 'unit')} of your load spill${lost === 1 ? 's' : ''} in the scramble!` : "You can't shake them!", 'bad');
     foesStrike(st);
   },
   fight(st) {
@@ -777,6 +789,18 @@ const ENC = {
     st.enc = null;
   },
 };
+
+/* A failed getaway costs a share of everything carried, rounded down, so a
+ * light load can come through untouched. Returns the units lost. */
+function dropGoods(st, share) {
+  let lost = 0;
+  if (share <= 0) return 0;
+  for (const g of GOODS) {
+    const q = Math.floor((st.stash[g.id] || 0) * share);
+    if (q > 0) { takeGoods(st, g.id, q); lost += q; }
+  }
+  return lost;
+}
 
 function takeGoods(st, id, q) {
   const have = st.stash[id] || 0;

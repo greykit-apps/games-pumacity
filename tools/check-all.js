@@ -19,6 +19,9 @@ function scenario(name, fn) { scenarios.push({ name, fn }); }
 function fresh(opts) {
   const C = loadCore();
   const st = C.newGame(Object.assign({ seed: 12345, days: 30, name: 'Test' }, opts || {}));
+  // The scenarios do their arithmetic from $2,000 in hand, independent of
+  // whatever the tuned starting cash is; 'start: the declared position' pins that.
+  st.cash = 2000;
   return { C, st };
 }
 /* Step that must succeed. */
@@ -90,11 +93,12 @@ scenario('core: never touches the page, the clock or storage', () => {
 
 // ---- the start
 scenario('start: the declared position', () => {
-  const { C, st } = fresh();
+  const C = loadCore();
+  const st = C.newGame({ seed: 12345, days: 30 });
   assert.strictEqual(st.day, 1);
   assert.strictEqual(st.loc, 'plaza');
-  assert.strictEqual(st.cash, 2000);
-  assert.strictEqual(st.debt, 5500);
+  assert.strictEqual(st.cash, 1500);
+  assert.strictEqual(st.debt, 8000);
   assert.strictEqual(st.hp, 100);
   assert.strictEqual(C.capacity(st), 100);
   assert.strictEqual(C.used(st), 0);
@@ -185,6 +189,7 @@ scenario('sell: a big sale raises heat, and Shades halve it', () => {
 scenario('travel: takes a day, compounds the debt 10% and the bank 1%', () => {
   let { C, st } = fresh();
   st.bank = 10000;
+  st.debt = 5500;
   st = travelQuiet(C, st, 'ranch');
   assert.strictEqual(st.day, 2);
   assert.strictEqual(st.loc, 'ranch');
@@ -211,6 +216,7 @@ scenario('loan: only at PVN Tower, capped, and a real repayment resets the clock
   let { C, st } = fresh();
   refused(C, st, { t: 'borrow', amt: 100 });
   st.loc = 'pvn';
+  st.debt = 5500;
   st.debtAge = 7;
   st = ok(C, st, { t: 'borrow', amt: 1000 });
   assert.strictEqual(st.debt, 6500);
@@ -262,11 +268,11 @@ scenario('goons: paying clears the clock; refusing costs health and cash', () =>
   st = C.forceEncounter(st, 'goons');
   const demand = st.enc.demand;
   const paid = ok(C, st, { t: 'pay' });
-  assert.strictEqual(paid.debt, 5500 - demand);
+  assert.strictEqual(paid.debt, 8000 - demand);
   assert.strictEqual(paid.debtAge, 0);
   assert.strictEqual(paid.enc, null);
   const hurt = ok(C, st, { t: 'refuse' });
-  assert.ok(hurt.hp < 100 && hurt.cash < 2000 && hurt.debt < 5500);
+  assert.ok(hurt.hp < 100 && hurt.cash < 2000 && hurt.debt < 8000);
   assert.strictEqual(hurt.debtAge, C.CONFIG.goonDays - 4);
 });
 
@@ -478,6 +484,57 @@ scenario('stash: found goods never overfill the pouch', () => {
     const s = C.forceEncounter(Object.assign(JSON.parse(JSON.stringify(st)), { rng: seed }), 'stash');
     assert.ok(C.used(s) <= C.capacity(s));
   }
+});
+
+scenario('getaway: a failed run spills part of every load, and a light one can come through', () => {
+  const { C, st } = fresh();
+  st.stash = { nip: 10, skooma: 2 };
+  st.cost = { nip: 100, skooma: 20000 };
+  let failed = null;
+  for (let seed = 1; seed < 300 && !failed; seed++) {
+    const s = C.forceEncounter(Object.assign(JSON.parse(JSON.stringify(st)), { rng: seed, heat: 90 }), 'watchers');
+    const r = C.step(s, { t: 'run' }).state;
+    if (r.enc) failed = r;
+  }
+  assert.ok(failed, 'never failed a getaway');
+  const share = C.CONFIG.dropOnFail;
+  assert.strictEqual(failed.stash.nip, 10 - Math.floor(10 * share));
+  assert.strictEqual(failed.stash.skooma, 2 - Math.floor(2 * share));
+  assert.ok(failed.log.some(l => /spill/.test(l.text)));
+});
+scenario('watchers: a heavy load draws them, capped', () => {
+  const { C, st } = fresh();
+  assert.strictEqual(C.carryRisk(st), 0);
+  st.stash = { skooma: 3 };
+  assert.ok(C.carryRisk(st) > 0);
+  st.stash = { skooma: 500 };
+  assert.strictEqual(C.carryRisk(st), C.CONFIG.carryWatchMax);
+  const count = load => {
+    let n = 0;
+    for (let seed = 1; seed <= 600; seed++) {
+      const s = Object.assign(JSON.parse(JSON.stringify(st)), { rng: seed, stash: load, cost: {}, enc: null });
+      const r = C.step(s, { t: 'travel', to: 'vault' }).state;
+      if (r.enc && r.enc.type === 'watchers') n++;
+    }
+    return n;
+  };
+  const light = count({}), heavy = count({ skooma: 100 });
+  assert.ok(heavy > light * 2, `heavy ${heavy} vs light ${light}`);
+});
+scenario('news: headlines move a price within the declared range', () => {
+  const { C } = fresh();
+  let seen = 0;
+  for (let seed = 1; seed < 400; seed++) {
+    const st = C.newGame({ seed, days: 30 });
+    if (!st.news) continue;
+    seen++;
+    const g = C.GOOD[st.news.good];
+    const p = st.prices[g.id];
+    const [lo, hi] = st.news.up ? C.CONFIG.eventUp : C.CONFIG.eventDown;
+    const m = (C.PLACE.plaza.mods[g.id] || 1);
+    assert.ok(p >= Math.floor(g.lo * m * lo) - 1 && p <= Math.ceil(g.hi * m * hi) + 1, `${g.id} ${p}`);
+  }
+  assert.ok(seen > 20, `only ${seen} headlines in 400 starts`);
 });
 
 // ---- gear
