@@ -1,0 +1,2177 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>PumaCity</title>
+<meta name="description" content="Buy low, sell high, and keep one step ahead of the Watchers. A puma-flavoured trading game in the spirit of Dope Wars, set on the streets of PumaCity.">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#05070f">
+<meta name="referrer" content="no-referrer">
+<meta property="og:title" content="PumaCity">
+<meta property="og:description" content="Buy low, sell high, and keep one step ahead of the Watchers. A puma-flavoured trading game in the spirit of Dope Wars, set on the streets of PumaCity.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://greykit.com/games/pumacity/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Buy low, sell high, and keep one step ahead of the Watchers. A puma-flavoured trading game in the spirit of Dope Wars, set on the streets of PumaCity.">
+<meta property="og:url" content="https://greykit.com/games/pumacity/">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="PumaCity">
+<meta name="twitter:description" content="Buy low, sell high, and keep one step ahead of the Watchers. A puma-flavoured trading game in the spirit of Dope Wars, set on the streets of PumaCity.">
+<meta name="twitter:image" content="https://greykit.com/games/pumacity/og.png">
+<meta name="twitter:image:alt" content="Buy low, sell high, and keep one step ahead of the Watchers. A puma-flavoured trading game in the spirit of Dope Wars, set on the streets of PumaCity.">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/svg+xml" href="icon.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
+<link rel="icon" href="favicon.ico" sizes="16x16 32x32 48x48">
+<style>
+/* Tactical tribe, PumaRally's palette: the same TOKENS table, retyped here
+ * because this is a single file and imports nothing. */
+:root{--bg:#05070f;--panel:#0a0e1a;--panel2:#0d1424;--line:#1b2540;--lit:#47609c;
+  --text:#dbe4fb;--ink:#8b96b8;--dim:#7d8aa8;--accent:#54f2ff;--warn:#ffb000;--danger:#ff5266;
+  --good:#4ade6a;--violet:#b47dff;--steel:#94a0c4;--blue:#4c8dff}
+:root{--s1:4px;--s2:8px;--s3:12px;--s4:16px;--s5:24px;--s6:32px;--s7:48px;--term:1100px;
+  --row:#0f1628;--z-scene:0;--z-stage:1;--z-sticky:5;--z-modal:10}
+*{box-sizing:border-box}
+html{color-scheme:dark}
+body{margin:0;min-height:100dvh;background:var(--bg);color:var(--ink);font:14px/1.5 ui-monospace,Menlo,Consolas,monospace;
+  -webkit-text-size-adjust:100%}
+.boot{padding:var(--s5)}
+.sr-only{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+button{font:inherit;color:var(--text);background:var(--panel2);border:1px solid var(--line);border-radius:3px;
+  padding:5px 10px;cursor:pointer;min-height:34px}
+button:hover:not(:disabled){border-color:var(--lit)}
+button:focus-visible,input:focus-visible,tr:focus-visible{outline:1px solid var(--accent);outline-offset:1px}
+button:disabled{opacity:.4;cursor:default}
+button.primary{border-color:var(--accent);color:var(--accent)}
+button.danger{border-color:var(--danger);color:var(--danger)}
+button[aria-pressed=true]{border-color:var(--accent);color:var(--accent)}
+input{font:inherit;color:var(--text);background:var(--panel2);border:1px solid var(--line);border-radius:3px;padding:5px 8px;min-height:34px}
+kbd{font:inherit;font-size:11px;color:var(--dim);border:1px solid var(--line);border-radius:2px;padding:0 4px;margin-right:6px}
+h1{font-size:14px;letter-spacing:.2em;text-transform:uppercase;color:var(--accent);margin:0;font-weight:600}
+h2{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);margin:var(--s4) 0 var(--s2);font-weight:600}
+h2:first-child{margin-top:0}
+p{margin:0 0 var(--s2)}
+
+.scene{position:fixed;inset:0;z-index:var(--z-scene);pointer-events:none;overflow:hidden;
+  background:linear-gradient(#05070f 0%,#070b17 40%,#0c1020 68%,#181622 88%,#231a17 100%)}
+.scene.under{background:linear-gradient(#04060c 0%,#080b14 55%,#0b0e17 100%)}
+.scene .layer{position:absolute;inset:0;opacity:0;transition:opacity .8s cubic-bezier(.22,1,.36,1)}
+.scene .layer.on{opacity:1}
+.scene svg{display:block;width:100%;height:100%}
+.scene .sf{fill:#0a0f1d;stroke:#2a3960;stroke-width:2;stroke-linejoin:round}
+.scene .sf.rock{fill:#070a12}
+.scene .sground{fill:#070a13}
+.scene .sl{fill:none;stroke:#2a3960;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.scene .sd{fill:none;stroke:#1d2948;stroke-width:1.5;stroke-linecap:round}
+.scene .sw{fill:#ffb000;opacity:.3}
+.scene .swl{fill:none;stroke:#ffb000;stroke-width:2;opacity:.3}
+.scene .sx{fill:#111a30}
+.scene .sa{fill:none;stroke:#54f2ff;stroke-width:2;opacity:.42}
+.scene .sad{fill:#54f2ff;opacity:.45}
+.scene .st{fill:#8b96b8;opacity:.45}
+.scene .smoon{fill:#ffb000;opacity:.55}
+.scene .ssky{fill:#05070f}
+.scene .sglow{fill:#ffb000;opacity:.035}
+.scene .sbeam{fill:url(#pcb)}
+.scene .sbeam.c{fill:url(#pcc)}
+.scene .shaz{fill:#ffb000;opacity:.16}
+.scene .stx{font:600 18px ui-monospace,Menlo,Consolas,monospace;letter-spacing:.18em;fill:#54f2ff;opacity:.5}
+.scene .stx.sm{font-size:11px;letter-spacing:.12em;fill:#ffb000;opacity:.55}
+.scene .stx.xs{font-size:7px;letter-spacing:.1em;fill:#8b96b8;opacity:.6}
+.scene .stx.big{font-size:44px;fill:#ffb000;opacity:.3}
+.top .place-name.arrive{animation:arrive .5s cubic-bezier(.22,1,.36,1) both}
+@keyframes arrive{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){
+  .scene .layer{transition:none}
+  .top .place-name.arrive{animation:none}
+}
+/* The stage centres the terminal in the window, both ways, over the scenery. */
+.stage{position:relative;z-index:var(--z-stage);min-height:100dvh;display:flex;align-items:center;justify-content:center;
+  padding:var(--s6) var(--s5)}
+.pc{width:min(var(--term),100%);background:var(--bg);border:1px solid var(--line);border-radius:4px;
+  box-shadow:0 0 0 1px rgba(5,7,15,.6),0 30px 90px rgba(0,0,0,.65)}
+
+/* Header: where you are and when, together, because that is what changed. */
+.top{display:flex;align-items:baseline;gap:var(--s4);padding:var(--s4) var(--s5) var(--s3)}
+.top .place-name{margin:0;font-size:20px;letter-spacing:.04em;text-transform:none;color:var(--text);font-weight:600}
+.top .day{color:var(--dim);white-space:nowrap}
+.top .day b{color:var(--text);font-weight:600}
+.top .day.last b,.top .day.last{color:var(--warn)}
+.top .grow{flex:1}
+.top .brand{font-size:12px;letter-spacing:.3em;text-transform:uppercase;color:var(--accent);font-weight:600}
+.dayline{height:2px;background:var(--line)}
+.dayline i{display:block;height:100%;background:var(--accent)}
+.dayline.last i{background:var(--warn)}
+
+/* Status: cash and debt lead; the rest support. */
+.status{display:grid;grid-template-columns:repeat(2,minmax(0,1.3fr)) repeat(4,minmax(0,1fr));border-bottom:1px solid var(--line)}
+.stat{padding:var(--s3) var(--s4);border-right:1px solid var(--line);min-width:0}
+.stat:last-child{border-right:0}
+.stat small{display:block;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--dim)}
+.stat span{color:var(--text);white-space:nowrap}
+.stat.lead span{font-size:20px;font-weight:600;line-height:1.3}
+.stat em{display:block;font-style:normal;font-size:12px;color:var(--dim)}
+.stat.bad span,.stat.bad em{color:var(--danger)}
+.stat.warn span{color:var(--warn)}
+.meter{display:block;height:6px;margin-top:var(--s1);background:var(--panel2);border:1px solid var(--line)}
+.meter i{display:block;height:100%;background:var(--good)}
+.meter.heat i{background:var(--warn)}
+.meter.low i{background:var(--danger)}
+
+/* The market column sets the row height; the log is taken out of flow so it
+ * fills whatever height that is and scrolls, instead of stretching the page. */
+.main{display:grid;grid-template-columns:minmax(0,1fr) 380px}
+.market{padding:var(--s4) var(--s5) var(--s5);min-width:0}
+table.mk{width:100%;border-collapse:collapse}
+.mk th{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--dim);text-align:right;font-weight:600;
+  padding:var(--s1) var(--s2);border-bottom:1px solid var(--line)}
+.mk th.name,.mk th.held{text-align:left}
+.mk td{padding:5px var(--s2);text-align:right;border-bottom:1px solid var(--row);white-space:nowrap}
+.mk td.key{color:var(--dim);width:2em;text-align:left;padding-left:var(--s2)}
+.mk td.name{text-align:left;color:var(--text);width:8.5em}
+.mk td.price{width:7.5em;font-variant-numeric:tabular-nums}
+.mk td.held{text-align:left;color:var(--text)}
+.mk td.held small{color:var(--dim);font-size:12px;margin-left:var(--s1)}
+.mk tr{cursor:pointer}
+.mk tr:hover td{background:rgba(13,20,36,.6)}
+.mk tr.sel td{background:#101a30}
+.mk tr.sel td.key{color:var(--accent);box-shadow:inset 2px 0 var(--accent)}
+.mk tr.sel td.name{color:var(--accent)}
+.mk tr.news td.name::after{content:" !";color:var(--warn)}
+.mk td.btns{width:1%;padding-right:0}
+/* Eighteen trade buttons are noise until you're on their row: ghosted, then solid. */
+.mk td.btns button{min-width:52px;padding:3px 8px;min-height:30px;background:transparent;border-color:transparent;color:var(--steel)}
+.mk td.btns button:disabled{color:var(--dim)}
+.mk tr:hover td.btns button:not(:disabled),.mk tr.sel td.btns button:not(:disabled),
+.mk td.btns button:focus-visible{background:var(--panel2);border-color:var(--line);color:var(--text)}
+.mk .out{color:var(--dim)}
+.mk th.range,.mk td.range{text-align:left}
+.mk td.range{width:13em}
+.track{display:inline-block;position:relative;width:64px;height:8px;margin-right:var(--s2);vertical-align:middle;
+  border-left:1px solid var(--lit);border-right:1px solid var(--lit);background:linear-gradient(var(--line),var(--line)) center/100% 1px no-repeat}
+.track i{position:absolute;top:-2px;width:3px;height:12px;margin-left:-1px;background:var(--text);border-radius:1px}
+.rw{font-size:12px;color:var(--dim)}
+.rw-m{display:none}
+.rw.bargain,.rw.cheap{color:var(--good)}
+.rw.steep{color:var(--warn)}
+.rw.sky-high{color:var(--warn)}
+.ticker{margin:0 0 var(--s3);padding:6px var(--s3);border:1px solid #3a2e10;border-radius:3px;background:rgba(255,176,0,.06);color:var(--warn)}
+.ticker b{font-size:11px;letter-spacing:.12em;text-transform:uppercase;margin-right:var(--s2)}
+.up{color:var(--good)}.down{color:var(--danger)}
+/* The trend arrow is direction only; colour on a row belongs to 'vs usual',
+ * so a falling price never shows red beside a green 'cheap'. */
+.mk .tr{color:var(--steel);font-size:12px}
+.mk tr.trade-row{cursor:default}
+.mk tr.trade-row td,.mk tr.trade-row:hover td{background:#0b1222;padding:var(--s2) var(--s3);text-align:left;white-space:normal;border-bottom:1px solid var(--lit)}
+.trade{display:flex;flex-wrap:wrap;gap:var(--s1) var(--s3);align-items:baseline}
+.trade .tv{color:var(--accent);font-weight:600}
+.qrow{display:flex;flex-wrap:wrap;gap:6px;align-items:center;width:100%;margin-top:var(--s1)}
+.qrow input{width:6em}
+.qrow .total{margin-left:auto;margin-right:var(--s2)}
+.travel,.sidepanel{position:absolute;inset:0;overflow:auto;padding:var(--s4) var(--s5)}
+.sidepanel .row{display:flex;gap:var(--s2);align-items:center;flex-wrap:wrap;margin:var(--s2) 0}
+.sidepanel .row input{width:8em}
+.sidepanel table{width:100%;border-collapse:collapse}
+.sidepanel td{padding:var(--s1) 0;vertical-align:top;border-bottom:1px solid var(--row)}
+.sidepanel td.r{text-align:right;padding-left:var(--s2)}
+.sidepanel .note{color:var(--dim);font-size:12px}
+.sidepanel .acts{margin-top:var(--s3)}
+.confirm-note{margin:var(--s3) 0 0;color:var(--warn)}
+.dest{list-style:none;margin:0 0 var(--s3);padding:0;display:grid;gap:6px}
+.dest button{width:100%;text-align:left;display:grid;grid-template-columns:auto minmax(0,1fr);gap:0 var(--s2);padding:6px var(--s3)}
+.dest button kbd{grid-row:span 2;align-self:center}
+.dest button span{font-size:12px;color:var(--dim)}
+.flash{margin-top:var(--s2);color:var(--danger)}
+.flash:empty{display:none}
+.market .bar{margin-top:var(--s4)}
+.side{border-left:1px solid var(--line);display:flex;flex-direction:column;min-height:0;min-width:0}
+.place{padding:var(--s4) var(--s5);border-bottom:1px solid var(--line)}
+.place .blurb{color:var(--ink)}
+.place .spec{color:var(--steel)}
+.place .gear{color:var(--dim);font-size:12px;margin:0}
+.tip{margin-top:var(--s2);padding:6px var(--s2);border:1px dashed var(--line);font-size:12px;color:var(--steel)}
+.tip b{color:var(--accent);font-weight:600}
+.logwrap{flex:1;position:relative;min-height:180px}
+.log{position:absolute;inset:0;overflow:auto;padding:var(--s3) var(--s5)}
+.log p{margin:0 0 3px}
+.log .day{color:var(--accent);margin-top:var(--s3)}
+.log p:first-child{margin-top:0}
+.news{color:var(--warn)}.bad{color:var(--danger)}.good{color:var(--good)}.enc{color:var(--violet)}
+.trade{color:var(--steel)}.dim{color:var(--dim)}.warn{color:var(--warn)}
+.bar{display:flex;gap:var(--s2);flex-wrap:wrap;padding:var(--s2);border:1px solid var(--line);border-radius:3px;background:var(--panel)}
+.bar .grow{flex:1}
+
+.back{position:fixed;inset:0;background:rgba(2,4,10,.8);display:flex;align-items:center;justify-content:center;padding:var(--s4);z-index:var(--z-modal)}
+.modal{background:var(--panel);border:1px solid var(--lit);border-radius:4px;max-width:540px;width:100%;
+  max-height:calc(100dvh - 32px);overflow:auto;padding:var(--s4) var(--s5)}
+.modal h1{margin-bottom:var(--s3)}
+.modal .row{display:flex;gap:var(--s2);align-items:center;flex-wrap:wrap;margin:var(--s2) 0}
+.modal .row input{width:9em}
+.modal .acts{display:flex;gap:var(--s2);flex-wrap:wrap;margin-top:var(--s4)}
+.modal .note{color:var(--dim);font-size:12px}
+.modal table{width:100%;border-collapse:collapse}
+.modal td,.modal th{padding:var(--s1) 6px;text-align:left;border-bottom:1px solid var(--row);vertical-align:top}
+.modal th{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--dim);font-weight:600}
+.modal td.r,.modal th.r{text-align:right}
+.back.enc-back{background:rgba(2,4,10,.66)}
+/* Encounters are the drama: a heading coloured by who's in front of you. */
+.modal.encounter{max-width:580px;box-shadow:0 24px 70px rgba(0,0,0,.7)}
+.modal.encounter h1{font-size:22px;letter-spacing:.12em;padding-bottom:var(--s2);margin-bottom:var(--s3);border-bottom:1px solid currentColor}
+.modal.t-watchers h1{color:var(--danger)}
+.modal.t-boss h1,.modal.t-goons h1{color:var(--warn)}
+.modal.t-rival h1{color:var(--violet)}
+.modal.t-stray h1{color:var(--accent)}
+.modal.enter{animation:encIn .32s cubic-bezier(.22,1,.36,1) both}
+@keyframes encIn{from{opacity:0;transform:translateY(10px) scale(.985)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.modal.enter{animation:none}}
+.foes{margin:var(--s3) 0}
+.choices{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:var(--s2) var(--s3);align-items:center;margin-top:var(--s4)}
+.choices button{text-align:left}
+.choices .cost{font-size:12px;color:var(--steel)}
+.foe{display:grid;grid-template-columns:minmax(0,1fr) 120px;gap:var(--s3);align-items:center;margin:var(--s1) 0;color:var(--text)}
+.elog{margin-top:var(--s3);padding:var(--s2);background:var(--bg);border:1px solid var(--line);max-height:150px;overflow:auto;font-size:13px}
+.elog p{margin:0 0 2px}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:var(--s3)}
+.help dt{color:var(--text)}
+.help dd{margin:0 0 var(--s2) 0;color:var(--ink)}
+
+.setup{width:min(640px,100%);padding:var(--s6) var(--s6) var(--s5)}
+.setup .sky{display:block;width:100%;height:auto;margin:0 0 var(--s1)}
+.setup .title{font-size:26px;letter-spacing:.35em;color:var(--accent);margin:0}
+.setup .tag{color:var(--steel);margin:var(--s1) 0 var(--s3)}
+.setup .row{display:flex;gap:var(--s2);align-items:center;flex-wrap:wrap;margin:var(--s3) 0}
+.setup .row label{width:7em;color:var(--dim)}
+.setup .row input{flex:1;min-width:10em;max-width:20em}
+.setup .acts{display:flex;gap:var(--s2);flex-wrap:wrap;margin:var(--s5) 0 var(--s6)}
+.setup table.scores{border-collapse:collapse;width:100%}
+.setup .scores td,.setup .scores th{padding:var(--s1) var(--s2);text-align:left;border-bottom:1px solid var(--row)}
+.setup .scores th{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--dim);font-weight:600}
+.scores td.r,.scores th.r{text-align:right}
+.scores td:last-child{white-space:nowrap}
+.scores .rip{color:var(--danger)}
+.final{font-size:32px;font-weight:600;color:var(--text);margin:var(--s1) 0 0;font-variant-numeric:tabular-nums}
+.final.neg{color:var(--danger)}
+.verdict{margin:0 0 var(--s3)}
+.verdict.best{color:var(--accent)}
+.primer{margin:0 0 var(--s4);padding-left:1.5em;color:var(--ink)}
+.primer li{margin:2px 0}
+.primer .rw{font-size:inherit}
+.foot{color:var(--dim);font-size:12px;margin-top:var(--s6)}
+.foot a{color:var(--steel)}
+
+/* Laptops (1280x800 is the common case): a narrower, shorter terminal, so
+ * the district's landmarks keep real space at the sides and above. */
+@media (min-width:901px) and (max-width:1400px){
+  :root{--term:1000px}
+  .stage{padding:var(--s4)}
+  .main{grid-template-columns:minmax(0,1fr) 330px}
+  .mk td.range{width:11em}
+  .track{width:52px}
+  .market,.place,.log{padding-left:var(--s4);padding-right:var(--s4)}
+  .top{padding-left:var(--s4);padding-right:var(--s4)}
+}
+@media (min-width:901px) and (max-height:860px){
+  .top{padding-top:var(--s3);padding-bottom:var(--s2)}
+  .stat{padding-top:var(--s2);padding-bottom:var(--s2)}
+  .stat.lead span{font-size:18px}
+  .market{padding-top:var(--s3);padding-bottom:var(--s4)}
+  .mk td{padding-top:3px;padding-bottom:3px}
+  .market .bar{margin-top:var(--s3)}
+}
+@media (max-width:900px){
+  .scene{position:relative;height:clamp(120px,34vw,220px);border-bottom:1px solid var(--line)}
+  .stage{display:block;padding:0}
+  .pc{border:0;border-radius:0;box-shadow:none}
+  .setup{margin:0 auto}
+  .main{grid-template-columns:minmax(0,1fr)}
+  .side{border-left:0;border-top:1px solid var(--line)}
+  .logwrap{min-height:0}
+  .log{position:static;max-height:260px;min-height:140px}
+  .travel,.sidepanel{position:static}
+  .status{grid-template-columns:repeat(2,minmax(0,1fr)) repeat(2,minmax(0,1fr))}
+  .stat.lead{grid-column:span 2}
+  .stat:nth-child(2){border-right:0}
+  .stat:nth-child(-n+2){border-bottom:1px solid var(--line)}
+  .stat:nth-child(n+3){padding:var(--s2) var(--s3)}
+}
+@media (max-width:700px){
+  body{font-size:13px}
+  button{min-height:44px}
+  .top{padding:var(--s3) var(--s3) var(--s2);gap:var(--s3);flex-wrap:wrap}
+  .top .place-name{font-size:18px}
+  .top .brand{display:none}
+  .stat{padding:var(--s2) var(--s3)}
+  .stat.lead span{font-size:17px}
+  .status{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .mk td.btns button{min-height:40px;min-width:46px;padding:2px 6px;background:var(--panel2);border-color:var(--line);color:var(--text)}
+  .mk .key,.mk .range{display:none}
+  .mk td.price{width:auto}
+  .rw-m{display:block;font-size:11px;line-height:1.2}
+  .mk td,.mk th{padding:var(--s1) 3px}
+  .mk td.name{width:auto}
+  .mk td.held small{display:block;margin:0;font-size:11px}
+  .market,.place,.log,.travel,.sidepanel{padding-left:var(--s3);padding-right:var(--s3)}
+  .qrow .total{margin-left:0}
+  .bar{position:sticky;bottom:6px;z-index:var(--z-sticky)}
+  .bar button{flex:1 1 auto}
+  kbd{display:none}
+  .modal{padding:14px}
+  .choices{grid-template-columns:minmax(0,1fr)}
+  .choices .cost{margin:-4px 0 var(--s2)}
+  .setup{padding:var(--s5) var(--s4)}
+}
+</style>
+</head>
+<body>
+<div class="scene" id="pc-scene" aria-hidden="true"></div>
+<div class="sr-only" id="pc-live" aria-live="polite" aria-atomic="false"></div>
+<div data-pumacity-game><p class="boot">Hitting the streets…</p></div>
+<script>
+'use strict';
+// ===== @core-begin =====
+/* Everything between the core markers is data and rules with no DOM. The tools
+ * under tools/ cut this block out of the page and run it under Node, so the
+ * browser and the tests play exactly the same game. Nothing in here may touch
+ * the page, the clock or browser storage -- all randomness comes from st.rng. */
+
+const VERSION = '1.0.0';
+
+const CONFIG = {
+  lengths: [30, 60, 90],
+  startCash: 1500,
+  startDebt: 8000,
+  startLoc: 'plaza',
+  baseCap: 100,
+  maxHp: 100,
+  debtRate: 0.10,     // per day, compounding
+  bankRate: 0.01,     // per day, compounding
+  debtCap: 50000,     // the most The Boss will have on her books for you
+  goonDays: 8,        // days without a real repayment before the goons come
+  repayReset: 0.10,   // a repayment of at least this share of the debt counts as "real"
+  heatDecay: 4,       // per day
+  eventChance: 0.12,  // a market headline on any given day: rarer, but sharper
+  eventUp: [3, 5],   // a spike multiplies the price by this range
+  eventDown: [0.2, 0.4],
+  carryWatch: 1 / 150000, // extra Watcher odds per $1 of goods carried (at usual mid prices)
+  carryWatchMax: 0.35,     // ...capped here
+  dropOnFail: 0.4,     // share of each good you drop when a getaway fails
+  vetPerHp: 15,
+  logMax: 150,
+};
+
+const GOODS = [
+  { id: 'nip',        name: 'Catnip',     lo: 10,    hi: 60,    blurb: "Ditch-grade 'nip. Cheap, bulky, everywhere." },
+  { id: 'feathers',   name: 'Feathers',   lo: 40,    hi: 150,   blurb: 'Wand-toy plumage. Kittens go wild for it.' },
+  { id: 'nappers',    name: 'Nappers',    lo: 100,   hi: 400,   blurb: 'Sleepy pills, for the cat who has had enough of today.' },
+  { id: 'zoomers',    name: 'Zoomers',    lo: 200,   hi: 700,   blurb: 'Three in the morning, in capsule form.' },
+  { id: 'silvervine', name: 'Silvervine', lo: 300,   hi: 900,   blurb: "Refined vine chews. 'nip's classier cousin." },
+  { id: 'psychos',    name: 'Psychos',    lo: 600,   hi: 1800,  blurb: 'Mushrooms that make the wallpaper move.' },
+  { id: 'reddot',     name: 'Red Dot',    lo: 1000,  hi: 4500,  blurb: 'You will never catch it. You will never stop trying.' },
+  { id: 'moonsugar',  name: 'Moonsugar',  lo: 5000,  hi: 14000, blurb: 'Crystal sugar that comes in on The Ship. Pricey.' },
+  { id: 'skooma',     name: 'Skooma',     lo: 10000, hi: 28000, blurb: "Moonsugar, cooked down. The Boss's favourite." },
+];
+const GOOD = Object.fromEntries(GOODS.map(g => [g.id, g]));
+
+/* mods multiply a good's price here; `all` multiplies every good. watch, mug
+ * and boss scale those encounters; cool is extra heat shed per day here. */
+const PLACES = [
+  { id: 'plaza', name: 'Market Plaza', service: null, serviceName: 'Shades stall', shop: ['shades'],
+    mods: { psychos: 1.1, reddot: 1.15, moonsugar: 1.15, skooma: 1.15 }, watch: 1, mug: 1.5,
+    blurb: "Downtown: an open-air mall of stucco arcades, palms and fountains, full of tourists with money to spend.",
+    special: 'Tourists pay a premium for luxury goods.' },
+  { id: 'pvn', name: 'PVN Tower', service: 'loan', serviceName: "The Boss's office", shop: [],
+    mods: { skooma: 1.25 }, watch: 1, boss: 3,
+    blurb: "Casey Benton's office tower: a theater at street level, her offices above it, a nightclub on the roof.",
+    special: 'The Boss lends money from her office. Skooma sells high at the club upstairs.' },
+  { id: 'vault', name: 'The Vault', service: 'bank', serviceName: "Overseer's terminal", shop: [],
+    mods: {}, watch: 0.8, mug: 0.3,
+    blurb: "A fully stocked vault under the city, waiting for PumaCity's leadership in case of war. Until then, the Overseer runs it as a bank.",
+    special: 'Money in the Vault is safe from muggers and the Watchers.' },
+  { id: 'ranch', name: 'The Ranch', service: null, serviceName: '', shop: [],
+    mods: { nip: 0.45 }, watch: 0.5, cool: 6,
+    blurb: "An old horse ranch on the edge of town, its paddocks turned over to grow fields.",
+    special: "Catnip is cheap, and the Watchers rarely drive out this far." },
+  { id: 'starport', name: 'Starport', service: null, serviceName: 'Outfitter, Bay 9', shop: ['hovercrate', 'mech'],
+    mods: { moonsugar: 0.8, skooma: 0.8 }, watch: 1.3,
+    blurb: "Where The Ship lands, trading PumaCity's goods with the other areas.",
+    special: "Moonsugar and Skooma come in cheap off The Ship. The outfitter in Bay 9 sells gear you can't get in town." },
+  { id: 'convention', name: 'The Convention Center', service: null, serviceName: 'Tech expo', shop: ['pawphone'],
+    all: 1.2, mods: {}, watch: 1.1, mug: 3,
+    blurb: 'The convention center by the starport, with a different event every week.',
+    special: 'Crowds pay over the odds for everything. Pickpockets work the crowd.' },
+  { id: 'suburbs', name: 'Suburbs', service: 'vet', serviceName: 'Pet store & vet', shop: ['fanny', 'saddle', 'spray', 'laser', 'claws', 'collar', 'mittens'],
+    mods: {}, watch: 0.9,
+    blurb: 'Single-family homes on quiet cul-de-sacs, every one of them rented from Casey Benton.',
+    special: 'The vet patches you up. The pet store sells pouches, weapons and accessories.' },
+];
+const PLACE = Object.fromEntries(PLACES.map(p => [p.id, p]));
+
+/* Within a slot, later entries outrank earlier ones: you can trade up, never down. */
+const GEAR = {
+  fanny:      { slot: 'pouch',    a: 'a', name: 'Fanny Pouch',     price: 400,   cap: 30,  short: "+30 space", blurb: '+30 carrying space.' },
+  saddle:     { slot: 'pouch',    a: 'some', name: 'Saddlebags',      price: 1500,  cap: 60,  short: "+60 space", blurb: '+60 carrying space.' },
+  hovercrate: { slot: 'pouch',    a: 'a', name: 'Hover-Crate',     price: 9000,  cap: 120, short: "+120 space", blurb: '+120 carrying space. Floats along behind you.' },
+  spray:      { slot: 'weapon',   a: 'a', name: 'Spray Bottle',    price: 300,   dmg: [4, 9],   short: "4–9 a hit", blurb: 'Nobody likes getting wet. Hits for 4–9.' },
+  laser:      { slot: 'weapon',   a: 'a', name: 'Laser Pointer',   price: 900,   dmg: [7, 13],  short: "7–13 a hit", blurb: 'They cannot help chasing it. Hits for 7–13.' },
+  claws:      { slot: 'weapon',   a: 'some', name: 'Sharpened Claws', price: 2500,  dmg: [11, 19], short: "11–19 a hit", blurb: 'A professional manicure. Hits for 11–19.' },
+  mech:       { slot: 'weapon',   a: 'some', name: 'Mech-Claws',      price: 12000, dmg: [18, 30], short: "18–30 a hit", blurb: 'Off-world hydraulics. Hits for 18–30.' },
+  collar:     { slot: 'armour',   a: 'a', name: 'Kevlar Collar',   price: 2000,  guard: 0.4, short: "−40% damage", blurb: 'Takes 40% off every hit.' },
+  pawphone:   { slot: 'pawphone', a: 'a', name: 'Pawphone',        price: 1200,  short: "tomorrow's prices", blurb: "Each day, shows tomorrow's prices somewhere else in town." },
+  mittens:    { slot: 'mittens',  a: 'some', name: 'Sneaky Mittens',  price: 800,   short: "better getaways", blurb: 'Kittens wear them. Much better odds when you run.' },
+  shades:     { slot: 'shades',   a: 'some', name: 'Shades',          price: 600,   short: "half the heat", blurb: 'Heat builds half as fast.' },
+};
+const SLOTS = ['pouch', 'weapon', 'armour', 'pawphone', 'mittens', 'shades'];
+
+const RIVALS = ['Tomcat Tony', 'Scraps McGee', 'Velvet', 'One-Ear Ollie', 'Duchess', 'Big Ginger', 'Mister Whiskers'];
+
+/* Market headlines. {g} is the good's name. Specific lines win over generic ones. */
+const NEWS = {
+  up: [
+    'Watchers raid a {g} den downtown. Prices are through the roof!',
+    'Kittens are paying crazy money for {g}!',
+    'A {g} shortage hits PumaCity. Sellers name their price!',
+  ],
+  down: [
+    'A {g} shipment slips past customs. Prices crash!',
+    'Somebody dumped a crate of {g} in the park. Prices hit the floor!',
+    'Cheap {g} floods the streets!',
+  ],
+  nip: { down: "The Ranch harvest floods the market with cheap 'nip!" },
+  feathers: { down: 'A pillow factory explodes. Feathers everywhere, prices crash!' },
+  reddot: { up: 'The Boss bans laser pointers! Red Dot prices go wild!' },
+  moonsugar: { up: "Customs impound The Ship's Moonsugar. Prices skyrocket!" },
+  skooma: { up: 'Casey Benton is throwing a party in the PVN Tower club. Skooma prices soar!' },
+};
+
+// ---- randomness: one 32-bit LCG whose whole state is st.rng (from pumarally's rng.js)
+function nextState(s) { return (Math.imul(s | 0, 1664525) + 1013904223) | 0; }
+function rnd(st) { st.rng = nextState(st.rng); return ((st.rng >>> 8) & 0xffffff) / 0x1000000; }
+function rndInt(st, n) { return Math.floor(rnd(st) * n); }
+function rndRange(st, a, b) { return a + rndInt(st, b - a + 1); }
+function pick(st, arr) { return arr[rndInt(st, arr.length)]; }
+/* Deterministic hash, for bot choices that must not move the game's RNG. */
+function hash32(n) {
+  let x = n | 0;
+  x = Math.imul(x ^ (x >>> 16), 0x7feb352d);
+  x = Math.imul(x ^ (x >>> 15), 0x846ca68b);
+  x = x ^ (x >>> 16);
+  return x >>> 0;
+}
+
+// ---- small helpers
+function fmt(n) {
+  const s = String(Math.round(Math.abs(n))).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  return (n < 0 ? '-$' : '$') + s;
+}
+function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
+function here(st) { return PLACE[st.loc]; }
+function capacity(st) { return CONFIG.baseCap + (st.gear.pouch ? GEAR[st.gear.pouch].cap : 0); }
+function used(st) { let n = 0; for (const g of GOODS) n += st.stash[g.id] || 0; return n; }
+function free(st) { return capacity(st) - used(st); }
+function netWorth(st) { return st.cash + st.bank - st.debt; }
+function slotItems(slot) { return Object.keys(GEAR).filter(id => GEAR[id].slot === slot); }
+function gearRank(id) { return slotItems(GEAR[id].slot).indexOf(id); }
+function canUpgrade(st, id) {
+  const cur = st.gear[GEAR[id].slot];
+  return !cur || gearRank(id) > gearRank(cur);
+}
+function guard(st, dmg) { return st.gear.armour ? Math.round(dmg * (1 - GEAR[st.gear.armour].guard)) : dmg; }
+function heatUp(st, n) {
+  if (n <= 0) return;
+  if (st.gear.shades) n = Math.ceil(n / 2);
+  st.heat = Math.min(100, st.heat + n);
+}
+function addLog(st, text, cls) {
+  st.logN++;
+  st.log.push({ n: st.logN, d: st.day, text, cls: cls || '' });
+  if (st.log.length > CONFIG.logMax) st.log.splice(0, st.log.length - CONFIG.logMax);
+}
+function plural(n, one, many) { return n === 1 ? one : (many || one + 's'); }
+
+// ---- new run
+function newGame(opts) {
+  opts = opts || {};
+  const days = CONFIG.lengths.includes(opts.days) ? opts.days : CONFIG.lengths[0];
+  const seed = (opts.seed == null ? 1 : opts.seed) | 0;
+  // Count characters, not UTF-16 units, so a cut never splits an emoji in half.
+  const name = Array.from(String(opts.name || '').trim()).slice(0, 16).join('') || 'Stray';
+  const st = {
+    v: 1, version: VERSION, seed, rng: seed, name, days, day: 1, loc: CONFIG.startLoc,
+    cash: CONFIG.startCash, bank: 0, debt: CONFIG.startDebt, debtAge: 0,
+    hp: CONFIG.maxHp, heat: 0,
+    stash: {}, cost: {},
+    gear: { pouch: null, weapon: null, armour: null, pawphone: null, mittens: null, shades: null },
+    prices: {}, prev: {}, news: null, tip: null, enc: null, over: null,
+    log: [], logN: 0,
+    stats: { bought: 0, sold: 0, fights: 0, won: 0, fled: 0, busted: 0, peak: CONFIG.startCash - CONFIG.startDebt },
+  };
+  addLog(st, `Day 1: ${PLACE[st.loc].name}.`, 'day');
+  addLog(st, `Welcome to PumaCity, ${name}. Casey Benton owns all of it, including your ${fmt(st.debt)} debt, at 10% a day.`, '');
+  addLog(st, `You have ${days} days. Buy low, sell high, and pay her back at PVN Tower.`, '');
+  rollMarket(st);
+  rollTip(st);
+  return st;
+}
+
+// ---- prices
+function basePrice(st, g, P) {
+  const m = (P.mods[g.id] || 1) * (P.all || 1);
+  return Math.max(1, Math.round((g.lo + rnd(st) * (g.hi - g.lo)) * m));
+}
+function basePrices(st, P) {
+  const prices = {};
+  for (const g of GOODS) prices[g.id] = basePrice(st, g, P);
+  const gone = 1 + rndInt(st, 2);
+  for (let i = 0; i < gone; i++) prices[pick(st, GOODS).id] = null;
+  return prices;
+}
+function headline(st, g, up) {
+  const special = NEWS[g.id] && NEWS[g.id][up ? 'up' : 'down'];
+  const line = special && rnd(st) < 0.6 ? special : pick(st, NEWS[up ? 'up' : 'down']);
+  return line.replace('{g}', g.name);
+}
+function rollMarket(st) {
+  const P = here(st);
+  for (const g of GOODS) if (st.prices[g.id] != null) st.prev[g.id] = st.prices[g.id];
+  const tipped = st.tip && st.tip.loc === st.loc && st.tip.day === st.day;
+  const prices = tipped ? Object.assign({}, st.tip.prices) : basePrices(st, P);
+  st.tip = null;
+  st.news = null;
+  if (rnd(st) < CONFIG.eventChance) {
+    const g = pick(st, GOODS);
+    const up = rnd(st) < 0.5;
+    const base = prices[g.id] != null ? prices[g.id] : basePrice(st, g, P);
+    const [a, b] = up ? CONFIG.eventUp : CONFIG.eventDown;
+    prices[g.id] = Math.max(1, Math.round(base * (a + rnd(st) * (b - a))));
+    st.news = { good: g.id, up };
+    addLog(st, headline(st, g, up), 'news');
+  }
+  st.prices = prices;
+}
+/* The Pawphone pre-rolls tomorrow's prices at one other place. If you go there
+ * tomorrow, those ARE the prices (a headline can still move one good). */
+function rollTip(st) {
+  if (!st.gear.pawphone || st.day >= st.days) return;
+  const others = PLACES.filter(p => p.id !== st.loc);
+  const P = pick(st, others);
+  st.tip = { loc: P.id, day: st.day + 1, prices: basePrices(st, P) };
+}
+
+// ---- encounters
+/* Carrying a big load draws the Watchers' eye, whatever your heat. Valued at
+ * each good's usual mid price, so the risk doesn't swing with today's market. */
+function carried(st) { let v = 0; for (const g of GOODS) v += (st.stash[g.id] || 0) * (g.lo + g.hi) / 2; return v; }
+function carryRisk(st) { return Math.min(CONFIG.carryWatchMax, carried(st) * CONFIG.carryWatch); }
+
+function rollEncounter(st) {
+  const P = here(st);
+  const table = [
+    ['goons',    st.debt > 0 && st.debtAge >= CONFIG.goonDays && P.id !== 'pvn' ? 0.3 : 0],
+    ['watchers', (0.05 + st.heat / 250 + carryRisk(st)) * P.watch],
+    ['rival',    0.07],
+    ['boss',     0.035 * (P.boss || 1)],
+    ['mugging',  0.04 * (P.mug == null ? 1 : P.mug)],
+    ['stash',    0.04],
+    ['stray',    0.04],
+  ];
+  const r = rnd(st);
+  let acc = 0;
+  for (const [type, p] of table) {
+    acc += p;
+    if (r < acc) { startEncounter(st, type); return; }
+  }
+}
+
+/* enc.from marks where this encounter's log lines begin, so the screen can show
+ * just them however the encounter was reached (arrival, resume or debug). */
+function startEncounter(st, type) {
+  const from = st.logN;
+  beginEncounter(st, type);
+  if (st.enc) st.enc.from = from;
+}
+function beginEncounter(st, type) {
+  switch (type) {
+    case 'watchers': {
+      const n = clamp(1 + Math.floor(st.heat / 30) + rndInt(st, 2), 1, 5);
+      const foes = [];
+      if (st.heat >= 40) foes.push({ name: 'Watch-Captain Hardclaw', hp: 24, max: 24 });
+      while (foes.length < n) foes.push({ name: 'Watcher', hp: 12, max: 12 });
+      st.enc = { type, foes, n, hitP: 0.3, dmg: [3, 8], loot: [80, 250] };
+      const lead = foes[0].name === 'Watcher' ? '' : 'Watch-Captain Hardclaw and ';
+      const rest = foes.filter(f => f.name === 'Watcher').length;
+      addLog(st, n === 1 ? 'A Watcher spots you and gives chase!' : `${lead}${rest} ${plural(rest, 'Watcher')} are on your tail!`, 'enc');
+      return;
+    }
+    case 'rival': {
+      const n = 1 + rndInt(st, 3);
+      const boss = pick(st, RIVALS);
+      const foes = [{ name: boss, hp: 14, max: 14 }];
+      while (foes.length < n) foes.push({ name: 'Henchcat', hp: 10, max: 10 });
+      const hostile = rnd(st) < 0.45;
+      const deal = hostile ? null : makeDeal(st);
+      st.enc = { type, foes, n, hostile, deal, boss, hitP: 0.28, dmg: [3, 7], loot: [150, 600] };
+      if (hostile) addLog(st, `${boss}'s crew jumps you! "This is our turf."`, 'enc');
+      else addLog(st, `${boss} waves you into a doorway. "Got a deal for you."`, 'enc');
+      return;
+    }
+    case 'boss': {
+      const sk = st.stash.skooma || 0;
+      if (sk > 0 && rnd(st) < 0.6) {
+        const price = Math.round(GOOD.skooma.hi * (1.05 + rnd(st) * 0.3));
+        st.enc = { type, ask: 'skooma', qty: sk, price };
+        addLog(st, `Casey Benton's limo pulls up and a tinted window slides down. "I hear you're carrying Skooma. I'll take all ${sk} at ${fmt(price)} each. Between friends."`, 'enc');
+      } else if (st.heat >= 15) {
+        const amount = Math.max(300, Math.round(((st.cash + st.bank) * 0.06 + st.heat * 30) / 50) * 50);
+        st.enc = { type, ask: 'bribe', amount };
+        addLog(st, `Casey Benton's limo pulls up and a tinted window slides down. "The Watchers have been asking about you. For ${fmt(amount)}, they could stop asking."`, 'enc');
+      } else {
+        addLog(st, "Casey Benton's motorcade sweeps past. You keep your head down.", 'dim');
+      }
+      return;
+    }
+    case 'goons': {
+      const demand = Math.min(st.debt, Math.max(500, Math.round(st.debt * 0.25)));
+      st.enc = { type, demand };
+      addLog(st, `Two of The Boss's goons step out of a car. "The Boss hasn't seen her money in a while. ${fmt(demand)}. Now."`, 'enc');
+      return;
+    }
+    case 'stray': {
+      const next = ['pouch', 'weapon'].map(slot => slotItems(slot).find(id => canUpgrade(st, id))).filter(Boolean);
+      if (!next.length) { addLog(st, 'A scruffy stray looks you over, decides you have everything, and wanders off.', 'dim'); return; }
+      const item = pick(st, next);
+      const price = Math.round(GEAR[item].price * (0.4 + rnd(st) * 0.2));
+      st.enc = { type, item, price };
+      addLog(st, `A scruffy stray sidles up. "Psst. Want ${GEAR[item].a} ${GEAR[item].name}? Fell off a hover-truck. ${fmt(price)}, no questions."`, 'enc');
+      return;
+    }
+    case 'stash': {
+      const g = GOODS[rndInt(st, 6)];
+      const q = Math.min(3 + rndInt(st, 13), free(st));
+      if (q <= 0) addLog(st, `You find a bag of ${g.name}, but you have no room to carry it.`, 'dim');
+      else { st.stash[g.id] = (st.stash[g.id] || 0) + q; addLog(st, `You find ${q} ${g.name} stuffed in a drainpipe!`, 'good'); }
+      return;
+    }
+    case 'mugging': {
+      if (st.cash <= 0) { addLog(st, 'A mugger corners you, finds empty pockets, and leaves in disgust.', 'dim'); return; }
+      const lose = Math.max(1, Math.round(st.cash * (0.15 + rnd(st) * 0.25)));
+      st.cash -= lose;
+      addLog(st, st.loc === 'convention' ? `A pickpocket in the crowd lifts ${fmt(lose)}!` : `You're mugged in an alley! They take ${fmt(lose)}.`, 'bad');
+      return;
+    }
+  }
+}
+
+function makeDeal(st) {
+  const held = GOODS.filter(g => (st.stash[g.id] || 0) > 0);
+  if (held.length && rnd(st) < 0.5) {
+    const g = pick(st, held);
+    const mkt = st.prices[g.id] != null ? st.prices[g.id] : (g.lo + g.hi) / 2;
+    return { side: 'buy', good: g.id, qty: st.stash[g.id], price: Math.round(mkt * (1.2 + rnd(st) * 0.3)) };
+  }
+  const g = pick(st, GOODS);
+  const mkt = st.prices[g.id] != null ? st.prices[g.id] : (g.lo + g.hi) / 2;
+  return { side: 'sell', good: g.id, qty: 5 + rndInt(st, 21), price: Math.max(1, Math.round(mkt * (0.5 + rnd(st) * 0.2))) };
+}
+/* How many units the rival's offer would actually move, given room, cash and stock. */
+function dealQty(st, deal) {
+  if (deal.side === 'buy') return Math.min(deal.qty, st.stash[deal.good] || 0);
+  return Math.max(0, Math.min(deal.qty, free(st), Math.floor(st.cash / deal.price)));
+}
+
+function encOptions(st) {
+  const e = st.enc;
+  const armed = !!st.gear.weapon;
+  switch (e.type) {
+    case 'watchers': return ['run'].concat(armed ? ['fight'] : [], ['surrender']);
+    case 'rival':
+      if (e.hostile) return ['run'].concat(armed ? ['fight'] : [], ['surrender']);
+      return (dealQty(st, e.deal) > 0 ? ['deal'] : []).concat(['leave'], armed ? ['fight'] : []);
+    case 'boss': return e.ask === 'skooma' ? ['sell', 'decline'] : (st.cash >= e.amount ? ['pay'] : []).concat(['refuse']);
+    case 'goons': return (st.cash >= e.demand ? ['pay'] : []).concat(['refuse']);
+    case 'stray': return (st.cash >= e.price && canUpgrade(st, e.item) ? ['buy'] : []).concat(['decline']);
+  }
+  return [];
+}
+
+function die(st, why) {
+  st.hp = 0;
+  st.enc = null;
+  st.over = { reason: 'dead', why, score: 0, net: netWorth(st), day: st.day };
+  addLog(st, `${why} Your run ends on day ${st.day}.`, 'bad');
+}
+
+/* Rank-and-file foes read as 'a Watcher'; named ones as themselves. */
+function foeName(f) { return /^(Watcher|Henchcat)$/.test(f.name) ? 'a ' + f.name : f.name; }
+
+function foesStrike(st) {
+  const e = st.enc;
+  let total = 0;
+  for (let i = 0; i < e.foes.length; i++) if (rnd(st) < e.hitP) total += rndRange(st, e.dmg[0], e.dmg[1]);
+  if (total > 0) {
+    total = Math.max(1, guard(st, total));
+    st.hp = Math.max(0, st.hp - total);
+    addLog(st, `They hit you for ${total} HP.`, 'bad');
+  } else {
+    addLog(st, 'They swing and miss.', 'dim');
+  }
+  if (st.hp <= 0) die(st, e.type === 'watchers' ? 'The Watchers take you down.' : `${e.boss}'s crew takes you down.`);
+}
+
+function winFight(st) {
+  const e = st.enc;
+  let cash = 0;
+  for (let i = 0; i < e.n; i++) cash += rndRange(st, e.loot[0], e.loot[1]);
+  st.cash += cash;
+  st.stats.won++;
+  heatUp(st, e.type === 'watchers' ? 15 : 6);
+  addLog(st, `${e.type === 'watchers' ? 'The Watchers are down' : `${e.boss}'s crew is down`}. You go through their pockets: ${fmt(cash)}.`, 'good');
+  st.enc = null;
+}
+
+/* The odds and costs an encounter choice carries. The screen shows exactly
+ * these numbers beside the buttons, and the actions below use them, so what
+ * a choice says it will cost is what it costs. */
+function runChance(st) { return clamp(0.55 + (st.gear.mittens ? 0.25 : 0) - 0.05 * st.enc.foes.length, 0.15, 0.9); }
+function giveUpCost(st) {
+  const held = used(st);
+  if (st.enc.type === 'watchers') return { units: held, cash: Math.round(st.cash * (held > 0 ? 0.25 : 0.1)), all: true };
+  if (held > 0) { let units = 0; for (const g of GOODS) units += Math.ceil((st.stash[g.id] || 0) / 2); return { units, cash: 0, all: false }; }
+  return { units: 0, cash: Math.round(st.cash * 0.3), all: false };
+}
+function goonTake(st) { return Math.min(st.debt, Math.round(st.cash * 0.2)); }
+
+const ENC = {
+  run(st) {
+    const e = st.enc;
+    const p = runChance(st);
+    if (rnd(st) < p) {
+      st.stats.fled++;
+      addLog(st, 'You slip away down an alley.', 'good');
+      st.enc = null;
+      return;
+    }
+    const lost = dropGoods(st, CONFIG.dropOnFail);
+    addLog(st, lost ? `You can't shake them, and ${lost} ${plural(lost, 'unit')} of your load spill${lost === 1 ? 's' : ''} in the scramble!` : "You can't shake them!", 'bad');
+    foesStrike(st);
+  },
+  fight(st) {
+    const e = st.enc;
+    const W = GEAR[st.gear.weapon];
+    if (e.type === 'rival' && !e.hostile) {
+      e.hostile = true;
+      e.deal = null;
+      addLog(st, `You go for ${e.boss}. The deal's off!`, 'enc');
+    }
+    if (!e.fought) { e.fought = true; st.stats.fights++; }
+    const f = e.foes[e.foes.length - 1];
+    if (rnd(st) < 0.75) {
+      const d = rndRange(st, W.dmg[0], W.dmg[1]);
+      f.hp -= d;
+      if (f.hp <= 0) { e.foes.pop(); addLog(st, `You take down ${foeName(f)} with your ${W.name}!`, 'good'); }
+      else addLog(st, `You hit ${foeName(f)} for ${d}.`, '');
+    } else {
+      addLog(st, 'You miss!', 'dim');
+    }
+    if (!e.foes.length) { winFight(st); return; }
+    foesStrike(st);
+  },
+  surrender(st) {
+    const e = st.enc;
+    const held = used(st);
+    const cost = giveUpCost(st);
+    if (e.type === 'watchers') {
+      st.stats.busted++;
+      const fine = cost.cash;
+      st.cash -= fine;
+      if (held > 0) addLog(st, `You put your paws up. The Watchers confiscate your whole stash (${held} ${plural(held, 'unit')}) and fine you ${fmt(fine)}.`, 'bad');
+      else addLog(st, `You put your paws up. You're clean, but they fine you ${fmt(fine)} for loitering.`, 'bad');
+      st.stash = {};
+      st.cost = {};
+      st.heat = Math.min(st.heat, 10);
+    } else if (held > 0) {
+      let took = 0;
+      for (const g of GOODS) {
+        const q = st.stash[g.id] || 0;
+        if (!q) continue;
+        const t = Math.ceil(q / 2);
+        took += t;
+        takeGoods(st, g.id, t);
+      }
+      addLog(st, `You hand it over. ${e.boss}'s crew walks off with ${took} ${plural(took, 'unit')} of your stash.`, 'bad');
+    } else {
+      const lose = cost.cash;
+      st.cash -= lose;
+      addLog(st, `Your pouch is empty, so ${e.boss} takes ${fmt(lose)} instead.`, 'bad');
+    }
+    st.enc = null;
+  },
+  deal(st) {
+    const e = st.enc;
+    const d = e.deal;
+    const g = GOOD[d.good];
+    const q = dealQty(st, d);
+    if (d.side === 'buy') {
+      takeGoods(st, g.id, q);
+      st.cash += q * d.price;
+      st.stats.sold += q * d.price;
+      addLog(st, `You sell ${e.boss} ${q} ${g.name} at ${fmt(d.price)}.`, 'trade');
+    } else {
+      st.cash -= q * d.price;
+      st.stash[g.id] = (st.stash[g.id] || 0) + q;
+      st.cost[g.id] = (st.cost[g.id] || 0) + q * d.price;
+      st.stats.bought += q * d.price;
+      addLog(st, `You buy ${q} ${g.name} from ${e.boss} at ${fmt(d.price)}.`, 'trade');
+    }
+    st.enc = null;
+  },
+  leave(st) {
+    addLog(st, `You tell ${st.enc.boss} you'll pass.`, 'dim');
+    st.enc = null;
+  },
+  sell(st) {
+    const e = st.enc;
+    const q = Math.min(e.qty, st.stash.skooma || 0);
+    takeGoods(st, 'skooma', q);
+    st.cash += q * e.price;
+    st.stats.sold += q * e.price;
+    addLog(st, `The Boss takes ${q} Skooma off your paws for ${fmt(q * e.price)}. The window slides up.`, 'good');
+    st.enc = null;
+  },
+  decline(st) {
+    if (st.enc.type === 'boss') addLog(st, '"Pity." The window slides up.', 'dim');
+    else addLog(st, 'The stray shrugs and vanishes.', 'dim');
+    st.enc = null;
+  },
+  pay(st) {
+    const e = st.enc;
+    if (e.type === 'boss') {
+      st.cash -= e.amount;
+      st.heat = 0;
+      addLog(st, `You hand over ${fmt(e.amount)}. "Pleasure." The Watchers lose interest in you.`, 'good');
+    } else {
+      st.cash -= e.demand;
+      st.debt -= e.demand;
+      st.debtAge = 0;
+      addLog(st, `You pay the goons ${fmt(e.demand)} toward your debt. They drive off.`, 'warn');
+    }
+    st.enc = null;
+  },
+  refuse(st) {
+    const e = st.enc;
+    if (e.type === 'boss') {
+      st.heat = Math.min(100, st.heat + 20);
+      addLog(st, '"Suit yourself." The window rolls up. The Watchers will be keen now.', 'bad');
+      st.enc = null;
+      return;
+    }
+    const dmg = Math.max(1, guard(st, rndRange(st, 12, 28)));
+    const take = goonTake(st);
+    st.hp = Math.max(0, st.hp - dmg);
+    st.cash -= take;
+    st.debt -= take;
+    st.debtAge = CONFIG.goonDays - 4;
+    st.enc = null;
+    addLog(st, `The goons rough you up (${dmg} HP)${take ? ` and take ${fmt(take)} toward the debt` : ''}. "We'll be back."`, 'bad');
+    if (st.hp <= 0) die(st, "The Boss's goons go too far.");
+  },
+  buy(st) {
+    const e = st.enc;
+    const it = GEAR[e.item];
+    st.cash -= e.price;
+    st.gear[it.slot] = e.item;
+    addLog(st, `You buy the ${it.name} for ${fmt(e.price)}. Bargain.`, 'good');
+    st.enc = null;
+  },
+};
+
+/* A failed getaway costs a share of everything carried, rounded down, so a
+ * light load can come through untouched. Returns the units lost. */
+function dropGoods(st, share) {
+  let lost = 0;
+  if (share <= 0) return 0;
+  for (const g of GOODS) {
+    const q = Math.floor((st.stash[g.id] || 0) * share);
+    if (q > 0) { takeGoods(st, g.id, q); lost += q; }
+  }
+  return lost;
+}
+
+function takeGoods(st, id, q) {
+  const have = st.stash[id] || 0;
+  if (q <= 0 || have <= 0) return;
+  const basis = st.cost[id] || 0;
+  st.cost[id] = basis - Math.round(basis * q / have);
+  st.stash[id] = have - q;
+  if (!st.stash[id]) { delete st.stash[id]; delete st.cost[id]; }
+}
+
+// ---- market actions
+function sellableHere(st) { return GOODS.filter(g => (st.stash[g.id] || 0) > 0 && st.prices[g.id] != null); }
+function intAmt(v) { const n = Math.floor(Number(v)); return Number.isFinite(n) ? n : 0; }
+
+const MARKET = {
+  buy(st, a) {
+    const g = GOOD[a.good];
+    if (!g) return 'Unknown good.';
+    const p = st.prices[g.id];
+    if (p == null) return `Nobody is selling ${g.name} here today.`;
+    const q = intAmt(a.qty);
+    if (q < 1) return 'Buy at least one.';
+    if (q > free(st)) return `Your pouch only has room for ${free(st)} more.`;
+    if (q * p > st.cash) return `You can't afford ${q} ${g.name}.`;
+    st.cash -= q * p;
+    st.stash[g.id] = (st.stash[g.id] || 0) + q;
+    st.cost[g.id] = (st.cost[g.id] || 0) + q * p;
+    st.stats.bought += q * p;
+    addLog(st, `Bought ${q} ${g.name} at ${fmt(p)}.`, 'trade');
+  },
+  sell(st, a) {
+    const g = GOOD[a.good];
+    if (!g) return 'Unknown good.';
+    const p = st.prices[g.id];
+    if (p == null) return `Nobody is buying ${g.name} here today.`;
+    const q = intAmt(a.qty);
+    const have = st.stash[g.id] || 0;
+    if (q < 1) return 'Sell at least one.';
+    if (q > have) return `You only have ${have} ${g.name}.`;
+    const value = q * p;
+    takeGoods(st, g.id, q);
+    st.cash += value;
+    st.stats.sold += value;
+    heatUp(st, Math.min(8, Math.floor(value / 4000)));
+    addLog(st, `Sold ${q} ${g.name} at ${fmt(p)}.`, 'trade');
+  },
+  /* Sells every good you hold that someone here is buying, each at today's
+   * price and through the same rule as a single sale (so heat adds up the
+   * same way). Goods nobody here is buying stay in the pouch. */
+  sellall(st) {
+    const goods = sellableHere(st);
+    if (!goods.length) return 'Nobody here is buying anything you carry.';
+    for (const g of goods) MARKET.sell(st, { good: g.id, qty: st.stash[g.id] });
+  },
+  travel(st, a) {
+    const P = PLACE[a.to];
+    if (!P) return 'No such place.';
+    if (P.id === st.loc) return 'You are already here.';
+    if (st.day >= st.days) return 'This is your last day. Cash out.';
+    st.day++;
+    st.loc = P.id;
+    if (st.debt > 0) { st.debt = Math.round(st.debt * (1 + CONFIG.debtRate)); st.debtAge++; }
+    if (st.bank > 0) st.bank = Math.floor(st.bank * (1 + CONFIG.bankRate));
+    st.heat = Math.max(0, st.heat - CONFIG.heatDecay - (P.cool || 0));
+    addLog(st, `Day ${st.day}: ${P.name}.`, 'day');
+    rollMarket(st);
+    rollTip(st);
+    rollEncounter(st);
+    if (st.day === st.days && !st.over) addLog(st, 'Last day! Sell everything, then cash out. Unsold goods are worth nothing.', 'warn');
+  },
+  finish(st) {
+    if (st.debt > 0) {
+      const fromCash = Math.min(st.cash, st.debt);
+      st.cash -= fromCash; st.debt -= fromCash;
+      const fromBank = Math.min(st.bank, st.debt);
+      st.bank -= fromBank; st.debt -= fromBank;
+      if (fromCash + fromBank > 0) addLog(st, `The Boss collects ${fmt(fromCash + fromBank)}.`, 'warn');
+    }
+    const unsold = used(st);
+    const score = st.cash + st.bank - st.debt;
+    st.over = { reason: 'days', score, unsold, day: st.day };
+    if (score < 0) addLog(st, `You still owe The Boss ${fmt(st.debt)}. Leaving town would be wise.`, 'bad');
+    addLog(st, `You cash out with ${fmt(score)}.`, score > 0 ? 'good' : 'bad');
+  },
+  borrow(st, a) {
+    const amt = intAmt(a.amt);
+    if (amt < 1) return 'Borrow at least $1.';
+    if (st.debt + amt > CONFIG.debtCap) return `The Boss won't carry more than ${fmt(CONFIG.debtCap)} for you.`;
+    if (st.debt === 0) st.debtAge = 0;
+    st.debt += amt;
+    st.cash += amt;
+    addLog(st, `The Boss lends you ${fmt(amt)}. "Ten percent a day. Don't make me send anyone."`, 'warn');
+  },
+  repay(st, a) {
+    const amt = intAmt(a.amt);
+    if (st.debt <= 0) return "You don't owe The Boss anything.";
+    if (amt < 1) return 'Repay at least $1.';
+    if (amt > st.cash) return "You don't have that much cash on you.";
+    if (amt > st.debt) return `You only owe ${fmt(st.debt)}.`;
+    if (amt >= st.debt * CONFIG.repayReset) st.debtAge = 0;
+    st.debt -= amt;
+    st.cash -= amt;
+    addLog(st, st.debt === 0 ? `You pay The Boss off in full. "Pleasure doing business."` : `You pay The Boss ${fmt(amt)}. You still owe ${fmt(st.debt)}.`, 'good');
+  },
+  deposit(st, a) {
+    const amt = intAmt(a.amt);
+    if (amt < 1) return 'Deposit at least $1.';
+    if (amt > st.cash) return "You don't have that much cash on you.";
+    st.cash -= amt; st.bank += amt;
+    addLog(st, `Deposited ${fmt(amt)}.`, 'trade');
+  },
+  withdraw(st, a) {
+    const amt = intAmt(a.amt);
+    if (amt < 1) return 'Withdraw at least $1.';
+    if (amt > st.bank) return `You only have ${fmt(st.bank)} in the Vault.`;
+    st.bank -= amt; st.cash += amt;
+    addLog(st, `Withdrew ${fmt(amt)}.`, 'trade');
+  },
+  gear(st, a) {
+    const it = GEAR[a.item];
+    if (!it || !here(st).shop.includes(a.item)) return "That isn't sold here.";
+    if (!canUpgrade(st, a.item)) return st.gear[it.slot] === a.item ? `You already have the ${it.name}.` : `You already have something better than the ${it.name}.`;
+    if (st.cash < it.price) return `The ${it.name} costs ${fmt(it.price)}.`;
+    st.cash -= it.price;
+    st.gear[it.slot] = a.item;
+    addLog(st, `You buy the ${it.name} for ${fmt(it.price)}.`, 'good');
+    if (it.slot === 'pawphone') rollTip(st);
+  },
+  heal(st) {
+    const missing = CONFIG.maxHp - st.hp;
+    if (missing <= 0) return 'The vet says you are in perfect health.';
+    const hp = Math.min(missing, Math.floor(st.cash / CONFIG.vetPerHp));
+    if (hp < 1) return `The vet charges ${fmt(CONFIG.vetPerHp)} per HP.`;
+    st.cash -= hp * CONFIG.vetPerHp;
+    st.hp += hp;
+    addLog(st, `The vet patches you up: +${hp} HP for ${fmt(hp * CONFIG.vetPerHp)}.`, 'good');
+  },
+};
+
+// ---- the one way in
+function waiting(st) {
+  if (st.over) return { kind: 'over', options: [] };
+  if (st.enc) return { kind: 'encounter', type: st.enc.type, options: encOptions(st) };
+  const P = here(st);
+  const o = [];
+  if (GOODS.some(g => st.prices[g.id] != null)) o.push('buy');
+  if (used(st) > 0) o.push('sell');
+  if (sellableHere(st).length) o.push('sellall');
+  o.push(st.day < st.days ? 'travel' : 'finish');
+  if (P.service === 'loan') o.push('borrow', 'repay');
+  if (P.service === 'bank') o.push('deposit', 'withdraw');
+  if (P.service === 'vet') o.push('heal');
+  if (P.shop.length) o.push('gear');
+  return { kind: 'market', options: o };
+}
+
+/* step(state, action) -> {state, events, refused}. The input state is never
+ * modified; a refused action returns it unchanged along with the reason. */
+function step(st0, a) {
+  const w = waiting(st0);
+  if (!a || !w.options.includes(a.t)) {
+    return { state: st0, events: [], refused: w.kind === 'over' ? 'The run is over.' : `You can't do that right now.` };
+  }
+  const st = JSON.parse(JSON.stringify(st0));
+  const n0 = st.logN;
+  const fn = (w.kind === 'encounter' ? ENC : MARKET)[a.t];
+  const err = fn(st, a);
+  if (typeof err === 'string') return { state: st0, events: [], refused: err };
+  if (!st.over) st.stats.peak = Math.max(st.stats.peak, netWorth(st));
+  return { state: st, events: st.log.filter(l => l.n > n0), refused: null };
+}
+
+/* For the debug hook and the tests: the same state with a given encounter started. */
+function forceEncounter(st0, type) {
+  const st = JSON.parse(JSON.stringify(st0));
+  st.enc = null;
+  startEncounter(st, type);
+  return st;
+}
+
+// ---- bot: plays through the same door. Pure: it reads the state and never
+// advances st.rng, so a bot's thinking cannot change what happens next.
+function ratio(g, p) { return (p - g.lo) / (g.hi - g.lo); }
+function botAct(st, style) {
+  style = style || 'careful';
+  const w = waiting(st);
+  if (w.kind === 'over') return null;
+  const has = t => w.options.includes(t);
+  if (w.kind === 'encounter') {
+    const e = st.enc;
+    switch (e.type) {
+      case 'watchers':
+      case 'rival':
+        if (e.type === 'rival' && !e.hostile) {
+          if (has('deal') && (e.deal.side === 'buy' || ratio(GOOD[e.deal.good], e.deal.price) < 0.3)) return { t: 'deal' };
+          return { t: 'leave' };
+        }
+        if (has('fight') && (style === 'reckless' || st.hp > 50)) return { t: 'fight' };
+        if (style !== 'reckless' && st.hp < 25) return { t: 'surrender' };
+        return { t: 'run' };
+      case 'boss':
+        if (e.ask === 'skooma') return { t: 'sell' };
+        return has('pay') && st.heat >= 30 && st.cash >= e.amount * 2 ? { t: 'pay' } : { t: 'refuse' };
+      case 'goons': return has('pay') ? { t: 'pay' } : { t: 'refuse' };
+      case 'stray': return has('buy') && st.cash >= e.price * 2 ? { t: 'buy' } : { t: 'decline' };
+    }
+  }
+  const P = here(st);
+  const last = st.day === st.days;
+  for (const g of GOODS) {
+    const q = st.stash[g.id] || 0;
+    const p = st.prices[g.id];
+    if (q > 0 && p != null && (last || ratio(g, p) >= 0.6)) return { t: 'sell', good: g.id, qty: q };
+  }
+  if (last) return { t: 'finish' };
+  if (P.service === 'loan' && st.debt > 0 && st.cash > 500) return { t: 'repay', amt: st.cash >= st.debt ? st.debt : st.cash - 500 };
+  if (P.service === 'bank') {
+    if (st.cash > 40000) return { t: 'deposit', amt: st.cash - 20000 };
+    if (st.cash < 3000 && st.bank > 0) return { t: 'withdraw', amt: Math.min(st.bank, 20000) };
+  }
+  if (P.service === 'vet' && st.hp < 60 && st.cash > (CONFIG.maxHp - st.hp) * CONFIG.vetPerHp * 3) return { t: 'heal' };
+  for (const id of P.shop) {
+    const it = GEAR[id];
+    if (['pouch', 'weapon', 'armour'].includes(it.slot) && canUpgrade(st, id) && st.cash >= it.price * 3) return { t: 'gear', item: id };
+  }
+  const reserve = Math.min(500, Math.floor(st.cash * 0.05));
+  let best = null;
+  let bestR = 0.35;
+  for (const g of GOODS) {
+    const p = st.prices[g.id];
+    if (p == null) continue;
+    const q = Math.min(free(st), Math.floor((st.cash - reserve) / p));
+    const r = ratio(g, p);
+    if (q >= 1 && r < bestR) { best = { good: g.id, qty: q }; bestR = r; }
+  }
+  if (best) return { t: 'buy', good: best.good, qty: best.qty };
+  const others = PLACES.filter(p => p.id !== st.loc);
+  let to = others[hash32(st.rng ^ Math.imul(st.day, 7919)) % others.length].id;
+  if (st.debt > 0 && st.cash >= st.debt && st.loc !== 'pvn') to = 'pvn';
+  else if (st.hp < 50 && st.cash > 1500 && st.loc !== 'suburbs') to = 'suburbs';
+  else if (st.cash > 60000 && st.loc !== 'vault') to = 'vault';
+  return { t: 'travel', to };
+}
+// ===== @core-end =====
+
+/* ---------------------------------------------------------------------------
+ * The screen. Everything below talks to the core only through newGame, step,
+ * waiting and the read-only helpers.
+ * ------------------------------------------------------------------------- */
+const KEY_GAME = 'pumacity_game_v1';
+const KEY_SCORES = 'pumacity_scores_v1';
+const KEY_PREFS = 'pumacity_prefs_v1';
+
+function load(key, fallback) {
+  try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; } catch (e) { return fallback; }
+}
+function save(key, value) {
+  try { if (value == null) localStorage.removeItem(key); else localStorage.setItem(key, JSON.stringify(value)); } catch (e) { /* private window */ }
+}
+function esc(s) {
+  return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+const root = document.querySelector('[data-pumacity-game]');
+let S = null;            // the game state, or null on the title screen
+let ui = { sel: 0, modal: null, flash: '' };
+let prefs = Object.assign({ name: '', days: 30 }, load(KEY_PREFS, {}));
+let scoreTab = prefs.days;
+
+/* A save from an older build, or one edited by hand, must not crash the screen:
+ * anything that doesn't look like a live run is treated as no save at all. */
+function validSave(st) {
+  return !!st && st.v === 1 && !st.over && PLACE[st.loc] && CONFIG.lengths.includes(st.days)
+    && Number.isInteger(st.day) && st.day >= 1 && st.day <= st.days
+    && ['cash', 'bank', 'debt', 'hp', 'heat', 'rng', 'logN'].every(k => Number.isFinite(st[k]))
+    && st.stash && st.cost && st.gear && st.prices && st.prev && st.stats && Array.isArray(st.log)
+    && (st.enc == null || typeof st.enc.type === 'string');
+}
+function loadGame() {
+  const st = load(KEY_GAME, null);
+  return validSave(st) ? st : null;
+}
+
+function scores() {
+  const s = load(KEY_SCORES, {});
+  return s && typeof s === 'object' ? s : {};
+}
+function recordScore(st) {
+  const all = scores();
+  const list = Array.isArray(all[st.days]) ? all[st.days] : [];
+  const entry = { name: st.name, score: st.over.score, dead: st.over.reason === 'dead', day: st.over.day, at: new Date().toISOString().slice(0, 10), id: st.seed + ':' + st.logN };
+  list.push(entry);
+  list.sort((a, b) => b.score - a.score);
+  all[st.days] = list.slice(0, 10);
+  save(KEY_SCORES, all);
+  return all[st.days].findIndex(e => e.id === entry.id);
+}
+
+// ---- actions
+function act(a) {
+  if (!S) return;
+  const before = S;
+  const r = step(S, a);
+  if (r.refused) { ui.flash = r.refused; announce([r.refused]); render(); return; }
+  S = r.state;
+  ui.flash = '';
+  announce(r.events.map(l => l.text));
+  if (S.over && !before.over) {
+    ui.rank = recordScore(S);
+    save(KEY_GAME, null);
+    ui.modal = { kind: 'over' };
+  } else {
+    save(KEY_GAME, S);
+  }
+  if (a.t === 'travel') ui.arrived = true;
+  if (a.t === 'travel' || a.t === 'finish') ui.modal = S.over ? { kind: 'over' } : null;
+  if (['buy', 'sell', 'sellall', 'travel', 'finish'].includes(a.t)) { ui.trade = null; ui.side = null; ui.confirmCash = false; }
+  render();
+}
+
+function startRun() {
+  const nameEl = document.getElementById('pc-name');
+  if (nameEl) prefs.name = Array.from(nameEl.value.trim()).slice(0, 16).join('');
+  save(KEY_PREFS, prefs);
+  const seed = (Date.now() ^ Math.floor(Math.random() * 0x7fffffff)) | 0;
+  S = newGame({ seed, days: prefs.days, name: prefs.name });
+  ui = { sel: 0, modal: null, flash: '' };
+  save(KEY_GAME, S);
+  render();
+}
+
+function resume() {
+  S = loadGame();
+  ui = { sel: 0, modal: null, flash: '' };
+  render();
+}
+
+function quitToTitle() {
+  S = null;
+  ui = { sel: 0, modal: null, flash: '' };
+  render();
+}
+
+// ---- rendering
+function meter(v, max, cls) {
+  const pct = clamp(Math.round(v / max * 100), 0, 100);
+  return `<span class="meter ${cls || ''}"><i style="width:${pct}%"></i></span>`;
+}
+
+function skyline() {
+  return `<svg class="sky" viewBox="0 0 600 120" aria-hidden="true" fill="none" stroke="#54f2ff" stroke-width="1.5">
+  <path d="M0 118h600" stroke="#1b2540"/>
+  <path d="M10 118V80h30v38M50 118V60h22v58M80 118V90h26v28M116 118V40h28v78M130 40V22M154 118V72h34v46M198 118V54l18-14 18 14v64
+    M244 118V84h24v34M278 118V30h36v88M296 30V10M324 118V66h28v52M362 118V88h40v30M412 118V48h26v70M448 118V76h30v42
+    M488 118V62h20v56M518 118V86h36v32M564 118V70h26v48"/>
+  <path d="M286 44h20M286 58h20M286 72h20M286 86h20M122 54h16M122 68h16M122 82h16M418 60h14M418 74h14" stroke="#47609c"/>
+</svg>`;
+}
+
+// ---- scenery: one line-drawn scene per district, behind the terminal.
+/* Composed for a 1600x900 box drawn "xMidYMax slice", so the landmarks sit in
+ * the side margins (x < 330, x > 1270) and the bottom band (y > 760) that the
+ * centred terminal leaves showing. On phones the same art becomes a banner. */
+const G = 820;  // ground line
+function rint(seed, n) { return hash32(seed) % n; }
+function lit(seed, rate) { return (hash32(seed) % 100) < rate; }
+function win(x, y, w, h, seed, rate) {
+  return `<rect class="${lit(seed, rate == null ? 35 : rate) ? 'sw' : 'sx'}" x="${x}" y="${y}" width="${w}" height="${h}"/>`;
+}
+function grid(x0, y0, cols, rows, w, h, gx, gy, seed, rate) {
+  let o = '';
+  for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) o += win(x0 + c * (w + gx), y0 + r * (h + gy), w, h, seed + r * 31 + c, rate);
+  return o;
+}
+function stars(seed, n, ymax) {
+  let o = '';
+  for (let i = 0; i < n; i++) {
+    const x = rint(seed + i * 7, 1600), y = rint(seed + i * 13, ymax), r = rint(seed + i, 3) === 0 ? 1.6 : 1;
+    o += `<circle class="st" cx="${x}" cy="${y}" r="${r}"/>`;
+  }
+  return o;
+}
+function moon(x, y) { return `<circle class="smoon" cx="${x}" cy="${y}" r="20"/><circle class="ssky" cx="${x + 8}" cy="${y - 6}" r="18"/>`; }
+function palm(x, h, lean) {
+  const tx = x + lean, ty = G - h;
+  let o = `<path class="sl" d="M${x} ${G} Q${x + lean * 0.15} ${G - h * 0.55} ${tx} ${ty}"/>`;
+  for (const [dx, dy] of [[-95, 34], [-70, 62], [-30, 78], [28, 76], [68, 60], [96, 30], [-10, -18]]) {
+    o += `<path class="sl" d="M${tx} ${ty} Q${tx + dx * 0.45} ${ty - 34 + dy * 0.1} ${tx + dx} ${ty + dy}"/>`;
+  }
+  return o;
+}
+function lamp(x, h, dir) {
+  const top = G - h, arm = dir * 34;
+  return `<path class="sl" d="M${x} ${G} V${top} q0 -12 ${arm / 2} -12 h${arm / 2}"/>`
+    + `<path class="sglow" d="M${x + arm - 10} ${top - 8} L${x + arm - 46} ${G} H${x + arm + 26} L${x + arm + 10} ${top - 8} Z"/>`
+    + `<rect class="sw" x="${x + arm - 9}" y="${top - 14}" width="18" height="6"/>`;
+}
+function tree(x, r, base) {
+  base = base || G;
+  return `<path class="sl" d="M${x} ${base} V${base - r * 1.2}"/><circle class="sf" cx="${x}" cy="${base - r * 1.7}" r="${r}"/>`;
+}
+function house(x, base, w, h, seed, opts) {
+  opts = opts || {};
+  const roof = h * 0.55;
+  let o = `<path class="sf" d="M${x} ${base} V${base - h} L${x + w / 2} ${base - h - roof} L${x + w} ${base - h} V${base} Z"/>`;
+  o += `<path class="sd" d="M${x - w * 0.06} ${base - h + 4} L${x + w / 2} ${base - h - roof - 4} L${x + w * 1.06} ${base - h + 4}"/>`;
+  const ww = w * 0.16, wh = h * 0.28;
+  o += win(x + w * 0.14, base - h * 0.72, ww, wh, seed, 60) + win(x + w * 0.7, base - h * 0.72, ww, wh, seed + 1, 45);
+  if (opts.garage) o += `<path class="sd" d="M${x + w * 0.38} ${base} V${base - h * 0.48} H${x + w * 0.64} V${base}M${x + w * 0.38} ${base - h * 0.32} H${x + w * 0.64}M${x + w * 0.38} ${base - h * 0.16} H${x + w * 0.64}"/>`;
+  else o += `<path class="sd" d="M${x + w * 0.44} ${base} V${base - h * 0.42} H${x + w * 0.56} V${base}"/>`;
+  return o;
+}
+function rentSign(x, base) {
+  return `<path class="sl" d="M${x} ${base} V${base - 56}"/><rect class="sf" x="${x - 46}" y="${base - 92}" width="92" height="40"/>`
+    + `<text class="stx sm" x="${x}" y="${base - 75}" text-anchor="middle">FOR RENT</text>`
+    + `<text class="stx xs" x="${x}" y="${base - 60}" text-anchor="middle">BENTON PROPERTIES</text>`;
+}
+function fence(x0, x1, y) {
+  let o = `<path class="sl" d="M${x0} ${y + 14} H${x1}M${x0} ${y + 34} H${x1}"/>`;
+  for (let x = x0; x <= x1; x += 56) o += `<path class="sl" d="M${x} ${y} V${y + 50}"/>`;
+  return o;
+}
+function gear(cx, cy, r, teeth) {
+  const pts = [];
+  for (let i = 0; i < teeth * 2; i++) {
+    const a0 = (i / (teeth * 2)) * Math.PI * 2, a1 = ((i + 1) / (teeth * 2)) * Math.PI * 2;
+    const rr = i % 2 ? r : r * 0.88;
+    pts.push([cx + Math.cos(a0) * rr, cy + Math.sin(a0) * rr], [cx + Math.cos(a1) * rr, cy + Math.sin(a1) * rr]);
+  }
+  return `<path class="sf" d="M${pts.map(p => p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join(' L')} Z"/>`;
+}
+function beam(x, y, x1, x2, cls) { return `<path class="${cls || 'sbeam'}" d="M${x - 4} ${y} L${x1} -20 L${x2} -20 L${x + 4} ${y} Z"/>`; }
+function ship(x, y, s) {
+  // The Ship: a long wedge hull, nose to the left.
+  const p = (dx, dy) => `${x + dx * s} ${y + dy * s}`;
+  return `<path class="sf" d="M${p(0, 60)} L${p(110, 8)} L${p(470, -22)} L${p(560, -22)} L${p(560, 120)} L${p(470, 132)} L${p(120, 110)} Z"/>`
+    + `<path class="sd" d="M${p(110, 8)} L${p(130, 104)}M${p(240, -2)} V${y + 118 * s}M${p(380, -14)} V${y + 126 * s}"/>`
+    + `<path class="sa" d="M${p(26, 60)} L${p(108, 22)}"/>`
+    + `<rect class="sw" x="${x + 140 * s}" y="${y + 30 * s}" width="${30 * s}" height="${10 * s}"/><rect class="sw" x="${x + 186 * s}" y="${y + 26 * s}" width="${30 * s}" height="${10 * s}"/>`
+    + `<circle class="sad" cx="${x + 300 * s}" cy="${y + 124 * s}" r="${4 * s}"/><circle class="sad" cx="${x + 430 * s}" cy="${y + 130 * s}" r="${4 * s}"/>`;
+}
+
+const SCENES = {
+  plaza() {
+    let o = stars(11, 90, 360) + moon(1480, 96);
+    o += `<path class="sf" d="M0 ${G} V700 H180 V684 H420 V706 H640 V690 H960 V706 H1180 V684 H1420 V700 H1600 V${G} Z"/>`;
+    for (let x = 0; x < 1600; x += 84) {
+      o += `<path class="sl" d="M${x + 6} 724 H${x + 78} L${x + 86} 742 H${x - 2} Z"/>`;
+      o += `<path class="sd" d="M${x - 2} 742 q10.5 10 21 0 q10.5 10 21 0 q10.5 10 21 0 q10.5 10 21 0"/>`;
+      o += win(x + 12, 760, 60, 44, x * 3 + 5, 55);
+    }
+    // the mall's entrance arch
+    o += `<path class="sf" d="M70 ${G} V560 H104 V${G} Z M246 ${G} V560 H280 V${G} Z"/>`;
+    o += `<path class="sl" d="M70 560 Q175 450 280 560"/><rect class="sf" x="78" y="580" width="194" height="40"/>`;
+    o += `<text class="stx" x="175" y="607" text-anchor="middle">MARKET PLAZA</text>`;
+    // the anchor store, right
+    o += `<path class="sf" d="M1300 ${G} V600 H1600 V${G} Z"/><path class="sd" d="M1300 640 H1600"/>` + grid(1318, 662, 5, 2, 42, 44, 12, 14, 77, 50);
+    // string lights
+    o += `<path class="sd" d="M330 520 Q800 640 1270 520"/>`;
+    for (let i = 1; i < 24; i++) { const t = i / 24, x = 330 + 940 * t, y = (1 - t) * (1 - t) * 520 + 2 * (1 - t) * t * 640 + t * t * 520; o += `<circle class="sw" cx="${x.toFixed(0)}" cy="${(y + 4).toFixed(0)}" r="3"/>`; }
+    o += palm(30, 440, 26) + palm(330, 360, -16) + palm(1272, 380, 22) + palm(1572, 460, -28);
+    o += lamp(430, 220, 1) + lamp(1170, 220, -1);
+    o += `<path class="sl" d="M760 ${G} V806 H840 V${G}M780 806 Q800 770 820 806M800 790 V770"/>`;
+    return o;
+  },
+  pvn() {
+    let o = stars(23, 80, 300) + moon(140, 90);
+    o += beam(1350, 70, 1120, 1190) + beam(1470, 70, 1560, 1640, 'sbeam c');
+    o += `<path class="sf" d="M1300 ${G} V110 H1520 V${G} Z"/>` + grid(1318, 140, 7, 18, 18, 18, 11, 12, 401, 18);
+    // the nightclub on the roof
+    o += `<path class="sf" d="M1286 110 V66 H1534 V110 Z"/><path class="sa" d="M1296 98 H1524"/>`;
+    for (let x = 1300; x < 1530; x += 26) o += `<path class="sd" d="M${x} 70 V96"/>`;
+    // the theatre below
+    o += `<path class="sf" d="M1262 760 V694 H1558 V760 Z"/>`;
+    for (let x = 1272; x <= 1548; x += 14) o += `<circle class="sw" cx="${x}" cy="700" r="2.4"/><circle class="sw" cx="${x}" cy="754" r="2.4"/>`;
+    o += `<text class="stx" x="1410" y="733" text-anchor="middle">NOW SHOWING</text>`;
+    o += `<path class="sd" d="M1340 ${G} V772 H1480 V${G}M1386 772 V${G}M1434 772 V${G}"/>`;
+    // the office park, left
+    o += `<path class="sf" d="M30 ${G} V500 H232 V${G} Z"/>`;
+    for (let y = 524; y < 800; y += 26) o += `<path class="${lit(y, 40) ? 'swl' : 'sd'}" d="M44 ${y} H218"/>`;
+    o += `<path class="sf" d="M214 ${G} V640 H330 V${G} Z"/>` + grid(228, 660, 3, 5, 24, 14, 10, 16, 909, 35);
+    o += tree(372, 34) + tree(1220, 30);
+    o += `<path class="sl" d="M0 ${G} H1600"/>`;
+    return o;
+  },
+  vault() {
+    let o = `<path class="sf rock" d="M0 0 H1600 V104 L1530 126 L1462 108 L1390 132 L1300 112 L1210 128 L1120 106 L1010 124 L900 110 L800 128 L700 108 L590 126 L480 110 L380 132 L290 112 L190 128 L90 108 L0 124 Z"/>`;
+    for (const x of [430, 800, 1170]) o += `<path class="sl" d="M${x} 118 V190"/><path class="sglow" d="M${x - 12} 204 L${x - 120} 840 H${x + 120} L${x + 12} 204 Z"/><path class="sf" d="M${x - 22} 204 L${x - 10} 190 H${x + 10} L${x + 22} 204 Z"/>`;
+    // the blast door
+    o += `<circle class="sl" cx="170" cy="560" r="262"/>` + gear(170, 560, 240, 14);
+    o += `<circle class="sd" cx="170" cy="560" r="176"/><circle class="sd" cx="170" cy="560" r="118"/><circle class="sf" cx="170" cy="560" r="40"/>`;
+    for (let i = 0; i < 8; i++) { const a = i / 8 * Math.PI * 2; o += `<circle class="sx" cx="${(170 + Math.cos(a) * 150).toFixed(0)}" cy="${(560 + Math.sin(a) * 150).toFixed(0)}" r="7"/>`; }
+    o += `<text class="stx big" x="170" y="470" text-anchor="middle">PC</text>`;
+    // pipes, valves and the overseer's panel
+    for (const x of [1310, 1346, 1382]) o += `<path class="sl" d="M${x} 120 V840"/>` + [260, 470, 690].map(y => `<path class="sd" d="M${x - 9} ${y} H${x + 9}"/>`).join('');
+    o += `<circle class="sl" cx="1346" cy="560" r="22"/><path class="sd" d="M1324 560 H1368M1346 538 V582"/>`;
+    o += `<path class="sf" d="M1436 760 V590 H1590 V760 Z"/><rect class="sa" x="1452" y="606" width="122" height="70"/>`;
+    for (let i = 0; i < 6; i++) o += `<circle class="${i % 3 ? 'sw' : 'sad'}" cx="${1460 + i * 22}" cy="${700}" r="5"/>`;
+    o += `<path class="sf" d="M0 840 H1600 V900 H0 Z"/>`;
+    for (let x = 0; x < 1600; x += 36) o += `<path class="shaz" d="M${x} 840 l18 0 l-14 18 l-18 0 Z"/>`;
+    return o;
+  },
+  ranch() {
+    let o = stars(37, 110, 420) + moon(1460, 110);
+    o += `<path class="sf" d="M0 792 Q200 742 420 772 T860 762 T1300 774 T1600 752 V900 H0 Z"/>`;
+    for (let i = -22; i <= 22; i++) o += `<path class="sd" d="M${800 + i * 14} 790 L${800 + i * 96} 900"/>`;
+    // the old barn
+    o += `<path class="sf" d="M50 ${G} V600 L84 540 L170 504 L256 540 L290 600 V${G} Z"/><path class="sd" d="M50 600 H290"/>`;
+    o += `<path class="sd" d="M128 ${G} V706 H212 V${G}M128 706 L212 ${G}M212 706 L128 ${G}"/>` + win(152, 556, 36, 30, 5, 100);
+    o += `<path class="sl" d="M170 504 V470M150 462 H186 L192 454M150 462 L146 452M156 462 V472M182 462 V472"/>`;
+    // the windmill
+    o += `<path class="sl" d="M1396 ${G} L1430 470 M1484 ${G} L1450 470 M1404 760 H1476 M1412 680 H1468 M1420 600 H1460 M1404 760 L1468 680 M1476 760 L1412 680"/>`;
+    o += `<circle class="sl" cx="1440" cy="450" r="64"/>`;
+    for (let i = 0; i < 12; i++) { const a = i / 12 * Math.PI * 2; o += `<path class="sd" d="M1440 450 L${(1440 + Math.cos(a) * 64).toFixed(0)} ${(450 + Math.sin(a) * 64).toFixed(0)}"/>`; }
+    o += `<path class="sl" d="M1440 450 L1530 446 L1546 420 L1546 470 Z"/>`;
+    o += fence(0, 340, 796) + fence(1260, 1600, 796);
+    return o;
+  },
+  starport() {
+    let o = stars(51, 100, 380) + moon(980, 70);
+    o += beam(160, 236, 60, 110, 'sbeam c');
+    o += `<path class="sf" d="M130 ${G} V360 H190 V${G} Z"/><path class="sf" d="M96 360 L80 300 H240 L224 360 Z"/>`;
+    o += grid(98, 316, 6, 1, 16, 14, 8, 0, 3, 80);
+    o += `<path class="sl" d="M160 300 V236"/><circle class="sw" cx="160" cy="232" r="6"/>`;
+    for (let i = 0; i < 6; i++) { const x = 224 + (i % 3) * 70, y = 776 - Math.floor(i / 3) * 44; o += `<path class="sf" d="M${x} ${y + 44} V${y} H${x + 64} V${y + 44} Z"/><path class="sd" d="M${x + 16} ${y + 6} V${y + 38}M${x + 32} ${y + 6} V${y + 38}M${x + 48} ${y + 6} V${y + 38}"/>`; }
+    // The Ship, on its pad
+    o += ship(1170, 610, 1.0);
+    o += `<path class="sl" d="M1330 726 L1316 812M1540 738 L1556 812M1302 812 H1330M1542 812 H1570"/>`;
+    o += `<path class="sf" d="M1400 734 H1452 L1424 812 H1372 Z"/><path class="sd" d="M1390 760 H1442M1382 786 H1434"/>`;
+    o += `<path class="sl" d="M0 ${G} H1600"/>`;
+    for (let x = 20; x < 1600; x += 40) o += `<circle class="${(x / 40) % 2 ? 'sad' : 'sw'}" cx="${x}" cy="${G + 10}" r="3"/>`;
+    return o;
+  },
+  convention() {
+    let o = stars(67, 90, 360) + moon(1470, 90);
+    o += beam(330, G, 140, 210) + beam(1270, G, 1400, 1480, 'sbeam c');
+    o += ship(140, 120, 0.28) + `<path class="sd" d="M300 150 Q420 160 560 150" stroke-dasharray="4 10"/>`;
+    o += `<path class="sf" d="M0 700 Q800 560 1600 700 V${G} H0 Z"/>`;
+    for (let x = 20; x < 1600; x += 40) {
+      if (x > 340 && x < 1260) continue;
+      const t = x / 1600, y = (1 - t) * (1 - t) * 700 + 2 * (1 - t) * t * 560 + t * t * 700;
+      o += `<path class="sd" d="M${x} ${(y + 8).toFixed(0)} V${G}"/>`;
+    }
+    for (const x of [50, 130, 210, 1390, 1470, 1550]) {
+      o += `<path class="sl" d="M${x} ${G} V420"/><path class="sl" d="M${x} 420 L${x + 26} 428 L${x} 436"/>`;
+      o += `<path class="sf" d="M${x + 4} 452 H${x + 34} V600 L${x + 19} 586 L${x + 4} 600 Z"/><path class="${rint(x, 2) ? 'sa' : 'swl'}" d="M${x + 4} 470 H${x + 34}"/>`;
+    }
+    o += `<text class="stx" x="130" y="680" text-anchor="middle">EXPO</text><text class="stx" x="1470" y="680" text-anchor="middle">EXPO</text>`;
+    return o;
+  },
+  suburbs() {
+    let o = stars(83, 100, 380) + moon(160, 100);
+    // Casey's tower on the skyline: you live in her city
+    o += `<path class="sf" d="M1446 760 V420 H1500 V760 Z"/><path class="sa" d="M1442 416 H1504"/>` + grid(1455, 440, 3, 9, 8, 10, 8, 18, 61, 30);
+    for (let x = 340; x < 1260; x += 116) o += house(x, 790, 90, 44, x, { garage: rint(x, 2) });
+    o += house(20, 850, 250, 150, 7, { garage: true }) + rentSign(300, 850);
+    o += `<rect class="sf" x="120" y="708" width="54" height="30"/><path class="sl" d="M135 740 q12 12 24 0"/>`;
+    o += house(1340, 850, 240, 140, 13) + rentSign(1300, 850);
+    o += tree(1196, 40, 850) + lamp(440, 230, 1) + lamp(1110, 230, -1);
+    o += `<path class="sl" d="M0 852 H1600M0 872 H1600"/>`;
+    return o;
+  },
+};
+
+const sceneCache = {};
+function sceneSVG(id) {
+  if (!sceneCache[id]) {
+    sceneCache[id] = `<svg viewBox="0 0 1600 900" preserveAspectRatio="xMidYMax slice" aria-hidden="true" focusable="false">
+<defs><linearGradient id="pcb" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#ffb000" stop-opacity=".16"/><stop offset="1" stop-color="#ffb000" stop-opacity="0"/></linearGradient>
+<linearGradient id="pcc" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#54f2ff" stop-opacity=".12"/><stop offset="1" stop-color="#54f2ff" stop-opacity="0"/></linearGradient></defs>
+${id === 'vault' ? '' : `<rect class="sground" x="0" y="${G}" width="1600" height="${900 - G}"/>`}${SCENES[id]()}</svg>`;
+  }
+  return sceneCache[id];
+}
+
+/* Crossfades to the new district's scene. The old layer is removed after the
+ * fade, so at most two are ever in the DOM. */
+const sceneEl = document.getElementById('pc-scene');
+let sceneNow = null;
+function setScene(id) {
+  if (!sceneEl || id === sceneNow) return;
+  sceneNow = id;
+  sceneEl.classList.toggle('under', id === 'vault');
+  const layer = document.createElement('div');
+  layer.className = 'layer';
+  layer.innerHTML = sceneSVG(id);
+  sceneEl.appendChild(layer);
+  const old = [...sceneEl.children].filter(c => c !== layer);
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    layer.classList.add('on');
+    for (const c of old) c.classList.remove('on');
+    setTimeout(() => old.forEach(c => c.remove()), 900);
+  }));
+}
+
+function setupHTML() {
+  const saved = loadGame();
+  const all = scores();
+  const list = Array.isArray(all[scoreTab]) ? all[scoreTab] : [];
+  return `<div class="pc setup">
+  ${skyline()}
+  <h1 class="title">PUMACITY</h1>
+  <p class="tag">Buy low. Sell high. Stay one step ahead of the Watchers.</p>
+  <ol class="primer">
+    <li>Buy where a good is <span class="rw cheap">cheap</span>.</li>
+    <li>Travel across town. Every trip takes a day.</li>
+    <li>Sell where it's <span class="rw steep">steep</span>, and pay Casey Benton back before her 10% a day eats you.</li>
+  </ol>
+  <div class="row"><label for="pc-name">Name</label><input id="pc-name" maxlength="16" autocomplete="off" placeholder="Stray" value="${esc(prefs.name)}"></div>
+  <div class="row"><label>Run length</label>${CONFIG.lengths.map(d => `<button data-act="days" data-v="${d}" aria-pressed="${prefs.days === d}">${d} days</button>`).join('')}</div>
+  <div class="acts">
+    <button class="primary" data-act="start"><kbd>N</kbd>New run</button>
+    ${saved ? `<button data-act="resume"><kbd>R</kbd>Resume: ${esc(saved.name)}, day ${saved.day} of ${saved.days}</button>` : ''}
+    <button data-act="help"><kbd>?</kbd>How to play</button>
+  </div>
+  <h2>High scores</h2>
+  <div class="tabs">${CONFIG.lengths.map(d => `<button data-act="scoretab" data-v="${d}" aria-pressed="${scoreTab === d}">${d} days</button>`).join('')}</div>
+  ${scoreTable(list, -1)}
+  <p class="foot">Inspired by <i>Dope Wars</i> (John E. Dell, 1984). v${VERSION} · <a href="https://greykit.com/games/">More games</a></p>
+</div>`;
+}
+
+function scoreTable(list, hi) {
+  if (!list.length) return '<p class="dim">No runs finished yet.</p>';
+  return `<table class="scores"><tr><th>#</th><th>Name</th><th class="r">Score</th><th>Date</th></tr>${list.map((e, i) =>
+    `<tr${i === hi ? ' class="warn"' : ''}><td>${i + 1}</td><td>${esc(e.name)}${e.dead ? ` <span class="rip">RIP, day ${e.day}</span>` : ''}</td><td class="r">${fmt(e.score)}</td><td class="dim">${esc(e.at || '')}</td></tr>`).join('')}</table>`;
+}
+
+/* Where a price sits in its good's usual range. The word carries the meaning;
+ * the marker and colour only reinforce it. */
+function priceStanding(g, p) {
+  const r = (p - g.lo) / (g.hi - g.lo);
+  const word = r < 0 ? 'bargain' : r < 0.33 ? 'cheap' : r < 0.67 ? 'fair' : r <= 1 ? 'steep' : 'sky-high';
+  return { r, word };
+}
+function headlineToday(st) {
+  if (!st.news) return '';
+  const line = [...st.log].reverse().find(l => l.cls === 'news' && l.d === st.day);
+  return line ? `<p class="ticker"><b>News</b> ${esc(line.text)}</p>` : '';
+}
+function rangeCell(g, p) {
+  if (p == null) return '<span class="dim">not here today</span>';
+  const { r, word } = priceStanding(g, p);
+  const x = Math.round(clamp(r, -0.08, 1.08) * 100);
+  return `<span class="track" aria-hidden="true"><i style="left:${x}%"></i></span><span class="rw ${word}">${word}</span>`;
+}
+const HEAT = [
+  [0, 'cool', 'The Watchers barely notice you.'],
+  [20, 'warm', 'The Watchers are starting to ask about you.'],
+  [40, 'hot', 'Watch-Captain Hardclaw is on your case.'],
+  [70, 'wanted', 'Every patrol in PumaCity knows your face.'],
+];
+function heatBand(h) { let b = HEAT[0]; for (const x of HEAT) if (h >= x[0]) b = x; return { word: b[1], effect: b[2] }; }
+function debtNote(st) {
+  if (st.debt <= 0) return 'paid off';
+  const n = CONFIG.goonDays - st.debtAge;
+  return n <= 0 ? 'goons: any day now' : `goons in ${n} ${plural(n, 'day')}`;
+}
+
+function gameHTML() {
+  const st = S;
+  const P = here(st);
+  const last = st.day === st.days;
+  const cap = capacity(st);
+  const u = used(st);
+  const goods = GOODS.map((g, i) => {
+    const p = st.prices[g.id];
+    const held = st.stash[g.id] || 0;
+    const prev = st.prev[g.id];
+    const arrow = p != null && prev != null && p !== prev
+      ? ` <span class="tr" role="img" aria-label="${p > prev ? 'up' : 'down'} from ${fmt(prev)}" title="${p > prev ? 'up' : 'down'} from ${fmt(prev)}">${p > prev ? '▲' : '▼'}</span>`
+      : ' <span class="tr" aria-hidden="true"> </span>';
+    const each = held && st.cost[g.id] ? Math.round(st.cost[g.id] / held) : 0;
+    let pl = '';
+    if (held && p != null) {
+      if (!each) pl = ' <span class="up">all profit</span>';
+      else { const pct = Math.round((p - each) / each * 100); pl = pct === 0 ? ' <span class="dim">even</span>' : ` <span class="${pct > 0 ? 'up' : 'down'}">${pct > 0 ? '+' : '−'}${Math.abs(pct)}%</span>`; }
+    }
+    const avg = held ? `<small>@ ${each ? fmt(each) : 'found'}${pl}</small>` : '';
+    const cls = [i === ui.sel ? 'sel' : '', st.news && st.news.good === g.id ? 'news' : ''].join(' ');
+    return `<tr class="${cls}" data-act="sel" data-v="${i}">
+      <td class="key">${i + 1}</td><td class="name">${g.name}</td>
+      <td class="price">${p == null ? '<span class="out">—</span>' : fmt(p) + arrow + `<small class="rw rw-m ${priceStanding(g, p).word}">${priceStanding(g, p).word}</small>`}</td>
+      <td class="range">${rangeCell(g, p)}</td>
+      <td class="held">${held ? held + avg : '<span class="dim">—</span>'}</td>
+      <td class="btns"><button data-act="buy" data-v="${i}" ${p == null ? 'disabled' : ''}>Buy</button>
+      <button data-act="sell" data-v="${i}" ${p == null || !held ? 'disabled' : ''}>Sell</button></td></tr>`
+      + (ui.trade && ui.trade.good === i ? tradeRowHTML(ui.trade) : '');
+  }).join('');
+  const gear = SLOTS.filter(s => st.gear[s]).map(s => { const it = GEAR[st.gear[s]]; return `<span title="${esc(it.blurb)}">${it.name} <span class="dim">(${it.short})</span></span>`; });
+  const svc = P.service || P.shop.length;
+  const tip = st.tip ? `<div class="tip"><b>Pawphone</b>: tomorrow at ${PLACE[st.tip.loc].name}<br>${GOODS.map(g =>
+    `${g.name} ${st.tip.prices[g.id] == null ? '—' : fmt(st.tip.prices[g.id])}`).join(' · ')}</div>` : '';
+  const log = st.log.map(l => `<p class="${l.cls}">${esc(l.text)}</p>`).join('');
+  const left = st.days - st.day;
+  const sellable = sellableHere(st).length > 0;
+  return `<div class="pc">
+  <header class="top">
+    <h1 class="place-name">${P.name}</h1>
+    <span class="day${last ? ' last' : ''}">${last ? 'Last day' : `Day <b>${st.day}</b> of ${st.days} · ${left} left`}</span>
+    <span class="grow"></span><span class="brand">PumaCity</span>
+  </header>
+  <div class="dayline${last ? ' last' : ''}"><i style="width:${Math.round(st.day / st.days * 100)}%"></i></div>
+  <div class="status">
+    <div class="stat lead"><small>Cash</small><span>${fmt(st.cash)}</span></div>
+    <div class="stat lead${st.debt > 0 ? (st.debtAge >= CONFIG.goonDays - 2 ? ' bad' : ' warn') : ''}"><small>Debt</small><span>${fmt(st.debt)}</span><em>${debtNote(st)}</em></div>
+    <div class="stat"><small>Bank</small><span>${fmt(st.bank)}</span></div>
+    <div class="stat${st.hp <= 30 ? ' bad' : ''}"><small>Health</small><span>${st.hp} / ${CONFIG.maxHp}</span>${meter(st.hp, CONFIG.maxHp, st.hp <= 30 ? 'low' : '')}</div>
+    <div class="stat"><small>Pouch</small><span>${u} / ${cap}</span>${meter(u, cap, 'heat')}</div>
+    <div class="stat${st.heat >= 40 ? ' bad' : ''}" title="${heatBand(st.heat).effect}"><small>Heat</small><span>${heatBand(st.heat).word} · ${st.heat}</span>${meter(st.heat, 100, st.heat >= 40 ? 'low' : 'heat')}</div>
+  </div>
+  <div class="main">
+    <section class="market">
+      ${headlineToday(st)}
+      <table class="mk"><thead><tr><th class="key"></th><th class="name">Good</th><th>Price</th><th class="range">vs usual</th><th class="held">Held</th><th></th></tr></thead>
+      <tbody>${goods}</tbody></table>
+      ${ui.side === 'service' ? '' : `<div class="flash" role="status">${esc(ui.flash)}</div>`}
+      ${ui.confirmCash ? `<p class="confirm-note">Cashing out ends the run. The Boss collects what you owe${u ? `, and the ${u} ${plural(u, 'unit')} you still hold are worth nothing` : ''}.</p>` : ''}
+      <nav class="bar">
+        ${last && ui.confirmCash ? '<button class="danger" data-act="finishconfirm"><kbd>E</kbd>Confirm cash out</button><button data-act="finishcancel"><kbd>Esc</kbd>Not yet</button>'
+          : last && sellable ? '<button class="primary" data-act="sellall"><kbd>A</kbd>Sell all</button><button data-act="finish"><kbd>E</kbd>Cash out</button>'
+          : last ? '<button class="primary" data-act="finish"><kbd>E</kbd>Cash out</button>'
+          : `<button class="primary" data-act="travel" aria-pressed="${ui.side === 'travel'}"><kbd>T</kbd>Travel</button>`}
+        ${!last && u > 0 ? `<button data-act="sellall" ${sellable ? '' : 'disabled'} title="Sell everything you carry that someone here is buying"><kbd>A</kbd>Sell all</button>` : ''}
+        ${svc && !last ? `<button data-act="service"><kbd>V</kbd>${esc(P.serviceName)}</button>` : ''}
+        <span class="grow"></span>
+        <button data-act="help" aria-label="Help" title="How to play (?)">?</button>
+        ${ui.confirmCash ? '' : '<button data-act="menu"><kbd>Esc</kbd>Menu</button>'}
+      </nav>
+    </section>
+    <aside class="side">
+      ${ui.side === 'travel' ? travelPanelHTML() : ui.side === 'service' ? servicePanelHTML() : `<div class="place">
+        <p class="blurb">${P.blurb}</p>
+        <p class="spec">${P.special}</p>
+        <p class="gear">${gear.length ? 'Gear: ' + gear.join(' · ') : 'No gear yet. Without a weapon you can only run or give up.'}</p>
+        ${tip}
+      </div>
+      <div class="logwrap"><div class="log" id="pc-log" tabindex="0" aria-label="Log">${log}</div></div>`}
+    </aside>
+  </div>
+</div>`;
+}
+
+// ---- modals
+function modalHTML() {
+  const m = ui.modal;
+  if (S && S.over) return overHTML();
+  if (S && S.enc) return encHTML();
+  if (!m) return '';
+  let body = '';
+  switch (m.kind) {
+    case 'help': body = helpHTML(m.tab || 'basics'); break;
+    case 'menu': body = menuHTML(); break;
+    case 'confirmNew': body = `<h1 id="pc-mt">Abandon this run?</h1><p>Your current run will not be scored.</p>
+      <div class="acts"><button class="danger" data-act="newconfirm"><kbd>Y</kbd>Abandon and start over</button><button data-act="close"><kbd>Esc</kbd>Keep playing</button></div>`; break;
+  }
+  return `<div class="back" data-act="backdrop"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="pc-mt">${body}</div></div>`;
+}
+
+function qtyMax(m) {
+  const g = GOODS[m.good];
+  const p = S.prices[g.id];
+  if (m.side === 'buy') return p ? Math.max(0, Math.min(free(S), Math.floor(S.cash / p))) : 0;
+  return S.stash[g.id] || 0;
+}
+function tradeRowHTML(t) {
+  const g = GOODS[t.good];
+  const p = S.prices[g.id];
+  const max = qtyMax(t);
+  const verb = t.side === 'buy' ? 'Buy' : 'Sell';
+  const info = t.side === 'buy' ? `you can afford ${Math.floor(S.cash / p)}, room for ${free(S)}` : `you hold ${S.stash[g.id] || 0}`;
+  return `<tr class="trade-row"><td colspan="6"><form data-form="qty" class="trade" aria-label="${verb} ${g.name}">
+    <span class="tv">${verb} ${g.name}</span><span class="note">${fmt(p)} each · ${info}</span>
+    ${t.side === 'buy' && S.day === S.days ? `<span class="warn">Last day: anything you can't sell today is worth nothing.</span>` : ''}
+    <span class="qrow">
+      <button type="button" data-act="qadj" data-v="-10" aria-label="10 fewer">−10</button><button type="button" data-act="qadj" data-v="-1" aria-label="1 fewer">−1</button>
+      <input id="pc-qty" inputmode="numeric" autocomplete="off" value="${t.qty}" aria-label="Quantity to ${verb.toLowerCase()}">
+      <button type="button" data-act="qadj" data-v="1" aria-label="1 more">+1</button><button type="button" data-act="qadj" data-v="10" aria-label="10 more">+10</button>
+      <button type="button" data-act="qmax"><kbd>M</kbd>Max ${max}</button>
+      <span class="total">= <b id="pc-total">${fmt((intAmt(t.qty) || 0) * p)}</b></span>
+      <button class="primary" type="submit"><kbd>Enter</kbd>${verb}</button><button type="button" data-act="qcancel"><kbd>Esc</kbd>Cancel</button>
+    </span></form></td></tr>`;
+}
+
+function travelPanelHTML() {
+  const due = S.debt > 0 && CONFIG.goonDays - S.debtAge <= 1;
+  return `<div class="logwrap"><div class="travel" role="region" aria-label="Travel">
+    <h2>Where to?</h2>
+    <p class="note">Every trip takes a day, and the debt grows 10% overnight.${due ? " Her goons are due: PVN Tower is the one place they won't come for you." : ''}</p>
+    <ol class="dest">${PLACES.map((P, i) => `<li><button data-act="go" data-v="${P.id}" ${P.id === S.loc ? 'disabled' : ''}><kbd>${i + 1}</kbd><b>${P.name}</b><span>${P.id === S.loc ? 'You are here.' : P.special}</span></button></li>`).join('')}</ol>
+    <button data-act="stay"><kbd>Esc</kbd>Stay here</button>
+  </div></div>`;
+}
+
+function moneyForm(kind, label, max, hint) {
+  return `<form data-form="${kind}" class="row"><input inputmode="numeric" autocomplete="off" name="amt" placeholder="amount" aria-label="${label} amount">
+    <button type="button" data-act="mmax" data-v="${max}">Max ${fmt(max)}</button><button class="primary" type="submit">${label}</button>
+    ${hint ? `<span class="note">${hint}</span>` : ''}</form>`;
+}
+
+function servicePanelHTML() {
+  const st = S;
+  const P = here(st);
+  let out = `<h2>${esc(P.serviceName)}</h2>`;
+  if (P.service === 'loan') {
+    out += `<p>Casey Benton looks up from a desk the size of a car. "Back so soon?"</p>
+    <p>You owe <b>${fmt(st.debt)}</b>.${st.debt > 0 ? ` <span class="note">${st.debtAge} ${plural(st.debtAge, 'day')} since your last real payment (a payment of at least 10% of the debt). Her goons come at ${CONFIG.goonDays}.</span>` : ''}</p>
+    ${st.debt > 0 ? moneyForm('repay', 'Repay', Math.min(st.cash, st.debt)) : ''}
+    ${moneyForm('borrow', 'Borrow', Math.max(0, CONFIG.debtCap - st.debt), `She'll carry up to ${fmt(CONFIG.debtCap)}.`)}`;
+  }
+  if (P.service === 'bank') {
+    out += `<p>The blast door rolls aside and the Overseer's terminal flickers awake. WELCOME BACK, DWELLER.</p>
+    <p>Cash on you: <b>${fmt(st.cash)}</b> · In the Vault: <b>${fmt(st.bank)}</b>. <span class="note">The Vault pays 1% a day.</span></p>
+    ${moneyForm('deposit', 'Deposit', st.cash)}
+    ${moneyForm('withdraw', 'Withdraw', st.bank)}`;
+  }
+  if (P.service === 'vet') {
+    const missing = CONFIG.maxHp - st.hp;
+    out += `<h2>Vet</h2><p>Health ${st.hp} / ${CONFIG.maxHp}. ${fmt(CONFIG.vetPerHp)} per HP.</p>
+    <div class="row"><button class="primary" data-act="heal" ${missing <= 0 || st.cash < CONFIG.vetPerHp ? 'disabled' : ''}>Patch me up${missing > 0 ? ` (${fmt(Math.min(missing, Math.floor(st.cash / CONFIG.vetPerHp)) * CONFIG.vetPerHp)})` : ''}</button></div>`;
+  }
+  if (P.shop.length) {
+    out += `<h2>For sale</h2><table>${P.shop.map(id => {
+      const it = GEAR[id];
+      const owned = st.gear[it.slot] === id;
+      const ok = canUpgrade(st, id);
+      const label = owned ? 'Owned' : ok ? 'Buy' : 'Have better';
+      return `<tr><td><b>${it.name}</b><br><span class="note">${it.blurb}</span></td><td class="r">${fmt(it.price)}</td>
+        <td class="r"><button data-act="buygear" data-v="${id}" ${!ok || st.cash < it.price ? 'disabled' : ''}>${label}</button></td></tr>`;
+    }).join('')}</table>`;
+  }
+  out += `<div class="flash" role="status">${esc(ui.flash)}</div><div class="acts"><button data-act="stay"><kbd>Esc</kbd>Done</button></div>`;
+  return `<div class="logwrap"><div class="sidepanel" role="region" aria-label="${esc(P.serviceName)}">${out}</div></div>`;
+}
+
+
+/* One line per encounter choice: what it will cost or win, in numbers the
+ * engine itself uses (runChance, giveUpCost, goonTake). */
+function choiceCost(st, o) {
+  const e = st.enc;
+  const held = used(st);
+  const units = n => `${n} ${plural(n, 'unit')}`;
+  const collar = st.gear.armour ? ' (less with your collar)' : '';
+  switch (o) {
+    case 'run': {
+      const pct = Math.round(runChance(st) * 100);
+      return `${pct}% to get away${st.gear.mittens ? ', with your Sneaky Mittens' : ''}. If not, ${held ? `you spill ${Math.round(CONFIG.dropOnFail * 100)}% of your ${units(held)} and ` : ''}they get a swing at you.`;
+    }
+    case 'fight': {
+      const W = GEAR[st.gear.weapon];
+      const n = e.foes.length;
+      return `Your ${W.name} lands 3 times in 4 for ${W.dmg[0]}–${W.dmg[1]}. ${n === 1 ? 'They hit' : `Each of ${n} hits`} back ${Math.round(e.hitP * 100)}% of the time for ${e.dmg[0]}–${e.dmg[1]}${collar}.`;
+    }
+    case 'surrender': {
+      const c = giveUpCost(st);
+      if (e.type === 'watchers') return c.units ? `Lose all ${units(c.units)} and ${fmt(c.cash)}. Your heat drops to 10.` : `A ${fmt(c.cash)} fine for loitering.`;
+      return c.units ? `They take ${units(c.units)}: half of each good.` : `They take ${fmt(c.cash)}.`;
+    }
+    case 'deal': {
+      const d = e.deal, q = dealQty(st, d), g = GOOD[d.good];
+      return d.side === 'buy' ? `+${fmt(q * d.price)} for ${q} ${g.name}.` : `${fmt(q * d.price)} for ${q} ${g.name}: a ${priceStanding(g, d.price).word} price.`;
+    }
+    case 'leave': return 'Nothing happens.';
+    case 'sell': return `+${fmt(e.qty * e.price)} for all ${e.qty} Skooma.`;
+    case 'decline': return 'Nothing happens.';
+    case 'pay': return e.type === 'boss' ? `${fmt(e.amount)}. Your heat drops to 0.` : `${fmt(e.demand)} off your debt, and the goon clock resets.`;
+    case 'refuse': return e.type === 'boss'
+      ? `Your heat rises to ${Math.min(100, st.heat + 20)}.`
+      : `They hit you for 12–28${collar} and take ${fmt(goonTake(st))} toward the debt.`;
+    case 'buy': return `${fmt(e.price)}, ${Math.round((1 - e.price / GEAR[e.item].price) * 100)}% off the shop price.`;
+  }
+  return '';
+}
+
+function encHTML() {
+  const st = S;
+  const e = st.enc;
+  const opts = encOptions(st);
+  const keyOf = o => Object.keys(ENC_KEYS).find(k => ENC_KEYS[k].includes(o)).toUpperCase();
+  const LABEL = { run: 'Run', fight: 'Fight', surrender: 'Give up', deal: 'Deal', leave: 'Walk away', sell: 'Sell', decline: 'Decline', pay: 'Pay', refuse: 'Refuse', buy: 'Buy' };
+  let title = '';
+  let body = '';
+  if (e.type === 'watchers' || e.type === 'rival') {
+    title = e.type === 'watchers' ? 'Watchers!' : (e.hostile ? 'Rival crew' : 'A rival dealer');
+    if (e.type === 'rival' && !e.hostile) {
+      const d = e.deal;
+      const g = GOOD[d.good];
+      const q = dealQty(st, d);
+      body += d.side === 'buy'
+        ? `<p>${esc(e.boss)} wants your ${g.name}: up to ${d.qty} at <b>${fmt(d.price)}</b> each${st.prices[g.id] != null ? ` (${fmt(st.prices[g.id])} on the street here)` : ''}.</p>`
+        : `<p>${esc(e.boss)} is offloading ${d.qty} ${g.name} at <b>${fmt(d.price)}</b> each${st.prices[g.id] != null ? ` (${fmt(st.prices[g.id])} on the street here)` : ''}.</p>
+          <p class="note">${q > 0 ? `You can take ${q}.` : 'You have no room or no cash for it.'}</p>`;
+    } else {
+      body += `<div class="foes">${e.foes.map(f => `<div class="foe"><span>${esc(f.name)} <span class="dim">${Math.max(0, f.hp)} HP</span></span>${meter(f.hp, f.max, 'low')}</div>`).join('')}</div>`;
+    }
+    body += `<div class="foe"><span>You <span class="dim">${st.hp} HP</span></span>${meter(st.hp, CONFIG.maxHp, st.hp <= 30 ? 'low' : '')}</div>`;
+    if (!st.gear.weapon) body += '<p class="note">You have no weapon, so you can only run or give up. The pet store in the Suburbs sells them.</p>';
+  } else if (e.type === 'boss') {
+    title = 'The Boss';
+    body = e.ask === 'skooma'
+      ? `<p>Casey Benton wants all ${e.qty} of your Skooma at <b>${fmt(e.price)}</b> each: <b>${fmt(e.qty * e.price)}</b> in total.</p>`
+      : `<p>Casey Benton suggests a <b>${fmt(e.amount)}</b> donation to make your heat go away. Refusing will make it worse.</p>${st.cash < e.amount ? '<p class="note">You don\'t have that much cash on you.</p>' : ''}`;
+  } else if (e.type === 'goons') {
+    title = "The Boss's goons";
+    body = `<p>They want <b>${fmt(e.demand)}</b> toward your debt, now. Refuse and they'll take it out of your hide and your pockets.</p>${st.cash < e.demand ? '<p class="note">You don\'t have that much cash on you.</p>' : ''}`;
+  } else if (e.type === 'stray') {
+    const it = GEAR[e.item];
+    title = 'A stray';
+    body = `<p>${it.name} for <b>${fmt(e.price)}</b> (${fmt(it.price)} in the shops). <span class="note">${it.blurb}</span></p>`;
+  }
+  const lines = st.log.filter(l => l.n > (e.from || 0)).map(l => `<p class="${l.cls}">${esc(l.text)}</p>`).join('');
+  const enter = ui.encFresh ? ' enter' : '';
+  ui.encFresh = false;
+  return `<div class="back enc-back"><div class="modal encounter t-${e.type}${enter}" role="alertdialog" aria-modal="true" aria-labelledby="pc-mt">
+    <h1 id="pc-mt">${esc(title)}</h1>${body}
+    <div class="elog" id="pc-elog">${lines}</div>
+    <div class="choices">${opts.map(o => `<button data-act="enc" data-v="${o}" aria-describedby="pc-c-${o}" class="${o === 'fight' || o === 'deal' || o === 'pay' || o === 'sell' || o === 'buy' ? 'primary' : ''}"><kbd>${keyOf(o)}</kbd>${LABEL[o]}</button><span class="cost" id="pc-c-${o}">${choiceCost(st, o)}</span>`).join('')}</div>
+  </div></div>`;
+}
+
+/* One line that tells you how the run went, celebrating a board place. */
+function verdict(score, rank) {
+  if (score < 0) return `<p class="verdict bad">You leave PumaCity still owing Casey Benton. She'll remember.</p>`;
+  if (rank === 0) return `<p class="verdict best">A new best score for this run length.</p>`;
+  if (rank > 0) return `<p class="verdict good">Number ${rank + 1} on the board.</p>`;
+  return `<p class="verdict dim">Debt cleared. Not a board score this time.</p>`;
+}
+
+function overHTML() {
+  const st = S;
+  const o = st.over;
+  const list = scores()[st.days] || [];
+  const dead = o.reason === 'dead';
+  return `<div class="back"><div class="modal" role="alertdialog" aria-modal="true" aria-labelledby="pc-mt">
+    <h1 id="pc-mt">${dead ? 'You died' : 'The run is over'}</h1>
+    ${dead ? `<p class="bad">${esc(o.why)}</p><p>Day ${o.day} of ${st.days}. A death scores nothing.</p>` : `
+    <p class="final${o.score < 0 ? ' neg' : ''}">${fmt(o.score)}</p>
+    ${verdict(o.score, ui.rank)}
+    <table><tr><td>Cash</td><td class="r">${fmt(st.cash)}</td></tr><tr><td>Bank</td><td class="r">${fmt(st.bank)}</td></tr>
+    <tr><td>Still owed to The Boss</td><td class="r">${fmt(-st.debt)}</td></tr>
+    ${o.unsold ? `<tr><td class="dim">Unsold goods (worth nothing)</td><td class="r dim">${o.unsold} ${plural(o.unsold, 'unit')}</td></tr>` : ''}
+    </table>`}
+    <p class="note">Best net worth during the run: ${fmt(st.stats.peak)}. Fights won: ${st.stats.won}. Escapes: ${st.stats.fled}. Busts: ${st.stats.busted}.</p>
+    <h2>High scores, ${st.days} days</h2>${scoreTable(list, ui.rank)}
+    <div class="acts"><button class="primary" data-act="again"><kbd>N</kbd>New run</button><button data-act="title"><kbd>Esc</kbd>Title screen</button></div>
+  </div></div>`;
+}
+
+function menuHTML() {
+  return `<h1 id="pc-mt">Menu</h1>
+  <div class="acts" style="flex-direction:column;align-items:stretch">
+    <button data-act="close"><kbd>Esc</kbd>Back to the game</button>
+    <button data-act="help"><kbd>?</kbd>How to play</button>
+    <button data-act="title"><kbd>Q</kbd>Title screen (your run is saved)</button>
+    <button class="danger" data-act="newrun"><kbd>N</kbd>Abandon run and start over</button>
+  </div>`;
+}
+
+function helpHTML(tab) {
+  const tabs = [['basics', 'Basics'], ['places', 'Places'], ['goods', 'Goods'], ['gear', 'Gear'], ['keys', 'Keys']];
+  let body = '';
+  if (tab === 'basics') body = `<dl class="help">
+    <dt>The goal</dt><dd>Finish the run with as much money as you can. Your score is your cash plus your bank balance, minus whatever you still owe The Boss.</dd>
+    <dt>The debt</dt><dd>You start owing Casey Benton, The Boss, ${fmt(CONFIG.startDebt)}. It grows 10% every day. Pay it down at PVN Tower. Go ${CONFIG.goonDays} days without a real payment (at least 10% of the debt) and her goons come to collect; the Debt box counts down to them.</dd>
+    <dt>Trading</dt><dd>Each day you're somewhere new, and prices are new too. Buy cheap, carry it somewhere better, and sell. Your pouch holds ${CONFIG.baseCap} units until you buy a bigger one. The <i>vs usual</i> column says whether a price is a bargain, cheap, fair, steep or sky-high for that good, and the Held column shows what you paid and how today's price compares. A ▲ or ▼ compares a price with the last one you saw. A headline (shown above the market, and marked ! in it) sends one good's price wild.</dd>
+    <dt>Travel</dt><dd>Each trip takes one day. On your last day you can't travel; sell everything and cash out. Goods left in your pouch are worth nothing.</dd>
+    <dt>Heat</dt><dd>Big sales and fights raise your heat: cool, warm, hot, then wanted. The hotter you are, the more often the Watchers come and the more of them there are. It cools a little every day, faster at The Ranch, and The Boss will make it vanish for a price.</dd>
+    <dt>Encounters</dt><dd>Watchers and rival crews: run, fight (you need a weapon), or give up. Giving up to the Watchers costs your whole stash and a fine; a failed getaway spills part of your load. The more you carry, the more often they come. If your health hits zero, the run is over and scores nothing. Money in the bank is safe from muggers.</dd>
+  </dl>`;
+  if (tab === 'places') body = `<dl class="help">${PLACES.map(P => `<dt>${P.name}</dt><dd>${P.blurb} ${P.special}</dd>`).join('')}</dl>`;
+  if (tab === 'goods') body = `<table><tr><th>Good</th><th class="r">Usual price</th><th></th></tr>${GOODS.map(g => `<tr><td>${g.name}</td><td class="r">${fmt(g.lo)}–${fmt(g.hi)}</td><td class="note">${g.blurb}</td></tr>`).join('')}</table>`;
+  if (tab === 'gear') body = `<table><tr><th>Item</th><th class="r">Price</th><th>Where</th></tr>${Object.keys(GEAR).map(id => {
+    const where = PLACES.filter(P => P.shop.includes(id)).map(P => P.name).join(', ');
+    return `<tr><td><b>${GEAR[id].name}</b><br><span class="note">${GEAR[id].blurb}</span></td><td class="r">${fmt(GEAR[id].price)}</td><td class="note">${where}</td></tr>`;
+  }).join('')}</table><p class="note">Pouches and weapons only trade up: a new one replaces the old. Strays sometimes sell them cheap.</p>`;
+  if (tab === 'keys') body = `<table>
+    <tr><td><kbd>1</kbd>–<kbd>9</kbd></td><td>Select a good</td></tr>
+    <tr><td><kbd>B</kbd> / <kbd>S</kbd></td><td>Buy or sell the selected good (the quantity opens under it)</td></tr>
+    <tr><td><kbd>M</kbd> <kbd>↑</kbd> <kbd>↓</kbd></td><td>In the quantity box: the most you can, one more, one fewer</td></tr>
+    <tr><td><kbd>A</kbd></td><td>Sell all: everything you carry that someone here is buying</td></tr>
+    <tr><td><kbd>T</kbd></td><td>Travel: the destinations open beside the market; <kbd>1</kbd>–<kbd>7</kbd> picks one</td></tr>
+    <tr><td><kbd>E</kbd></td><td>Cash out on the last day; <kbd>E</kbd> again confirms</td></tr>
+    <tr><td><kbd>V</kbd></td><td>Visit this place's shop or office</td></tr>
+    <tr><td><kbd>R</kbd> <kbd>F</kbd> <kbd>U</kbd></td><td>Encounters: run, fight, give up. <kbd>Y</kbd> accepts an offer and <kbd>N</kbd> turns it down; every choice shows its key. None of them is a market key, so a key you were already pressing can't answer an encounter by mistake.</td></tr>
+    <tr><td><kbd>Enter</kbd> / <kbd>Esc</kbd></td><td>Confirm / close</td></tr></table>`;
+  return `<h1 id="pc-mt">How to play</h1>
+  <div class="tabs">${tabs.map(([k, l]) => `<button data-act="helptab" data-v="${k}" aria-pressed="${tab === k}">${l}</button>`).join('')}</div>
+  ${body}
+  <div class="acts"><button data-act="close"><kbd>Esc</kbd>Close</button></div>`;
+}
+
+/* Every render rebuilds the page, which would drop keyboard focus to <body>
+ * after each move. Remember what had focus by what it does (data-act and
+ * data-v, or its id) and put focus back on the same control afterwards.
+ * Opening a dialog focuses its first control; closing one returns focus to
+ * whatever opened it. */
+function focusKey(el) {
+  if (!el || el === document.body || !root.contains(el)) return null;
+  if (el.id) return { id: el.id };
+  const a = el.closest('[data-act]');
+  return a ? { act: a.dataset.act, v: a.dataset.v } : null;
+}
+function findFocus(k, within) {
+  if (!k) return null;
+  if (k.id) return document.getElementById(k.id);
+  const sel = `[data-act="${k.act}"]` + (k.v != null ? `[data-v="${CSS.escape(k.v)}"]` : '');
+  const el = (within || root).querySelector(sel);
+  return el && !el.disabled ? el : null;
+}
+const FOCUSABLE = 'button:not(:disabled),input,[tabindex="0"],a[href]';
+function announce(lines) {
+  const live = document.getElementById('pc-live');
+  if (!live || !lines.length) return;
+  live.textContent = '';
+  setTimeout(() => { live.textContent = lines.join(' '); }, 30);
+}
+
+function render() {
+  const before = focusKey(document.activeElement);
+  const hadModal = !!root.querySelector('.back');
+  const modal = S ? modalHTML() : (ui.modal && ui.modal.kind === 'help'
+    ? `<div class="back" data-act="backdrop"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="pc-mt">${helpHTML(ui.modal.tab || 'basics')}</div></div>` : '');
+  setScene(S ? S.loc : 'pvn');
+  if (S && S.enc && ui.encSeen !== S.enc.from + ':' + S.day) {
+    ui.encSeen = S.enc.from + ':' + S.day;
+    ui.encUntil = performance.now() + ENC_LOCK_MS;
+    ui.encFresh = true;
+  }
+  root.innerHTML = `<div class="stage">${S ? gameHTML() : setupHTML()}</div>` + modal;
+  if (ui.arrived) { const h = root.querySelector('.place-name'); if (h) h.classList.add('arrive'); ui.arrived = false; }
+  const log = document.getElementById('pc-log');
+  if (log) log.scrollTop = log.scrollHeight;
+  const elog = document.getElementById('pc-elog');
+  if (elog) elog.scrollTop = elog.scrollHeight;
+  const dlg = root.querySelector('.back .modal');
+  const q = document.getElementById('pc-qty');
+  let target = null;
+  if (dlg && !hadModal) {
+    ui.opener = before;
+    // An encounter opens on its cautious choice (run, walk away, decline,
+    // refuse), so a stray Enter can't start a brawl or spend your money.
+    target = q || dlg.querySelector('input')
+      || (S && S.enc ? ['run', 'leave', 'decline', 'refuse'].map(v => dlg.querySelector(`[data-act="enc"][data-v="${v}"]`)).find(Boolean) : null)
+      || dlg.querySelector('button.primary:not(:disabled)') || dlg.querySelector(FOCUSABLE);
+  } else if (dlg) {
+    target = findFocus(before, dlg) || q || dlg.querySelector(FOCUSABLE);
+  } else if (ui.panelFresh) {
+    target = ui.panelFresh === 'trade' ? q
+      : ui.panelFresh === 'travel' ? root.querySelector('.travel [data-act="go"]:not(:disabled)')
+      : ui.panelFresh === 'confirm' ? root.querySelector('[data-act="finishconfirm"]')
+      : root.querySelector('.sidepanel input') || root.querySelector('.sidepanel button.primary:not(:disabled)') || root.querySelector('.sidepanel button:not(:disabled)');
+    if ((ui.panelFresh === 'travel' || ui.panelFresh === 'service') && window.matchMedia('(max-width:900px)').matches) {
+      const panel = root.querySelector('.travel, .sidepanel');
+      if (panel) panel.scrollIntoView({ block: 'start' });
+    }
+    ui.panelFresh = null;
+  } else if (ui.panelOpener && !ui.trade && !ui.side) {
+    target = findFocus(ui.panelOpener) || findFocus(before);
+    ui.panelOpener = null;
+  } else {
+    target = findFocus(hadModal ? ui.opener : before) || (hadModal ? findFocus(before) : null);
+    if (hadModal) ui.opener = null;
+  }
+  if (target) target.focus({ preventScroll: true });
+  if (target === q && q) q.select();
+}
+
+// ---- input
+function openQty(i, side) {
+  const g = GOODS[i];
+  if (S.prices[g.id] == null) { ui.flash = `Nobody is trading ${g.name} here today.`; render(); return; }
+  if (side === 'sell' && !S.stash[g.id]) { ui.flash = `You don't have any ${g.name}.`; render(); return; }
+  ui.sel = i;
+  const t = { good: i, side, qty: 0 };
+  t.qty = qtyMax(t);
+  if (!ui.trade && !ui.side) ui.panelOpener = focusKey(document.activeElement) || { act: side, v: String(i) };
+  ui.trade = t;
+  ui.side = null;
+  ui.panelFresh = 'trade';
+  ui.flash = '';
+  render();
+}
+function closePanels() { ui.trade = null; ui.side = null; ui.confirmCash = false; ui.flash = ''; render(); }
+/* Travel and the shop/office share one slot beside the market, in place of
+ * the place panel and log, so the prices and your cash stay in view. */
+function openSide(which) {
+  if (S.day >= S.days) return;
+  if (which === 'service' && !(here(S).service || here(S).shop.length)) return;
+  if (ui.side === which) { closePanels(); return; }
+  if (!ui.trade && !ui.side) ui.panelOpener = focusKey(document.activeElement) || { act: which };
+  ui.trade = null;
+  ui.side = which;
+  ui.panelFresh = which;
+  ui.flash = '';
+  render();
+}
+function openTravel() { openSide('travel'); }
+function setQty(n) {
+  const m = ui.trade;
+  m.qty = clamp(n, 0, qtyMax(m));
+  const input = document.getElementById('pc-qty');
+  if (input) input.value = m.qty;
+  updateTotal();
+}
+function updateTotal() {
+  const m = ui.trade;
+  const input = document.getElementById('pc-qty');
+  const t = document.getElementById('pc-total');
+  if (!m || !input || !t) return;
+  m.qty = intAmt(input.value.replace(/[^\d]/g, ''));
+  t.textContent = fmt(m.qty * S.prices[GOODS[m.good].id]);
+}
+function closeModal() { ui.modal = null; ui.flash = ''; render(); }
+
+root.addEventListener('click', e => {
+  const el = e.target.closest('[data-act]');
+  if (!el) return;
+  const v = el.dataset.v;
+  switch (el.dataset.act) {
+    case 'backdrop': if (e.target === el) closeModal(); return;
+    case 'days': prefs.days = Number(v); scoreTab = prefs.days; save(KEY_PREFS, prefs); render(); return;
+    case 'scoretab': scoreTab = Number(v); render(); return;
+    case 'start': startRun(); return;
+    case 'resume': resume(); return;
+    case 'help': ui.modal = { kind: 'help', tab: 'basics' }; render(); return;
+    case 'helptab': ui.modal = { kind: 'help', tab: v }; render(); return;
+    case 'close': closeModal(); return;
+    case 'sel': if (e.target.closest('button')) return; ui.sel = Number(v); render(); return;
+    case 'buy': openQty(Number(v), 'buy'); return;
+    case 'sell': openQty(Number(v), 'sell'); return;
+    case 'qadj': setQty(ui.trade.qty + Number(v)); return;
+    case 'qmax': setQty(qtyMax(ui.trade)); return;
+    case 'qcancel': closePanels(); return;
+    case 'stay': closePanels(); return;
+    case 'finishcancel': ui.confirmCash = false; ui.panelOpener = null; render(); return;
+    case 'sellall': act({ t: 'sellall' }); return;
+    case 'mmax': { const inp = el.closest('form').querySelector('input'); inp.value = v; inp.focus(); return; }
+    case 'travel': openSide('travel'); return;
+    case 'go': act({ t: 'travel', to: v }); return;
+    case 'finish': ui.confirmCash = true; ui.trade = null; ui.panelOpener = null; ui.panelFresh = 'confirm'; render(); return;
+    case 'finishconfirm': act({ t: 'finish' }); return;
+    case 'service': openSide('service'); return;
+    case 'buygear': act({ t: 'gear', item: v }); return;
+    case 'heal': act({ t: 'heal' }); return;
+    case 'menu': ui.modal = { kind: 'menu' }; render(); return;
+    case 'newrun': ui.modal = { kind: 'confirmNew' }; render(); return;
+    case 'newconfirm': save(KEY_GAME, null); S = null; startRun(); return;
+    case 'enc': if (!encLocked()) act({ t: v }); return;
+    case 'again': S = null; startRun(); return;
+    case 'title': quitToTitle(); return;
+  }
+});
+
+root.addEventListener('submit', e => {
+  e.preventDefault();
+  const form = e.target;
+  const kind = form.dataset.form;
+  if (kind === 'qty') {
+    updateTotal();
+    const m = ui.trade;
+    act({ t: m.side, good: GOODS[m.good].id, qty: m.qty });
+    return;
+  }
+  const amt = intAmt(String(form.querySelector('input').value).replace(/[^\d]/g, ''));
+  act({ t: kind, amt });
+});
+
+root.addEventListener('input', e => { if (e.target.id === 'pc-qty') updateTotal(); });
+
+/* Encounters interrupt the market on arrival, exactly when a hand is reaching
+ * for a market key. So the two key sets share no letters (tools/check-all.js
+ * holds them apart), and an encounter ignores input for a moment after it
+ * appears, so a key already in flight can't answer it. */
+const MARKET_KEYS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'b', 's', 'a', 't', 'e', 'v', 'h', '?', '/'];
+const ENC_KEYS = { r: ['run'], f: ['fight'], u: ['surrender'], d: ['deal'], l: ['leave'], p: ['pay'], y: ['sell', 'buy'], n: ['refuse', 'decline'] };
+const ENC_LOCK_MS = 400;
+function encLocked() { return S && S.enc && performance.now() < (ui.encUntil || 0); }
+
+function helpKey(k) {
+  const tabs = ['basics', 'places', 'goods', 'gear', 'keys'];
+  const i = tabs.indexOf(ui.modal.tab || 'basics');
+  if (k === 'ArrowRight') { ui.modal = { kind: 'help', tab: tabs[(i + 1) % tabs.length] }; render(); }
+  if (k === 'ArrowLeft') { ui.modal = { kind: 'help', tab: tabs[(i + tabs.length - 1) % tabs.length] }; render(); }
+}
+
+document.addEventListener('keydown', e => {
+  if (e.metaKey || e.ctrlKey || e.altKey) return;
+  // Keep Tab inside an open dialog.
+  if (e.key === 'Tab') {
+    const dlg = root.querySelector('.back .modal');
+    if (!dlg) return;
+    const items = [...dlg.querySelectorAll(FOCUSABLE)].filter(el => el.offsetParent !== null);
+    if (!items.length) return;
+    const i = items.indexOf(document.activeElement);
+    const next = e.shiftKey ? (i <= 0 ? items.length - 1 : i - 1) : (i === -1 || i === items.length - 1 ? 0 : i + 1);
+    e.preventDefault();
+    items[next].focus();
+    return;
+  }
+  const k = e.key.length === 1 ? e.key.toLowerCase() : e.key;
+  const inInput = e.target && e.target.tagName === 'INPUT';
+  const m = ui.modal;
+
+  if (!S) {
+    if (m && m.kind === 'help') { if (k === 'Escape') closeModal(); else helpKey(k); return; }
+    if (inInput) { if (k === 'Enter') { e.preventDefault(); startRun(); } return; }
+    if (k === 'n' || k === 'Enter') { e.preventDefault(); startRun(); }
+    else if (k === 'r' && loadGame()) resume();
+    else if (k === '?' || k === '/') { ui.modal = { kind: 'help', tab: 'basics' }; render(); }
+    return;
+  }
+  if (S.over) {
+    if (k === 'n') { S = null; startRun(); } else if (k === 'Escape') quitToTitle();
+    return;
+  }
+  if (S.enc) {
+    if (encLocked()) { e.preventDefault(); return; }
+    const opts = encOptions(S);
+    const t = (ENC_KEYS[k] || []).find(o => opts.includes(o));
+    if (t) { e.preventDefault(); act({ t }); }
+    return;
+  }
+  if (m) {
+    if (k === 'Escape') { e.preventDefault(); closeModal(); return; }
+    if (inInput) return;
+    if (m.kind === 'confirmNew' && k === 'y') { save(KEY_GAME, null); S = null; startRun(); return; }
+    if (m.kind === 'menu') { if (k === '?' || k === '/') { ui.modal = { kind: 'help', tab: 'basics' }; render(); } else if (k === 'q') quitToTitle(); else if (k === 'n') { ui.modal = { kind: 'confirmNew' }; render(); } }
+    if (m.kind === 'help') helpKey(k);
+    return;
+  }
+  if (ui.trade) {
+    if (k === 'Escape') { e.preventDefault(); closePanels(); return; }
+    if (k === 'm') { e.preventDefault(); setQty(qtyMax(ui.trade)); return; }
+    if (k === 'ArrowUp' || k === '+') { e.preventDefault(); setQty(ui.trade.qty + 1); return; }
+    if (k === 'ArrowDown' || k === '-') { e.preventDefault(); setQty(ui.trade.qty - 1); return; }
+  }
+  if (ui.side === 'service') {
+    if (k === 'Escape' || (!inInput && k === 'v')) { e.preventDefault(); closePanels(); return; }
+  }
+  if (ui.side === 'travel') {
+    if (k === 'Escape' || k === 't') { e.preventDefault(); closePanels(); return; }
+    if (/^[1-7]$/.test(k)) { const P = PLACES[Number(k) - 1]; if (P.id !== S.loc) act({ t: 'travel', to: P.id }); return; }
+  }
+  if (inInput) return;
+  if (/^[1-9]$/.test(k)) { ui.sel = Number(k) - 1; ui.trade = null; ui.flash = ''; render(); return; }
+  if (k === 'a') { act({ t: 'sellall' }); return; }
+  if (k === 'ArrowDown') { e.preventDefault(); ui.sel = (ui.sel + 1) % GOODS.length; render(); return; }
+  if (k === 'ArrowUp') { e.preventDefault(); ui.sel = (ui.sel + GOODS.length - 1) % GOODS.length; render(); return; }
+  if (k === 'b') { openQty(ui.sel, 'buy'); return; }
+  if (k === 's') { openQty(ui.sel, 'sell'); return; }
+  if (k === 't' && S.day < S.days) { openTravel(); return; }
+  if (k === 'e' && S.day === S.days) {
+    if (ui.confirmCash) act({ t: 'finish' });
+    else { ui.confirmCash = true; ui.trade = null; ui.panelFresh = 'confirm'; render(); }
+    return;
+  }
+  if (k === 'Escape' && ui.confirmCash) { e.preventDefault(); ui.confirmCash = false; render(); return; }
+  if (k === 'v') { openSide('service'); return; }
+  if (k === '?' || k === '/' || k === 'h') { ui.modal = { kind: 'help', tab: 'basics' }; render(); return; }
+  if (k === 'Escape') { ui.modal = { kind: 'menu' }; render(); }
+});
+
+/* Debug and test hook. __PC.force('watchers') starts an encounter now. */
+window.__PC = {
+  get state() { return S; },
+  act,
+  force(type) { if (!S) return; S = forceEncounter(S, type); save(KEY_GAME, S); render(); },
+  bot(n) { for (let i = 0; i < (n || 1) && S && !S.over; i++) act(botAct(S)); return S && S.over; },
+  set(patch) { if (!S) return; S = Object.assign(JSON.parse(JSON.stringify(S)), patch); save(KEY_GAME, S); render(); },
+};
+
+S = null;
+render();
+</script>
+</body>
+</html>

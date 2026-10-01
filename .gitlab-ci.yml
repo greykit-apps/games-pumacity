@@ -1,0 +1,74 @@
+stages:
+  - validate
+  - deploy
+
+# PumaCity is one index.html. Its rules live between the @core markers in that
+# file, and the tools cut that block out and run it under Node, so these checks
+# test the exact code the browser runs.
+#
+# sim.js fails when no careful bot ever finishes in profit and when no reckless
+# bot ever dies. A sim that only reports "no crashes" cannot tell a working game
+# from one where winning, or losing, is unreachable.
+validate:
+  stage: validate
+  image: node:20-alpine
+  script:
+    - node tools/check-assets.js
+    - test -s index.html
+    - grep -q 'data-pumacity-game' index.html
+    - node tools/check-all.js
+    - node tools/sim.js 20
+
+deploy:
+  stage: deploy
+  image: debian:bookworm-slim
+  only:
+    - main
+  before_script:
+    - apt-get update -qq && apt-get install -y -qq openssh-client rsync > /dev/null 2>&1
+    - mkdir -p ~/.ssh
+    - cp "$DREAMHOST_SSH_KEY" ~/.ssh/id_rsa
+    - echo "" >> ~/.ssh/id_rsa
+    - chmod 600 ~/.ssh/id_rsa
+    # Host key is PINNED rather than scanned. A bare `ssh-keyscan` opens a burst
+    # of parallel connections (one per host-key type), which trips an SSH-scan
+    # detector on the self-hosted runner's network path; outbound port 22 to the
+    # target is then blackholed for ~3 minutes -- long enough for the rsync below
+    # to time out, which is what makes the job die with exit 255 after 133s.
+    # Pinning costs zero connections and is also strictly safer than trusting
+    # whatever key happens to answer at deploy time.
+    # If DreamHost rebuilds the VPS this must be re-pinned: the job will then
+    # fail loudly on a host key mismatch rather than silently trust a new key.
+    - echo "$DREAMHOST_HOST ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEtxw582rJAeTpXMTRJeGJ6GHis19hHmWWBwEL1bCbYd" > ~/.ssh/known_hosts
+    - chmod 644 ~/.ssh/known_hosts
+    # ConnectTimeout turns a blocked port into a 15s failure instead of a 133s
+    # one. It lives in ssh_config rather than on each command line so that
+    # rsync's own ssh picks it up too, without touching any rsync invocation.
+    - printf 'Host *\n  ConnectTimeout 15\n  BatchMode yes\n' > ~/.ssh/config
+    - chmod 600 ~/.ssh/config
+    # Outbound port 22 to this host gets blackholed for minutes once too many
+    # SSH connections go to it in a short window -- a mass deploy trips it even
+    # with no ssh-keyscan anywhere. Retry with long gaps so a queued deploy rides
+    # the block out instead of going red. The gaps are deliberately long: probing
+    # harder re-arms the block rather than clearing it.
+    - |
+      puma_rsync() {
+        attempt=1
+        until rsync "$@"; do
+          if [ "$attempt" -ge 3 ]; then
+            echo "rsync failed after $attempt attempts" >&2
+            return 1
+          fi
+          echo "attempt $attempt failed; waiting 200s for any port-22 block to clear"
+          attempt=$((attempt + 1))
+          sleep 200
+        done
+      }
+  script:
+    # Single destination, so this job costs exactly one SSH connection.
+    #
+    # --delete-excluded is load-bearing: plain --delete does NOT delete paths
+    # matched by --exclude -- excluded paths are PROTECTED on the destination.
+    # With --delete-excluded, anything excluded here is also removed from the
+    # live site, which is what "do not publish this" has to mean.
+    - puma_rsync -avz --delete --delete-excluded --exclude='.git' --exclude='.claude' --exclude='.gitlab-ci.yml' --exclude='tools' --exclude='screenshots' ./ ${DREAMHOST_USERNAME}@${DREAMHOST_HOST}:/home/${DREAMHOST_USERNAME}/greykit.com/games/pumacity/
