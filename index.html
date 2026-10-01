@@ -147,6 +147,17 @@ table.mk{width:100%;border-collapse:collapse}
 .mk tr:hover td.btns button:not(:disabled),.mk tr.sel td.btns button:not(:disabled),
 .mk td.btns button:focus-visible{background:var(--panel2);border-color:var(--line);color:var(--text)}
 .mk .out{color:var(--dim)}
+.mk th.range,.mk td.range{text-align:left}
+.mk td.range{width:13em}
+.track{display:inline-block;position:relative;width:64px;height:8px;margin-right:var(--s2);vertical-align:middle;
+  border-left:1px solid var(--lit);border-right:1px solid var(--lit);background:linear-gradient(var(--line),var(--line)) center/100% 1px no-repeat}
+.track i{position:absolute;top:-2px;width:3px;height:12px;margin-left:-1px;background:var(--text);border-radius:1px}
+.rw{font-size:12px;color:var(--dim)}
+.rw.bargain,.rw.cheap{color:var(--good)}
+.rw.steep{color:var(--warn)}
+.rw.sky-high{color:var(--warn)}
+.ticker{margin:0 0 var(--s3);padding:6px var(--s3);border:1px solid #3a2e10;border-radius:3px;background:rgba(255,176,0,.06);color:var(--warn)}
+.ticker b{font-size:11px;letter-spacing:.12em;text-transform:uppercase;margin-right:var(--s2)}
 .up{color:var(--good)}.down{color:var(--danger)}
 .flash{margin-top:var(--s2);color:var(--danger)}
 .flash:empty{display:none}
@@ -230,7 +241,8 @@ table.mk{width:100%;border-collapse:collapse}
   .stat.lead span{font-size:17px}
   .status{grid-template-columns:repeat(4,minmax(0,1fr))}
   .mk td.btns button{min-height:40px;min-width:46px;padding:2px 6px;background:var(--panel2);border-color:var(--line);color:var(--text)}
-  .mk .key{display:none}
+  .mk .key,.track{display:none}
+  .mk td.range{width:auto}
   .mk td,.mk th{padding:var(--s1) 3px}
   .mk td.name{width:auto}
   .mk td.held small{display:block;margin:0;font-size:11px}
@@ -287,7 +299,7 @@ const GOODS = [
   { id: 'silvervine', name: 'Silvervine', lo: 300,   hi: 900,   blurb: "Refined vine chews. 'nip's classier cousin." },
   { id: 'psychos',    name: 'Psychos',    lo: 600,   hi: 1800,  blurb: 'Mushrooms that make the wallpaper move.' },
   { id: 'reddot',     name: 'Red Dot',    lo: 1000,  hi: 4500,  blurb: 'You will never catch it. You will never stop trying.' },
-  { id: 'moonsugar',  name: 'Moonsugar',  lo: 5000,  hi: 14000, blurb: 'Crystal sugar off the moon freighters. Pricey.' },
+  { id: 'moonsugar',  name: 'Moonsugar',  lo: 5000,  hi: 14000, blurb: 'Crystal sugar that comes in on The Ship. Pricey.' },
   { id: 'skooma',     name: 'Skooma',     lo: 10000, hi: 28000, blurb: "Moonsugar, cooked down. The Boss's favourite." },
 ];
 const GOOD = Object.fromEntries(GOODS.map(g => [g.id, g]));
@@ -297,31 +309,31 @@ const GOOD = Object.fromEntries(GOODS.map(g => [g.id, g]));
 const PLACES = [
   { id: 'plaza', name: 'Market Plaza', service: null, serviceName: 'Shades stall', shop: ['shades'],
     mods: { psychos: 1.1, reddot: 1.15, moonsugar: 1.15, skooma: 1.15 }, watch: 1, mug: 1.5,
-    blurb: 'Fountains, food carts and tour groups with fat wallets.',
+    blurb: "Downtown: an open-air mall of stucco arcades, palms and fountains, full of tourists with money to spend.",
     special: 'Tourists pay a premium for luxury goods.' },
   { id: 'pvn', name: 'PVN Tower', service: 'loan', serviceName: "The Boss's office", shop: [],
     mods: { skooma: 1.25 }, watch: 1, boss: 3,
-    blurb: "Glass, steel, and Casey Benton's name on every floor.",
-    special: 'The Boss lends money from the penthouse. Skooma sells high.' },
+    blurb: "Casey Benton's office tower: a theater at street level, her offices above it, a nightclub on the roof.",
+    special: 'The Boss lends money from her office. Skooma sells high at the club upstairs.' },
   { id: 'vault', name: 'The Vault', service: 'bank', serviceName: "Overseer's terminal", shop: [],
     mods: {}, watch: 0.8, mug: 0.3,
-    blurb: 'An old fallout shelter under the city: a cog-shaped blast door, humming terminals, and an Overseer who runs it as a bank.',
+    blurb: "A fully stocked vault under the city, waiting for PumaCity's leadership in case of war. Until then, the Overseer runs it as a bank.",
     special: 'Money in the Vault is safe from muggers and the Watchers.' },
   { id: 'ranch', name: 'The Ranch', service: null, serviceName: '', shop: [],
     mods: { nip: 0.45 }, watch: 0.5, cool: 6,
-    blurb: "Rows of 'nip to the horizon, and nobody around to ask questions.",
+    blurb: "An old horse ranch on the edge of town, its paddocks turned over to grow fields.",
     special: "Catnip is cheap, and the Watchers rarely drive out this far." },
   { id: 'starport', name: 'Starport', service: null, serviceName: 'Outfitter, Bay 9', shop: ['hovercrate', 'mech'],
     mods: { moonsugar: 0.8, skooma: 0.8 }, watch: 1.3,
-    blurb: 'Freighters from the moons, and customs officers who look the other way.',
-    special: 'Off-world Moonsugar and Skooma come in cheap. The outfitter sells gear you cannot get planetside.' },
+    blurb: "Where The Ship lands, trading PumaCity's goods with the other areas.",
+    special: "Moonsugar and Skooma come in cheap off The Ship. The outfitter in Bay 9 sells gear you can't get in town." },
   { id: 'convention', name: 'The Convention Center', service: null, serviceName: 'Tech expo', shop: ['pawphone'],
     all: 1.2, mods: {}, watch: 1.1, mug: 3,
-    blurb: 'There is always an expo on, and the crowds never thin.',
+    blurb: 'The convention center by the starport, with a different event every week.',
     special: 'Crowds pay over the odds for everything. Pickpockets work the crowd.' },
   { id: 'suburbs', name: 'Suburbs', service: 'vet', serviceName: 'Pet store & vet', shop: ['fanny', 'saddle', 'spray', 'laser', 'claws', 'collar', 'mittens'],
     mods: {}, watch: 0.9,
-    blurb: 'Lawns, cul-de-sacs, a pet store, and a vet who does not ask questions.',
+    blurb: 'Single-family homes on quiet cul-de-sacs, every one of them rented from Casey Benton.',
     special: 'The vet patches you up. The pet store sells pouches, weapons and accessories.' },
 ];
 const PLACE = Object.fromEntries(PLACES.map(p => [p.id, p]));
@@ -359,8 +371,8 @@ const NEWS = {
   nip: { down: "The Ranch harvest floods the market with cheap 'nip!" },
   feathers: { down: 'A pillow factory explodes. Feathers everywhere, prices crash!' },
   reddot: { up: 'The Boss bans laser pointers! Red Dot prices go wild!' },
-  moonsugar: { up: 'Starport customs seize a Moonsugar freighter. Prices skyrocket!' },
-  skooma: { up: 'The Boss is throwing a party at PVN Tower. Skooma prices soar!' },
+  moonsugar: { up: "Customs impound The Ship's Moonsugar. Prices skyrocket!" },
+  skooma: { up: 'Casey Benton is throwing a party in the PVN Tower club. Skooma prices soar!' },
 };
 
 // ---- randomness: one 32-bit LCG whose whole state is st.rng (from pumarally's rng.js)
@@ -425,7 +437,7 @@ function newGame(opts) {
     stats: { bought: 0, sold: 0, fights: 0, won: 0, fled: 0, busted: 0, peak: CONFIG.startCash - CONFIG.startDebt },
   };
   addLog(st, `Day 1: ${PLACE[st.loc].name}.`, 'day');
-  addLog(st, `Welcome to PumaCity, ${name}. You owe The Boss ${fmt(st.debt)}, and her interest runs at 10% a day.`, '');
+  addLog(st, `Welcome to PumaCity, ${name}. Casey Benton owns all of it, including your ${fmt(st.debt)} debt, at 10% a day.`, '');
   addLog(st, `You have ${days} days. Buy low, sell high, and pay her back at PVN Tower.`, '');
   rollMarket(st);
   rollTip(st);
@@ -1406,6 +1418,37 @@ function scoreTable(list, hi) {
     `<tr${i === hi ? ' class="warn"' : ''}><td>${i + 1}</td><td>${esc(e.name)}${e.dead ? ` <span class="rip">RIP, day ${e.day}</span>` : ''}</td><td class="r">${fmt(e.score)}</td><td class="dim">${esc(e.at || '')}</td></tr>`).join('')}</table>`;
 }
 
+/* Where a price sits in its good's usual range. The word carries the meaning;
+ * the marker and colour only reinforce it. */
+function priceStanding(g, p) {
+  const r = (p - g.lo) / (g.hi - g.lo);
+  const word = r < 0 ? 'bargain' : r < 0.33 ? 'cheap' : r < 0.67 ? 'fair' : r <= 1 ? 'steep' : 'sky-high';
+  return { r, word };
+}
+function headlineToday(st) {
+  if (!st.news) return '';
+  const line = [...st.log].reverse().find(l => l.cls === 'news' && l.d === st.day);
+  return line ? `<p class="ticker"><b>News</b> ${esc(line.text)}</p>` : '';
+}
+function rangeCell(g, p) {
+  if (p == null) return '<span class="dim">not here today</span>';
+  const { r, word } = priceStanding(g, p);
+  const x = Math.round(clamp(r, -0.08, 1.08) * 100);
+  return `<span class="track" aria-hidden="true"><i style="left:${x}%"></i></span><span class="rw ${word}">${word}</span>`;
+}
+const HEAT = [
+  [0, 'cool', 'The Watchers barely notice you.'],
+  [20, 'warm', 'The Watchers are starting to ask about you.'],
+  [40, 'hot', 'Watch-Captain Hardclaw is on your case.'],
+  [70, 'wanted', 'Every patrol in PumaCity knows your face.'],
+];
+function heatBand(h) { let b = HEAT[0]; for (const x of HEAT) if (h >= x[0]) b = x; return { word: b[1], effect: b[2] }; }
+function debtNote(st) {
+  if (st.debt <= 0) return 'paid off';
+  const n = CONFIG.goonDays - st.debtAge;
+  return n <= 0 ? 'her goons are looking for you' : `goons in ${n} ${plural(n, 'day')}`;
+}
+
 function gameHTML() {
   const st = S;
   const P = here(st);
@@ -1417,11 +1460,18 @@ function gameHTML() {
     const held = st.stash[g.id] || 0;
     const prev = st.prev[g.id];
     const arrow = p != null && prev != null && p !== prev ? (p > prev ? ' <span class="up">▲</span>' : ' <span class="down">▼</span>') : ' <span class="dim"> </span>';
-    const avg = held && st.cost[g.id] ? `<small>@ ${fmt(Math.round(st.cost[g.id] / held))}</small>` : held ? '<small>found</small>' : '';
+    const each = held && st.cost[g.id] ? Math.round(st.cost[g.id] / held) : 0;
+    let pl = '';
+    if (held && p != null) {
+      if (!each) pl = ' <span class="up">all profit</span>';
+      else { const pct = Math.round((p - each) / each * 100); pl = pct === 0 ? ' <span class="dim">even</span>' : ` <span class="${pct > 0 ? 'up' : 'down'}">${pct > 0 ? '+' : '−'}${Math.abs(pct)}%</span>`; }
+    }
+    const avg = held ? `<small>@ ${each ? fmt(each) : 'found'}${pl}</small>` : '';
     const cls = [i === ui.sel ? 'sel' : '', st.news && st.news.good === g.id ? 'news' : ''].join(' ');
     return `<tr class="${cls}" data-act="sel" data-v="${i}">
       <td class="key">${i + 1}</td><td class="name">${g.name}</td>
       <td class="price">${p == null ? '<span class="out">—</span>' : fmt(p) + arrow}</td>
+      <td class="range">${rangeCell(g, p)}</td>
       <td class="held">${held ? held + avg : '<span class="dim">—</span>'}</td>
       <td class="btns"><button data-act="buy" data-v="${i}" ${p == null ? 'disabled' : ''}>Buy</button>
       <button data-act="sell" data-v="${i}" ${p == null || !held ? 'disabled' : ''}>Sell</button></td></tr>`;
@@ -1441,15 +1491,16 @@ function gameHTML() {
   <div class="dayline${last ? ' last' : ''}"><i style="width:${Math.round(st.day / st.days * 100)}%"></i></div>
   <div class="status">
     <div class="stat lead"><small>Cash</small><span>${fmt(st.cash)}</span></div>
-    <div class="stat lead${st.debt > 0 ? (st.debtAge >= CONFIG.goonDays - 2 ? ' bad' : ' warn') : ''}"><small>Debt</small><span>${fmt(st.debt)}</span></div>
+    <div class="stat lead${st.debt > 0 ? (st.debtAge >= CONFIG.goonDays - 2 ? ' bad' : ' warn') : ''}"><small>Debt</small><span>${fmt(st.debt)}</span><em>${debtNote(st)}</em></div>
     <div class="stat"><small>Bank</small><span>${fmt(st.bank)}</span></div>
     <div class="stat${st.hp <= 30 ? ' bad' : ''}"><small>Health</small><span>${st.hp} / ${CONFIG.maxHp}</span>${meter(st.hp, CONFIG.maxHp, st.hp <= 30 ? 'low' : '')}</div>
     <div class="stat"><small>Pouch</small><span>${u} / ${cap}</span>${meter(u, cap, 'heat')}</div>
-    <div class="stat${st.heat >= 50 ? ' bad' : ''}"><small>Heat</small><span>${st.heat}</span>${meter(st.heat, 100, st.heat >= 50 ? 'low' : 'heat')}</div>
+    <div class="stat${st.heat >= 40 ? ' bad' : ''}" title="${heatBand(st.heat).effect}"><small>Heat</small><span>${heatBand(st.heat).word} · ${st.heat}</span>${meter(st.heat, 100, st.heat >= 40 ? 'low' : 'heat')}</div>
   </div>
   <div class="main">
     <section class="market">
-      <table class="mk"><thead><tr><th class="key"></th><th class="name">Good</th><th>Price</th><th class="held">Held</th><th></th></tr></thead>
+      ${headlineToday(st)}
+      <table class="mk"><thead><tr><th class="key"></th><th class="name">Good</th><th>Price</th><th class="range">vs usual</th><th class="held">Held</th><th></th></tr></thead>
       <tbody>${goods}</tbody></table>
       <div class="flash" role="status">${esc(ui.flash)}</div>
       <nav class="bar">
@@ -1465,7 +1516,7 @@ function gameHTML() {
       <div class="place">
         <p class="blurb">${P.blurb}</p>
         <p class="spec">${P.special}</p>
-        <p class="gear">${gear.length ? 'Gear: ' + gear.join(' · ') : 'No gear yet. Without a weapon you can only run or surrender.'}</p>
+        <p class="gear">${gear.length ? 'Gear: ' + gear.join(' · ') : 'No gear yet. Without a weapon you can only run or give up.'}</p>
         ${tip}
       </div>
       <div class="logwrap"><div class="log" id="pc-log" aria-live="polite">${log}</div></div>
@@ -1513,6 +1564,7 @@ function qtyHTML(m) {
   return `<h1>${verb} ${g.name}</h1>
   <p>${fmt(p)} each. <span class="note">${info}</span></p>
   <p class="note">${g.blurb}</p>
+  ${m.side === 'buy' && S.day === S.days ? '<p class="warn">It\'s your last day. Anything you can\'t sell today is worth nothing.</p>' : ''}
   <form data-form="qty">
   <div class="row">
     <button type="button" data-act="qadj" data-v="-10">−10</button><button type="button" data-act="qadj" data-v="-1">−1</button>
@@ -1581,7 +1633,7 @@ function gearViewHTML() {
     const id = st.gear[s];
     return `<tr><td class="dim">${s}</td><td>${id ? `<b>${GEAR[id].name}</b> <span class="note">${GEAR[id].blurb}</span>` : '<span class="dim">none</span>'}</td></tr>`;
   }).join('')}</table>
-  <p class="note">Pouch: ${used(st)} of ${capacity(st)} used. ${st.gear.weapon ? '' : 'With no weapon you can only run or surrender.'}</p>
+  <p class="note">Pouch: ${used(st)} of ${capacity(st)} used. ${st.gear.weapon ? '' : 'With no weapon you can only run or give up.'}</p>
   <h2>Stash</h2>${held.length ? `<table><tr><th>Good</th><th class="r">Held</th><th class="r">Avg paid</th><th class="r">Here</th></tr>${held.map(g =>
     `<tr><td>${g.name}</td><td class="r">${st.stash[g.id]}</td><td class="r">${st.cost[g.id] ? fmt(Math.round(st.cost[g.id] / st.stash[g.id])) : 'found'}</td>
     <td class="r">${st.prices[g.id] == null ? '—' : fmt(st.prices[g.id])}</td></tr>`).join('')}</table>` : '<p class="dim">Empty.</p>'}
@@ -1592,7 +1644,7 @@ function encHTML() {
   const st = S;
   const e = st.enc;
   const opts = encOptions(st);
-  const LABEL = { run: ['R', 'Run'], fight: ['F', 'Fight'], surrender: ['S', 'Surrender'], deal: ['D', 'Deal'], leave: ['L', 'Walk away'],
+  const LABEL = { run: ['R', 'Run'], fight: ['F', 'Fight'], surrender: ['G', 'Give up'], deal: ['D', 'Deal'], leave: ['L', 'Walk away'],
     sell: ['S', 'Sell'], decline: ['N', 'Decline'], pay: ['P', 'Pay'], refuse: ['N', 'Refuse'], buy: ['B', 'Buy'] };
   let title = '';
   let body = '';
@@ -1610,7 +1662,7 @@ function encHTML() {
       body += `<div class="foes">${e.foes.map(f => `<div class="foe"><span>${esc(f.name)} <span class="dim">${Math.max(0, f.hp)} HP</span></span>${meter(f.hp, f.max, 'low')}</div>`).join('')}</div>`;
     }
     body += `<div class="foe"><span>You <span class="dim">${st.hp} HP</span></span>${meter(st.hp, CONFIG.maxHp, st.hp <= 30 ? 'low' : '')}</div>`;
-    if (!st.gear.weapon) body += '<p class="note">You have no weapon, so you can only run or surrender. The pet store in the Suburbs sells them.</p>';
+    if (!st.gear.weapon) body += '<p class="note">You have no weapon, so you can only run or give up. The pet store in the Suburbs sells them.</p>';
   } else if (e.type === 'boss') {
     title = 'The Boss';
     body = e.ask === 'skooma'
@@ -1665,11 +1717,11 @@ function helpHTML(tab) {
   let body = '';
   if (tab === 'basics') body = `<dl class="help">
     <dt>The goal</dt><dd>Finish the run with as much money as you can. Your score is your cash plus your bank balance, minus whatever you still owe The Boss.</dd>
-    <dt>The debt</dt><dd>You start owing Casey Benton, The Boss, ${fmt(CONFIG.startDebt)}. It grows 10% every day. Pay it down at PVN Tower. Go ${CONFIG.goonDays} days without a real payment (at least 10% of the debt) and her goons come to collect.</dd>
-    <dt>Trading</dt><dd>Each day you're somewhere new, and prices are new too. Buy cheap, carry it somewhere better, and sell. Your pouch holds ${CONFIG.baseCap} units until you buy a bigger one. A ▲ or ▼ compares a price with the last one you saw. Headlines (marked !) send one good's price wild.</dd>
+    <dt>The debt</dt><dd>You start owing Casey Benton, The Boss, ${fmt(CONFIG.startDebt)}. It grows 10% every day. Pay it down at PVN Tower. Go ${CONFIG.goonDays} days without a real payment (at least 10% of the debt) and her goons come to collect; the Debt box counts down to them.</dd>
+    <dt>Trading</dt><dd>Each day you're somewhere new, and prices are new too. Buy cheap, carry it somewhere better, and sell. Your pouch holds ${CONFIG.baseCap} units until you buy a bigger one. The <i>vs usual</i> column says whether a price is a bargain, cheap, fair, steep or sky-high for that good, and the Held column shows what you paid and how today's price compares. A ▲ or ▼ compares a price with the last one you saw. A headline (shown above the market, and marked ! in it) sends one good's price wild.</dd>
     <dt>Travel</dt><dd>Each trip takes one day. On your last day you can't travel; sell everything and cash out. Goods left in your pouch are worth nothing.</dd>
-    <dt>Heat</dt><dd>Big sales and fights raise your heat. The more heat, the more often the Watchers come for you. It cools a little every day, faster at The Ranch, and The Boss will make it vanish for a price.</dd>
-    <dt>Encounters</dt><dd>Watchers and rival crews: run, fight (you need a weapon), or surrender. Surrendering to the Watchers costs your whole stash and a fine. If your health hits zero, the run is over and scores nothing. Money in the bank is safe from muggers.</dd>
+    <dt>Heat</dt><dd>Big sales and fights raise your heat: cool, warm, hot, then wanted. The hotter you are, the more often the Watchers come and the more of them there are. It cools a little every day, faster at The Ranch, and The Boss will make it vanish for a price.</dd>
+    <dt>Encounters</dt><dd>Watchers and rival crews: run, fight (you need a weapon), or give up. Giving up to the Watchers costs your whole stash and a fine; a failed getaway spills part of your load. The more you carry, the more often they come. If your health hits zero, the run is over and scores nothing. Money in the bank is safe from muggers.</dd>
   </dl>`;
   if (tab === 'places') body = `<dl class="help">${PLACES.map(P => `<dt>${P.name}</dt><dd>${P.blurb} ${P.special}</dd>`).join('')}</dl>`;
   if (tab === 'goods') body = `<table><tr><th>Good</th><th class="r">Usual price</th><th></th></tr>${GOODS.map(g => `<tr><td>${g.name}</td><td class="r">${fmt(g.lo)}–${fmt(g.hi)}</td><td class="note">${g.blurb}</td></tr>`).join('')}</table>`;
@@ -1685,7 +1737,7 @@ function helpHTML(tab) {
     <tr><td><kbd>E</kbd></td><td>Cash out (last day)</td></tr>
     <tr><td><kbd>V</kbd></td><td>Visit this place's shop or office</td></tr>
     <tr><td><kbd>G</kbd></td><td>Gear and stash</td></tr>
-    <tr><td><kbd>R</kbd> <kbd>F</kbd> <kbd>S</kbd></td><td>Encounters: run, fight, surrender (other choices show their key)</td></tr>
+    <tr><td><kbd>R</kbd> <kbd>F</kbd> <kbd>G</kbd></td><td>Encounters: run, fight, give up (other choices show their key)</td></tr>
     <tr><td><kbd>Enter</kbd> / <kbd>Esc</kbd></td><td>Confirm / close</td></tr></table>`;
   return `<h1>How to play</h1>
   <div class="tabs">${tabs.map(([k, l]) => `<button data-act="helptab" data-v="${k}" aria-pressed="${tab === k}">${l}</button>`).join('')}</div>
@@ -1814,10 +1866,11 @@ document.addEventListener('keydown', e => {
     return;
   }
   if (S.enc) {
-    const keyFor = { r: 'run', f: 'fight', d: 'deal', l: 'leave', p: 'pay', b: 'buy' };
+    // G gives up and S sells: never the same key, so muscle memory can't hand
+    // your stash to the Watchers when you meant to sell to The Boss.
+    const keyFor = { r: 'run', f: 'fight', g: 'surrender', s: 'sell', d: 'deal', l: 'leave', p: 'pay', b: 'buy' };
     const opts = encOptions(S);
     let t = keyFor[k];
-    if (k === 's') t = opts.includes('surrender') ? 'surrender' : 'sell';
     if (k === 'n') t = opts.includes('refuse') ? 'refuse' : 'decline';
     if (t && opts.includes(t)) { e.preventDefault(); act({ t }); }
     return;
