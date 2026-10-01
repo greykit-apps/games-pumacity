@@ -1613,7 +1613,7 @@ function gameHTML() {
           : last ? '<button class="primary" data-act="finish"><kbd>E</kbd>Cash out</button>'
           : `<button class="primary" data-act="travel" aria-pressed="${!!ui.travel}"><kbd>T</kbd>Travel</button>`}
         ${!last && u > 0 ? `<button data-act="sellall" ${sellable ? '' : 'disabled'} title="Sell everything you carry that someone here is buying"><kbd>A</kbd>Sell all</button>` : ''}
-        ${svc ? `<button data-act="service"><kbd>V</kbd>${esc(P.serviceName)}</button>` : ''}
+        ${svc && !last ? `<button data-act="service"><kbd>V</kbd>${esc(P.serviceName)}</button>` : ''}
         <button data-act="gearview"><kbd>G</kbd>Gear</button>
         <span class="grow"></span>
         <button data-act="help" aria-label="Help" title="How to play (?)">?</button>
@@ -2148,7 +2148,7 @@ document.addEventListener('keydown', e => {
   if (k === 's') { openQty(ui.sel, 'sell'); return; }
   if (k === 't' && S.day < S.days) { openTravel(); return; }
   if (k === 'e' && S.day === S.days) { ui.modal = { kind: 'finish' }; render(); return; }
-  if (k === 'v' && (here(S).service || here(S).shop.length)) { ui.modal = { kind: 'service' }; ui.flash = ''; render(); return; }
+  if (k === 'v' && S.day < S.days && (here(S).service || here(S).shop.length)) { ui.modal = { kind: 'service' }; ui.flash = ''; render(); return; }
   if (k === 'g') { ui.modal = { kind: 'gearview' }; render(); return; }
   if (k === '?' || k === '/' || k === 'h') { ui.modal = { kind: 'help', tab: 'basics' }; render(); return; }
   if (k === 'Escape') { ui.modal = { kind: 'menu' }; render(); }

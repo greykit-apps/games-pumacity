@@ -63,22 +63,27 @@ Psychos, Red Dot, Moonsugar, Skooma.
 - **Muggers**, and the odd stash in a drainpipe.
 
 Against the Watchers or a rival crew you can **run, fight** (with a weapon) or
-**give up** (`G`).
+**give up**. Every choice shows its cost before you pick it: your odds of
+getting away, what a failed run spills, and exactly what giving up loses.
 
 ### Controls
 
 | Key | |
 |---|---|
 | `1`–`9`, `↑` `↓` | select a good |
-| `B` / `S` | buy / sell it (`M` in the box for the most you can) |
-| `T`, then `1`–`7` | travel |
+| `B` / `S` | buy / sell it: the quantity opens under the good (`M` for the most you can) |
+| `A` | sell all: everything you carry that someone here is buying |
+| `T`, then `1`–`7` | travel (the destinations open beside the market) |
 | `E` | cash out (last day) |
 | `V` | this place's shop or office |
 | `G` | gear and stash |
-| `R` `F` `G` … | encounters: run, fight, give up (each button shows its key) |
+| `R` `F` `U`, `Y` / `N` | encounters: run, fight, give up; accept or turn down an offer |
 | `?` | how to play · `Esc` menu / close |
 
-Everything is also a button, and the layout works at phone width.
+Encounter keys never share a letter with market keys, and an encounter ignores
+input for a moment after it appears. A key you were already pressing in the
+market can't answer it by accident. Everything is also a button, and the
+layout works at phone width.
 
 ## How it's built
 
@@ -99,7 +104,7 @@ The rules are data plus a DOM-free engine, which sit between the
 
 ```
 node tools/check-assets.js   # every file index.html references exists
-node tools/check-all.js      # 51 named rule scenarios
+node tools/check-all.js      # 54 named rule scenarios
 node tools/sim.js 20         # bots play whole runs; invariants after every step
 ```
 
