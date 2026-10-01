@@ -19,13 +19,17 @@ original text and code.
 One `index.html`: no build step, no dependencies, no network at play time.
 Saves stay in your browser's `localStorage`.
 
-![Day 22 at the Convention Center: a headline has sent Red Dot through the roof, the pouch is full of Feathers, and the log shows the last two days of trading](screenshots/market.png)
+![Day 24 at the Starport: the terminal sits over the district's scenery, a headline has sent Catnip sky-high, the vs-usual column marks the cheap goods, and the Held column shows a load of Nappers bought at $161 now down 32%](screenshots/market.png)
 
 ### How a run goes
 
 - **Pick a length** (30, 60 or 90 days) and a name.
-- **Every trip takes a day.** Prices roll fresh at each stop. One or two goods
-  are out of stock, and a headline sometimes sends one good's price wild.
+- **Every trip takes a day.** Each district has its own scenery behind the
+  terminal. Prices roll fresh at each stop, one or two goods are out of
+  stock, and a headline sometimes sends one good's price wild.
+- **Read the market.** The *vs usual* column says whether each price is a
+  bargain, cheap, fair, steep or sky-high for that good. The Held column
+  shows what you paid and how today's price compares.
 - **The debt compounds 10% a day.** Pay it down at PVN Tower. Go eight days
   without a real payment (at least 10% of what you owe) and The Boss sends
   her goons.
@@ -37,13 +41,13 @@ Saves stay in your browser's `localStorage`.
 
 | Place | What's special |
 |---|---|
-| Market Plaza | Start here. Tourists pay a premium for luxury goods. Shades stall. |
-| PVN Tower | Casey Benton's offices: borrow and repay. Skooma sells high. |
-| The Vault | A fallout shelter run as a bank. Money in it is safe and earns 1% a day. |
-| The Ranch | Cheap 'nip, and the Watchers rarely come out this far (heat cools faster). |
-| Starport | Off-world Moonsugar and Skooma come in cheap. Hover-Crate and Mech-Claws. |
-| The Convention Center | Everything sells high. Pickpockets. The Pawphone. |
-| Suburbs | The vet, and the pet store: pouches, weapons, the Kevlar Collar, Sneaky Mittens. |
+| Market Plaza | Start here. Downtown's open-air mall; tourists pay a premium for luxury goods. Shades stall. |
+| PVN Tower | Casey Benton's tower: a theater below, her offices, a nightclub on the roof. Borrow and repay; Skooma sells high. |
+| The Vault | A vault kept for PumaCity's leadership in case of war, run as a bank meanwhile. Money in it is safe and earns 1% a day. |
+| The Ranch | An old horse ranch turned grow fields. Cheap 'nip, and the Watchers rarely come out this far (heat cools faster). |
+| Starport | Where The Ship lands. Moonsugar and Skooma come in cheap. Hover-Crate and Mech-Claws. |
+| The Convention Center | By the starport, a new event every week. Everything sells high. Pickpockets. The Pawphone. |
+| Suburbs | Cul-de-sacs of Casey's rentals. The vet, and the pet store: pouches, weapons, the Kevlar Collar, Sneaky Mittens. |
 
 **Goods**, cheapest first: Catnip, Feathers, Nappers, Zoomers, Silvervine,
 Psychos, Red Dot, Moonsugar, Skooma.
@@ -59,7 +63,7 @@ Psychos, Red Dot, Moonsugar, Skooma.
 - **Muggers**, and the odd stash in a drainpipe.
 
 Against the Watchers or a rival crew you can **run, fight** (with a weapon) or
-**surrender**.
+**give up** (`G`).
 
 ### Controls
 
@@ -71,7 +75,7 @@ Against the Watchers or a rival crew you can **run, fight** (with a weapon) or
 | `E` | cash out (last day) |
 | `V` | this place's shop or office |
 | `G` | gear and stash |
-| `R` `F` `S` … | encounter choices (each button shows its key) |
+| `R` `F` `G` … | encounters: run, fight, give up (each button shows its key) |
 | `?` | how to play · `Esc` menu / close |
 
 Everything is also a button, and the layout works at phone width.
@@ -95,7 +99,7 @@ The rules are data plus a DOM-free engine, which sit between the
 
 ```
 node tools/check-assets.js   # every file index.html references exists
-node tools/check-all.js      # 50 named rule scenarios
+node tools/check-all.js      # 51 named rule scenarios
 node tools/sim.js 20         # bots play whole runs; invariants after every step
 ```
 

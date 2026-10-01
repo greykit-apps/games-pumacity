@@ -131,14 +131,15 @@ table.mk{width:100%;border-collapse:collapse}
   padding:var(--s1) var(--s2);border-bottom:1px solid var(--line)}
 .mk th.name,.mk th.held{text-align:left}
 .mk td{padding:5px var(--s2);text-align:right;border-bottom:1px solid var(--row);white-space:nowrap}
-.mk td.key{color:var(--dim);width:1.5em;text-align:left;padding-left:0}
+.mk td.key{color:var(--dim);width:2em;text-align:left;padding-left:var(--s2)}
 .mk td.name{text-align:left;color:var(--text);width:8.5em}
 .mk td.price{width:7.5em;font-variant-numeric:tabular-nums}
 .mk td.held{text-align:left;color:var(--text)}
 .mk td.held small{color:var(--dim);font-size:12px;margin-left:var(--s1)}
 .mk tr{cursor:pointer}
 .mk tr:hover td{background:rgba(13,20,36,.6)}
-.mk tr.sel td{background:var(--panel2)}
+.mk tr.sel td{background:#101a30}
+.mk tr.sel td.key{color:var(--accent);box-shadow:inset 2px 0 var(--accent)}
 .mk tr.sel td.name{color:var(--accent)}
 .mk tr.news td.name::after{content:" !";color:var(--warn)}
 .mk td.btns{width:1%;padding-right:0}
@@ -154,6 +155,7 @@ table.mk{width:100%;border-collapse:collapse}
   border-left:1px solid var(--lit);border-right:1px solid var(--lit);background:linear-gradient(var(--line),var(--line)) center/100% 1px no-repeat}
 .track i{position:absolute;top:-2px;width:3px;height:12px;margin-left:-1px;background:var(--text);border-radius:1px}
 .rw{font-size:12px;color:var(--dim)}
+.rw-m{display:none}
 .rw.bargain,.rw.cheap{color:var(--good)}
 .rw.steep{color:var(--warn)}
 .rw.sky-high{color:var(--warn)}
@@ -203,7 +205,7 @@ table.mk{width:100%;border-collapse:collapse}
 .setup{width:min(640px,100%);padding:var(--s6) var(--s6) var(--s5)}
 .setup .sky{display:block;width:100%;height:auto;margin:0 0 var(--s1)}
 .setup .title{font-size:26px;letter-spacing:.35em;color:var(--accent);margin:0}
-.setup .tag{color:var(--steel);margin:var(--s1) 0 var(--s5)}
+.setup .tag{color:var(--steel);margin:var(--s1) 0 var(--s3)}
 .setup .row{display:flex;gap:var(--s2);align-items:center;flex-wrap:wrap;margin:var(--s3) 0}
 .setup .row label{width:7em;color:var(--dim)}
 .setup .row input{flex:1;min-width:10em;max-width:20em}
@@ -214,6 +216,13 @@ table.mk{width:100%;border-collapse:collapse}
 .scores td.r,.scores th.r{text-align:right}
 .scores td:last-child{white-space:nowrap}
 .scores .rip{color:var(--danger)}
+.final{font-size:32px;font-weight:600;color:var(--text);margin:var(--s1) 0 0;font-variant-numeric:tabular-nums}
+.final.neg{color:var(--danger)}
+.verdict{margin:0 0 var(--s3)}
+.verdict.best{color:var(--accent)}
+.primer{margin:0 0 var(--s4);padding-left:1.5em;color:var(--ink)}
+.primer li{margin:2px 0}
+.primer .rw{font-size:inherit}
 .foot{color:var(--dim);font-size:12px;margin-top:var(--s6)}
 .foot a{color:var(--steel)}
 
@@ -242,8 +251,9 @@ table.mk{width:100%;border-collapse:collapse}
   .stat.lead span{font-size:17px}
   .status{grid-template-columns:repeat(4,minmax(0,1fr))}
   .mk td.btns button{min-height:40px;min-width:46px;padding:2px 6px;background:var(--panel2);border-color:var(--line);color:var(--text)}
-  .mk .key,.track{display:none}
-  .mk td.range{width:auto}
+  .mk .key,.mk .range{display:none}
+  .mk td.price{width:auto}
+  .rw-m{display:block;font-size:11px;line-height:1.2}
   .mk td,.mk th{padding:var(--s1) 3px}
   .mk td.name{width:auto}
   .mk td.held small{display:block;margin:0;font-size:11px}
@@ -1157,7 +1167,6 @@ function meter(v, max, cls) {
 
 function skyline() {
   return `<svg class="sky" viewBox="0 0 600 120" aria-hidden="true" fill="none" stroke="#54f2ff" stroke-width="1.5">
-  <circle cx="520" cy="30" r="14" fill="#ffb000" stroke="none"/><circle cx="526" cy="25" r="12" fill="#05070f" stroke="none"/>
   <path d="M0 118h600" stroke="#1b2540"/>
   <path d="M10 118V80h30v38M50 118V60h22v58M80 118V90h26v28M116 118V40h28v78M130 40V22M154 118V72h34v46M198 118V54l18-14 18 14v64
     M244 118V84h24v34M278 118V30h36v88M296 30V10M324 118V66h28v52M362 118V88h40v30M412 118V48h26v70M448 118V76h30v42
@@ -1410,6 +1419,11 @@ function setupHTML() {
   ${skyline()}
   <h1 class="title">PUMACITY</h1>
   <p class="tag">Buy low. Sell high. Stay one step ahead of the Watchers.</p>
+  <ol class="primer">
+    <li>Buy where a good is <span class="rw cheap">cheap</span>.</li>
+    <li>Travel across town. Every trip takes a day.</li>
+    <li>Sell where it's <span class="rw steep">steep</span>, and pay Casey Benton back before her 10% a day eats you.</li>
+  </ol>
   <div class="row"><label for="pc-name">Name</label><input id="pc-name" maxlength="16" autocomplete="off" placeholder="Stray" value="${esc(prefs.name)}"></div>
   <div class="row"><label>Run length</label>${CONFIG.lengths.map(d => `<button data-act="days" data-v="${d}" aria-pressed="${prefs.days === d}">${d} days</button>`).join('')}</div>
   <div class="acts">
@@ -1482,7 +1496,7 @@ function gameHTML() {
     const cls = [i === ui.sel ? 'sel' : '', st.news && st.news.good === g.id ? 'news' : ''].join(' ');
     return `<tr class="${cls}" data-act="sel" data-v="${i}">
       <td class="key">${i + 1}</td><td class="name">${g.name}</td>
-      <td class="price">${p == null ? '<span class="out">—</span>' : fmt(p) + arrow}</td>
+      <td class="price">${p == null ? '<span class="out">—</span>' : fmt(p) + arrow + `<small class="rw rw-m ${priceStanding(g, p).word}">${priceStanding(g, p).word}</small>`}</td>
       <td class="range">${rangeCell(g, p)}</td>
       <td class="held">${held ? held + avg : '<span class="dim">—</span>'}</td>
       <td class="btns"><button data-act="buy" data-v="${i}" ${p == null ? 'disabled' : ''}>Buy</button>
@@ -1696,6 +1710,14 @@ function encHTML() {
   </div></div>`;
 }
 
+/* One line that tells you how the run went, celebrating a board place. */
+function verdict(score, rank) {
+  if (score < 0) return `<p class="verdict bad">You leave PumaCity still owing Casey Benton. She'll remember.</p>`;
+  if (rank === 0) return `<p class="verdict best">A new best score for this run length.</p>`;
+  if (rank > 0) return `<p class="verdict good">Number ${rank + 1} on the board.</p>`;
+  return `<p class="verdict dim">Debt cleared. Not a board score this time.</p>`;
+}
+
 function overHTML() {
   const st = S;
   const o = st.over;
@@ -1704,10 +1726,12 @@ function overHTML() {
   return `<div class="back"><div class="modal" role="alertdialog" aria-modal="true" aria-labelledby="pc-mt">
     <h1 id="pc-mt">${dead ? 'You died' : 'The run is over'}</h1>
     ${dead ? `<p class="bad">${esc(o.why)}</p><p>Day ${o.day} of ${st.days}. A death scores nothing.</p>` : `
+    <p class="final${o.score < 0 ? ' neg' : ''}">${fmt(o.score)}</p>
+    ${verdict(o.score, ui.rank)}
     <table><tr><td>Cash</td><td class="r">${fmt(st.cash)}</td></tr><tr><td>Bank</td><td class="r">${fmt(st.bank)}</td></tr>
     <tr><td>Still owed to The Boss</td><td class="r">${fmt(-st.debt)}</td></tr>
     ${o.unsold ? `<tr><td class="dim">Unsold goods (worth nothing)</td><td class="r dim">${o.unsold} ${plural(o.unsold, 'unit')}</td></tr>` : ''}
-    <tr><td><b>Final score</b></td><td class="r"><b>${fmt(o.score)}</b></td></tr></table>`}
+    </table>`}
     <p class="note">Best net worth during the run: ${fmt(st.stats.peak)}. Fights won: ${st.stats.won}. Escapes: ${st.stats.fled}. Busts: ${st.stats.busted}.</p>
     <h2>High scores, ${st.days} days</h2>${scoreTable(list, ui.rank)}
     <div class="acts"><button class="primary" data-act="again"><kbd>N</kbd>New run</button><button data-act="title"><kbd>Esc</kbd>Title screen</button></div>
