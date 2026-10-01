@@ -1670,8 +1670,8 @@ function encHTML() {
   const st = S;
   const e = st.enc;
   const opts = encOptions(st);
-  const LABEL = { run: ['R', 'Run'], fight: ['F', 'Fight'], surrender: ['G', 'Give up'], deal: ['D', 'Deal'], leave: ['L', 'Walk away'],
-    sell: ['S', 'Sell'], decline: ['N', 'Decline'], pay: ['P', 'Pay'], refuse: ['N', 'Refuse'], buy: ['B', 'Buy'] };
+  const keyOf = o => Object.keys(ENC_KEYS).find(k => ENC_KEYS[k].includes(o)).toUpperCase();
+  const LABEL = { run: 'Run', fight: 'Fight', surrender: 'Give up', deal: 'Deal', leave: 'Walk away', sell: 'Sell', decline: 'Decline', pay: 'Pay', refuse: 'Refuse', buy: 'Buy' };
   let title = '';
   let body = '';
   if (e.type === 'watchers' || e.type === 'rival') {
@@ -1706,7 +1706,7 @@ function encHTML() {
   return `<div class="back"><div class="modal" role="alertdialog" aria-modal="true" aria-labelledby="pc-mt">
     <h1 id="pc-mt">${esc(title)}</h1>${body}
     <div class="elog" id="pc-elog">${lines}</div>
-    <div class="acts">${opts.map(o => `<button data-act="enc" data-v="${o}" class="${o === 'fight' || o === 'deal' || o === 'pay' || o === 'sell' || o === 'buy' ? 'primary' : ''}"><kbd>${LABEL[o][0]}</kbd>${LABEL[o][1]}</button>`).join('')}</div>
+    <div class="acts">${opts.map(o => `<button data-act="enc" data-v="${o}" class="${o === 'fight' || o === 'deal' || o === 'pay' || o === 'sell' || o === 'buy' ? 'primary' : ''}"><kbd>${keyOf(o)}</kbd>${LABEL[o]}</button>`).join('')}</div>
   </div></div>`;
 }
 
@@ -1773,7 +1773,7 @@ function helpHTML(tab) {
     <tr><td><kbd>E</kbd></td><td>Cash out (last day)</td></tr>
     <tr><td><kbd>V</kbd></td><td>Visit this place's shop or office</td></tr>
     <tr><td><kbd>G</kbd></td><td>Gear and stash</td></tr>
-    <tr><td><kbd>R</kbd> <kbd>F</kbd> <kbd>G</kbd></td><td>Encounters: run, fight, give up (other choices show their key)</td></tr>
+    <tr><td><kbd>R</kbd> <kbd>F</kbd> <kbd>U</kbd></td><td>Encounters: run, fight, give up. <kbd>Y</kbd> accepts an offer and <kbd>N</kbd> turns it down; every choice shows its key. None of them is a market key, so a key you were already pressing can't answer an encounter by mistake.</td></tr>
     <tr><td><kbd>Enter</kbd> / <kbd>Esc</kbd></td><td>Confirm / close</td></tr></table>`;
   return `<h1 id="pc-mt">How to play</h1>
   <div class="tabs">${tabs.map(([k, l]) => `<button data-act="helptab" data-v="${k}" aria-pressed="${tab === k}">${l}</button>`).join('')}</div>
@@ -1813,6 +1813,11 @@ function render() {
   const modal = S ? modalHTML() : (ui.modal && ui.modal.kind === 'help'
     ? `<div class="back" data-act="backdrop"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="pc-mt">${helpHTML(ui.modal.tab || 'basics')}</div></div>` : '');
   setScene(S ? S.loc : 'pvn');
+  if (S && S.enc && ui.encSeen !== S.enc.from + ':' + S.day) {
+    ui.encSeen = S.enc.from + ':' + S.day;
+    ui.encUntil = performance.now() + ENC_LOCK_MS;
+    ui.encFresh = true;
+  }
   root.innerHTML = `<div class="stage">${S ? gameHTML() : setupHTML()}</div>` + modal;
   if (ui.arrived) { const h = root.querySelector('.place-name'); if (h) h.classList.add('arrive'); ui.arrived = false; }
   const log = document.getElementById('pc-log');
@@ -1898,7 +1903,7 @@ root.addEventListener('click', e => {
     case 'menu': ui.modal = { kind: 'menu' }; render(); return;
     case 'newrun': ui.modal = { kind: 'confirmNew' }; render(); return;
     case 'newconfirm': save(KEY_GAME, null); S = null; startRun(); return;
-    case 'enc': act({ t: v }); return;
+    case 'enc': if (!encLocked()) act({ t: v }); return;
     case 'again': S = null; startRun(); return;
     case 'title': quitToTitle(); return;
   }
@@ -1919,6 +1924,15 @@ root.addEventListener('submit', e => {
 });
 
 root.addEventListener('input', e => { if (e.target.id === 'pc-qty') updateTotal(); });
+
+/* Encounters interrupt the market on arrival, exactly when a hand is reaching
+ * for a market key. So the two key sets share no letters (tools/check-all.js
+ * holds them apart), and an encounter ignores input for a moment after it
+ * appears, so a key already in flight can't answer it. */
+const MARKET_KEYS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'b', 's', 'a', 't', 'e', 'v', 'g', 'h', '?', '/'];
+const ENC_KEYS = { r: ['run'], f: ['fight'], u: ['surrender'], d: ['deal'], l: ['leave'], p: ['pay'], y: ['sell', 'buy'], n: ['refuse', 'decline'] };
+const ENC_LOCK_MS = 400;
+function encLocked() { return S && S.enc && performance.now() < (ui.encUntil || 0); }
 
 function helpKey(k) {
   const tabs = ['basics', 'places', 'goods', 'gear', 'keys'];
@@ -1958,13 +1972,10 @@ document.addEventListener('keydown', e => {
     return;
   }
   if (S.enc) {
-    // G gives up and S sells: never the same key, so muscle memory can't hand
-    // your stash to the Watchers when you meant to sell to The Boss.
-    const keyFor = { r: 'run', f: 'fight', g: 'surrender', s: 'sell', d: 'deal', l: 'leave', p: 'pay', b: 'buy' };
+    if (encLocked()) { e.preventDefault(); return; }
     const opts = encOptions(S);
-    let t = keyFor[k];
-    if (k === 'n') t = opts.includes('refuse') ? 'refuse' : 'decline';
-    if (t && opts.includes(t)) { e.preventDefault(); act({ t }); }
+    const t = (ENC_KEYS[k] || []).find(o => opts.includes(o));
+    if (t) { e.preventDefault(); act({ t }); }
     return;
   }
   if (m) {

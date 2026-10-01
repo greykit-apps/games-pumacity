@@ -596,6 +596,23 @@ scenario('vet: heals what you can afford, only in the Suburbs', () => {
   assert.strictEqual(st.cash, 0);
 });
 
+// ---- the screen's key tables (read from the page source)
+scenario('keys: encounter keys share no letter with market keys, and cover every choice', () => {
+  const html = require('fs').readFileSync(require('path').join(__dirname, '..', 'index.html'), 'utf8');
+  const mk = html.match(/const MARKET_KEYS = (\[[^\]]*\]);/);
+  const ek = html.match(/const ENC_KEYS = (\{[^\n]*\});/);
+  assert.ok(mk && ek, 'MARKET_KEYS or ENC_KEYS not found in index.html');
+  const market = new Function(`return ${mk[1]}`)();
+  const enc = new Function(`return ${ek[1]}`)();
+  assert.ok(market.length >= 15 && Object.keys(enc).length >= 6, 'key tables look empty');
+  for (const k of Object.keys(enc)) assert.ok(!market.includes(k), `'${k}' is both a market key and an encounter key`);
+  const covered = new Set(Object.values(enc).flat());
+  for (const t of ['run', 'fight', 'surrender', 'deal', 'leave', 'sell', 'decline', 'pay', 'refuse', 'buy']) {
+    assert.ok(covered.has(t), `no key for the encounter choice '${t}'`);
+  }
+  assert.ok(/ENC_KEYS\[k\]/.test(html), 'the encounter key handler does not read ENC_KEYS');
+});
+
 // ---- the door
 scenario('step: never modifies the state it was given', () => {
   let { C, st } = fresh();
