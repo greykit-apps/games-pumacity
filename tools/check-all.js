@@ -544,6 +544,33 @@ scenario('news: headlines move a price within the declared range', () => {
   assert.ok(seen > 20, `only ${seen} headlines in 400 starts`);
 });
 
+scenario('costs: what a choice says it costs is what it costs', () => {
+  for (const type of ['watchers', 'rival']) {
+    for (const load of [{}, { nip: 9, psychos: 3 }]) {
+      const { C, st } = fresh();
+      st.cash = 4321; st.stash = Object.assign({}, load); st.cost = {};
+      let s = C.forceEncounter(st, type);
+      if (type === 'rival') s.enc.hostile = true;
+      const cost = C.giveUpCost(s);
+      const r = C.step(s, { t: 'surrender' }).state;
+      assert.strictEqual(C.used(s) - C.used(r), cost.units, `${type} ${JSON.stringify(load)} units`);
+      assert.strictEqual(s.cash - r.cash, cost.cash, `${type} ${JSON.stringify(load)} cash`);
+    }
+  }
+  const { C, st } = fresh();
+  st.cash = 5000; st.debtAge = 12;
+  const g = C.forceEncounter(st, 'goons');
+  const take = C.goonTake(g);
+  const r = C.step(g, { t: 'refuse' }).state;
+  assert.strictEqual(g.cash - r.cash, take);
+  assert.strictEqual(g.debt - r.debt, take);
+  const w = C.forceEncounter(Object.assign(JSON.parse(JSON.stringify(st)), { heat: 90 }), 'watchers');
+  const p = C.runChance(w);
+  let got = 0;
+  for (let seed = 1; seed <= 2000; seed++) if (!C.step(Object.assign(JSON.parse(JSON.stringify(w)), { rng: C.hash32(seed) | 0 }), { t: 'run' }).state.enc) got++;
+  assert.ok(Math.abs(got / 2000 - p) < 0.04, `shown ${p}, measured ${got / 2000}`);
+});
+
 // ---- gear
 scenario('gear: only sold where stocked, only trades up, and pouches add room', () => {
   let { C, st } = fresh();

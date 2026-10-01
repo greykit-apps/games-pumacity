@@ -195,6 +195,9 @@ table.mk{width:100%;border-collapse:collapse}
 .modal th{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--dim);font-weight:600}
 .modal td.r,.modal th.r{text-align:right}
 .foes{margin:var(--s3) 0}
+.choices{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:var(--s2) var(--s3);align-items:center;margin-top:var(--s4)}
+.choices button{text-align:left}
+.choices .cost{font-size:12px;color:var(--steel)}
 .foe{display:grid;grid-template-columns:minmax(0,1fr) 120px;gap:var(--s3);align-items:center;margin:var(--s1) 0;color:var(--text)}
 .elog{margin-top:var(--s3);padding:var(--s2);background:var(--bg);border:1px solid var(--line);max-height:150px;overflow:auto;font-size:13px}
 .elog p{margin:0 0 2px}
@@ -262,6 +265,8 @@ table.mk{width:100%;border-collapse:collapse}
   .bar button{flex:1 1 auto}
   kbd{display:none}
   .modal{padding:14px}
+  .choices{grid-template-columns:minmax(0,1fr)}
+  .choices .cost{margin:-4px 0 var(--s2)}
   .setup{padding:var(--s5) var(--s4)}
 }
 </style>
@@ -672,10 +677,22 @@ function winFight(st) {
   st.enc = null;
 }
 
+/* The odds and costs an encounter choice carries. The screen shows exactly
+ * these numbers beside the buttons, and the actions below use them, so what
+ * a choice says it will cost is what it costs. */
+function runChance(st) { return clamp(0.55 + (st.gear.mittens ? 0.25 : 0) - 0.05 * st.enc.foes.length, 0.15, 0.9); }
+function giveUpCost(st) {
+  const held = used(st);
+  if (st.enc.type === 'watchers') return { units: held, cash: Math.round(st.cash * (held > 0 ? 0.25 : 0.1)), all: true };
+  if (held > 0) { let units = 0; for (const g of GOODS) units += Math.ceil((st.stash[g.id] || 0) / 2); return { units, cash: 0, all: false }; }
+  return { units: 0, cash: Math.round(st.cash * 0.3), all: false };
+}
+function goonTake(st) { return Math.min(st.debt, Math.round(st.cash * 0.2)); }
+
 const ENC = {
   run(st) {
     const e = st.enc;
-    const p = clamp(0.55 + (st.gear.mittens ? 0.25 : 0) - 0.05 * e.foes.length, 0.15, 0.9);
+    const p = runChance(st);
     if (rnd(st) < p) {
       st.stats.fled++;
       addLog(st, 'You slip away down an alley.', 'good');
@@ -710,9 +727,10 @@ const ENC = {
   surrender(st) {
     const e = st.enc;
     const held = used(st);
+    const cost = giveUpCost(st);
     if (e.type === 'watchers') {
       st.stats.busted++;
-      const fine = Math.round(st.cash * (held > 0 ? 0.25 : 0.1));
+      const fine = cost.cash;
       st.cash -= fine;
       if (held > 0) addLog(st, `You put your paws up. The Watchers confiscate your whole stash (${held} ${plural(held, 'unit')}) and fine you ${fmt(fine)}.`, 'bad');
       else addLog(st, `You put your paws up. You're clean, but they fine you ${fmt(fine)} for loitering.`, 'bad');
@@ -730,7 +748,7 @@ const ENC = {
       }
       addLog(st, `You hand it over. ${e.boss}'s crew walks off with ${took} ${plural(took, 'unit')} of your stash.`, 'bad');
     } else {
-      const lose = Math.round(st.cash * 0.3);
+      const lose = cost.cash;
       st.cash -= lose;
       addLog(st, `Your pouch is empty, so ${e.boss} takes ${fmt(lose)} instead.`, 'bad');
     }
@@ -796,7 +814,7 @@ const ENC = {
       return;
     }
     const dmg = Math.max(1, guard(st, rndRange(st, 12, 28)));
-    const take = Math.min(st.debt, Math.round(st.cash * 0.2));
+    const take = goonTake(st);
     st.hp = Math.max(0, st.hp - dmg);
     st.cash -= take;
     st.debt -= take;
@@ -1485,7 +1503,9 @@ function gameHTML() {
     const p = st.prices[g.id];
     const held = st.stash[g.id] || 0;
     const prev = st.prev[g.id];
-    const arrow = p != null && prev != null && p !== prev ? (p > prev ? ' <span class="up">▲</span>' : ' <span class="down">▼</span>') : ' <span class="dim"> </span>';
+    const arrow = p != null && prev != null && p !== prev
+      ? ` <span class="tr" role="img" aria-label="${p > prev ? 'up' : 'down'} from ${fmt(prev)}" title="${p > prev ? 'up' : 'down'} from ${fmt(prev)}">${p > prev ? '▲' : '▼'}</span>`
+      : ' <span class="tr" aria-hidden="true"> </span>';
     const each = held && st.cost[g.id] ? Math.round(st.cost[g.id] / held) : 0;
     let pl = '';
     if (held && p != null) {
@@ -1666,6 +1686,44 @@ function gearViewHTML() {
   <div class="acts"><button data-act="close"><kbd>Esc</kbd>Close</button></div>`;
 }
 
+/* One line per encounter choice: what it will cost or win, in numbers the
+ * engine itself uses (runChance, giveUpCost, goonTake). */
+function choiceCost(st, o) {
+  const e = st.enc;
+  const held = used(st);
+  const units = n => `${n} ${plural(n, 'unit')}`;
+  const collar = st.gear.armour ? ' (less with your collar)' : '';
+  switch (o) {
+    case 'run': {
+      const pct = Math.round(runChance(st) * 100);
+      return `${pct}% to get away${st.gear.mittens ? ', with your Sneaky Mittens' : ''}. If not, ${held ? `you spill ${Math.round(CONFIG.dropOnFail * 100)}% of your ${units(held)} and ` : ''}they get a swing at you.`;
+    }
+    case 'fight': {
+      const W = GEAR[st.gear.weapon];
+      const n = e.foes.length;
+      return `Your ${W.name} lands 3 times in 4 for ${W.dmg[0]}–${W.dmg[1]}. ${n === 1 ? 'They hit' : `Each of ${n} hits`} back ${Math.round(e.hitP * 100)}% of the time for ${e.dmg[0]}–${e.dmg[1]}${collar}.`;
+    }
+    case 'surrender': {
+      const c = giveUpCost(st);
+      if (e.type === 'watchers') return c.units ? `Lose all ${units(c.units)} and ${fmt(c.cash)}. Your heat drops to 10.` : `A ${fmt(c.cash)} fine for loitering.`;
+      return c.units ? `They take ${units(c.units)}: half of each good.` : `They take ${fmt(c.cash)}.`;
+    }
+    case 'deal': {
+      const d = e.deal, q = dealQty(st, d), g = GOOD[d.good];
+      return d.side === 'buy' ? `+${fmt(q * d.price)} for ${q} ${g.name}.` : `${fmt(q * d.price)} for ${q} ${g.name}, ${priceStanding(g, d.price).word} for ${g.name}.`;
+    }
+    case 'leave': return 'Nothing happens.';
+    case 'sell': return `+${fmt(e.qty * e.price)} for all ${e.qty} Skooma.`;
+    case 'decline': return 'Nothing happens.';
+    case 'pay': return e.type === 'boss' ? `${fmt(e.amount)}. Your heat drops to 0.` : `${fmt(e.demand)} off your debt, and the goon clock resets.`;
+    case 'refuse': return e.type === 'boss'
+      ? `Your heat rises to ${Math.min(100, st.heat + 20)}.`
+      : `They hit you for 12–28${collar} and take ${fmt(goonTake(st))} toward the debt.`;
+    case 'buy': return `${fmt(e.price)}, ${Math.round((1 - e.price / GEAR[e.item].price) * 100)}% off the shop price.`;
+  }
+  return '';
+}
+
 function encHTML() {
   const st = S;
   const e = st.enc;
@@ -1706,7 +1764,7 @@ function encHTML() {
   return `<div class="back"><div class="modal" role="alertdialog" aria-modal="true" aria-labelledby="pc-mt">
     <h1 id="pc-mt">${esc(title)}</h1>${body}
     <div class="elog" id="pc-elog">${lines}</div>
-    <div class="acts">${opts.map(o => `<button data-act="enc" data-v="${o}" class="${o === 'fight' || o === 'deal' || o === 'pay' || o === 'sell' || o === 'buy' ? 'primary' : ''}"><kbd>${keyOf(o)}</kbd>${LABEL[o]}</button>`).join('')}</div>
+    <div class="choices">${opts.map(o => `<button data-act="enc" data-v="${o}" aria-describedby="pc-c-${o}" class="${o === 'fight' || o === 'deal' || o === 'pay' || o === 'sell' || o === 'buy' ? 'primary' : ''}"><kbd>${keyOf(o)}</kbd>${LABEL[o]}</button><span class="cost" id="pc-c-${o}">${choiceCost(st, o)}</span>`).join('')}</div>
   </div></div>`;
 }
 

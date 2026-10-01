@@ -13,7 +13,7 @@ const path = require('path');
 const EXPORTS = [
   'VERSION', 'CONFIG', 'GOODS', 'GOOD', 'PLACES', 'PLACE', 'GEAR', 'SLOTS',
   'newGame', 'step', 'waiting', 'forceEncounter', 'botAct', 'encOptions', 'dealQty',
-  'capacity', 'used', 'free', 'netWorth', 'canUpgrade', 'hash32', 'fmt', 'carried', 'carryRisk',
+  'capacity', 'used', 'free', 'netWorth', 'canUpgrade', 'hash32', 'fmt', 'carried', 'carryRisk', 'runChance', 'giveUpCost', 'goonTake',
 ];
 
 function coreSource() {
