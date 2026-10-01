@@ -162,6 +162,9 @@ table.mk{width:100%;border-collapse:collapse}
 .ticker{margin:0 0 var(--s3);padding:6px var(--s3);border:1px solid #3a2e10;border-radius:3px;background:rgba(255,176,0,.06);color:var(--warn)}
 .ticker b{font-size:11px;letter-spacing:.12em;text-transform:uppercase;margin-right:var(--s2)}
 .up{color:var(--good)}.down{color:var(--danger)}
+/* The trend arrow is direction only; colour on a row belongs to 'vs usual',
+ * so a falling price never shows red beside a green 'cheap'. */
+.mk .tr{color:var(--steel);font-size:12px}
 .flash{margin-top:var(--s2);color:var(--danger)}
 .flash:empty{display:none}
 .market .bar{margin-top:var(--s4)}
@@ -1501,7 +1504,7 @@ function heatBand(h) { let b = HEAT[0]; for (const x of HEAT) if (h >= x[0]) b =
 function debtNote(st) {
   if (st.debt <= 0) return 'paid off';
   const n = CONFIG.goonDays - st.debtAge;
-  return n <= 0 ? 'her goons are looking for you' : `goons in ${n} ${plural(n, 'day')}`;
+  return n <= 0 ? 'goons: any day now' : `goons in ${n} ${plural(n, 'day')}`;
 }
 
 function gameHTML() {
