@@ -55,6 +55,39 @@ h2{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim)
 h2:first-child{margin-top:0}
 p{margin:0 0 var(--s2)}
 
+.scene{position:fixed;inset:0;z-index:var(--z-scene);pointer-events:none;overflow:hidden;
+  background:linear-gradient(#05070f 0%,#070b17 40%,#0c1020 68%,#181622 88%,#231a17 100%)}
+.scene.under{background:linear-gradient(#04060c 0%,#080b14 55%,#0b0e17 100%)}
+.scene .layer{position:absolute;inset:0;opacity:0;transition:opacity .8s cubic-bezier(.22,1,.36,1)}
+.scene .layer.on{opacity:1}
+.scene svg{display:block;width:100%;height:100%}
+.scene .sf{fill:#0a0f1d;stroke:#2a3960;stroke-width:2;stroke-linejoin:round}
+.scene .sf.rock{fill:#070a12}
+.scene .sground{fill:#070a13}
+.scene .sl{fill:none;stroke:#2a3960;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.scene .sd{fill:none;stroke:#1d2948;stroke-width:1.5;stroke-linecap:round}
+.scene .sw{fill:#ffb000;opacity:.3}
+.scene .swl{fill:none;stroke:#ffb000;stroke-width:2;opacity:.3}
+.scene .sx{fill:#111a30}
+.scene .sa{fill:none;stroke:#54f2ff;stroke-width:2;opacity:.42}
+.scene .sad{fill:#54f2ff;opacity:.45}
+.scene .st{fill:#8b96b8;opacity:.45}
+.scene .smoon{fill:#ffb000;opacity:.55}
+.scene .ssky{fill:#05070f}
+.scene .sglow{fill:#ffb000;opacity:.035}
+.scene .sbeam{fill:url(#pcb)}
+.scene .sbeam.c{fill:url(#pcc)}
+.scene .shaz{fill:#ffb000;opacity:.16}
+.scene .stx{font:600 18px ui-monospace,Menlo,Consolas,monospace;letter-spacing:.18em;fill:#54f2ff;opacity:.5}
+.scene .stx.sm{font-size:11px;letter-spacing:.12em;fill:#ffb000;opacity:.55}
+.scene .stx.xs{font-size:7px;letter-spacing:.1em;fill:#8b96b8;opacity:.6}
+.scene .stx.big{font-size:44px;fill:#ffb000;opacity:.3}
+.top .place-name.arrive{animation:arrive .5s cubic-bezier(.22,1,.36,1) both}
+@keyframes arrive{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){
+  .scene .layer{transition:none}
+  .top .place-name.arrive{animation:none}
+}
 /* The stage centres the terminal in the window, both ways, over the scenery. */
 .stage{position:relative;z-index:var(--z-stage);min-height:100dvh;display:flex;align-items:center;justify-content:center;
   padding:var(--s6) var(--s5)}
@@ -173,6 +206,7 @@ table.mk{width:100%;border-collapse:collapse}
 .foot a{color:var(--steel)}
 
 @media (max-width:900px){
+  .scene{position:relative;height:clamp(120px,34vw,220px);border-bottom:1px solid var(--line)}
   .stage{display:block;padding:0}
   .pc{border:0;border-radius:0;box-shadow:none}
   .setup{margin:0 auto}
@@ -210,6 +244,7 @@ table.mk{width:100%;border-collapse:collapse}
 </style>
 </head>
 <body>
+<div class="scene" id="pc-scene" aria-hidden="true"></div>
 <div data-pumacity-game><p class="boot">Hitting the streets…</p></div>
 <script>
 'use strict';
@@ -1037,6 +1072,7 @@ function act(a) {
   } else {
     save(KEY_GAME, S);
   }
+  if (a.t === 'travel') ui.arrived = true;
   if (a.t === 'travel' || a.t === 'finish') ui.modal = S.over ? { kind: 'over' } : null;
   else if (ui.modal && ui.modal.kind === 'qty') ui.modal = null;
   render();
@@ -1080,6 +1116,242 @@ function skyline() {
     M488 118V62h20v56M518 118V86h36v32M564 118V70h26v48"/>
   <path d="M286 44h20M286 58h20M286 72h20M286 86h20M122 54h16M122 68h16M122 82h16M418 60h14M418 74h14" stroke="#47609c"/>
 </svg>`;
+}
+
+// ---- scenery: one line-drawn scene per district, behind the terminal.
+/* Composed for a 1600x900 box drawn "xMidYMax slice", so the landmarks sit in
+ * the side margins (x < 330, x > 1270) and the bottom band (y > 760) that the
+ * centred terminal leaves showing. On phones the same art becomes a banner. */
+const G = 820;  // ground line
+function rint(seed, n) { return hash32(seed) % n; }
+function lit(seed, rate) { return (hash32(seed) % 100) < rate; }
+function win(x, y, w, h, seed, rate) {
+  return `<rect class="${lit(seed, rate == null ? 35 : rate) ? 'sw' : 'sx'}" x="${x}" y="${y}" width="${w}" height="${h}"/>`;
+}
+function grid(x0, y0, cols, rows, w, h, gx, gy, seed, rate) {
+  let o = '';
+  for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) o += win(x0 + c * (w + gx), y0 + r * (h + gy), w, h, seed + r * 31 + c, rate);
+  return o;
+}
+function stars(seed, n, ymax) {
+  let o = '';
+  for (let i = 0; i < n; i++) {
+    const x = rint(seed + i * 7, 1600), y = rint(seed + i * 13, ymax), r = rint(seed + i, 3) === 0 ? 1.6 : 1;
+    o += `<circle class="st" cx="${x}" cy="${y}" r="${r}"/>`;
+  }
+  return o;
+}
+function moon(x, y) { return `<circle class="smoon" cx="${x}" cy="${y}" r="20"/><circle class="ssky" cx="${x + 8}" cy="${y - 6}" r="18"/>`; }
+function palm(x, h, lean) {
+  const tx = x + lean, ty = G - h;
+  let o = `<path class="sl" d="M${x} ${G} Q${x + lean * 0.15} ${G - h * 0.55} ${tx} ${ty}"/>`;
+  for (const [dx, dy] of [[-95, 34], [-70, 62], [-30, 78], [28, 76], [68, 60], [96, 30], [-10, -18]]) {
+    o += `<path class="sl" d="M${tx} ${ty} Q${tx + dx * 0.45} ${ty - 34 + dy * 0.1} ${tx + dx} ${ty + dy}"/>`;
+  }
+  return o;
+}
+function lamp(x, h, dir) {
+  const top = G - h, arm = dir * 34;
+  return `<path class="sl" d="M${x} ${G} V${top} q0 -12 ${arm / 2} -12 h${arm / 2}"/>`
+    + `<path class="sglow" d="M${x + arm - 10} ${top - 8} L${x + arm - 46} ${G} H${x + arm + 26} L${x + arm + 10} ${top - 8} Z"/>`
+    + `<rect class="sw" x="${x + arm - 9}" y="${top - 14}" width="18" height="6"/>`;
+}
+function tree(x, r, base) {
+  base = base || G;
+  return `<path class="sl" d="M${x} ${base} V${base - r * 1.2}"/><circle class="sf" cx="${x}" cy="${base - r * 1.7}" r="${r}"/>`;
+}
+function house(x, base, w, h, seed, opts) {
+  opts = opts || {};
+  const roof = h * 0.55;
+  let o = `<path class="sf" d="M${x} ${base} V${base - h} L${x + w / 2} ${base - h - roof} L${x + w} ${base - h} V${base} Z"/>`;
+  o += `<path class="sd" d="M${x - w * 0.06} ${base - h + 4} L${x + w / 2} ${base - h - roof - 4} L${x + w * 1.06} ${base - h + 4}"/>`;
+  const ww = w * 0.16, wh = h * 0.28;
+  o += win(x + w * 0.14, base - h * 0.72, ww, wh, seed, 60) + win(x + w * 0.7, base - h * 0.72, ww, wh, seed + 1, 45);
+  if (opts.garage) o += `<path class="sd" d="M${x + w * 0.38} ${base} V${base - h * 0.48} H${x + w * 0.64} V${base}M${x + w * 0.38} ${base - h * 0.32} H${x + w * 0.64}M${x + w * 0.38} ${base - h * 0.16} H${x + w * 0.64}"/>`;
+  else o += `<path class="sd" d="M${x + w * 0.44} ${base} V${base - h * 0.42} H${x + w * 0.56} V${base}"/>`;
+  return o;
+}
+function rentSign(x, base) {
+  return `<path class="sl" d="M${x} ${base} V${base - 56}"/><rect class="sf" x="${x - 46}" y="${base - 92}" width="92" height="40"/>`
+    + `<text class="stx sm" x="${x}" y="${base - 75}" text-anchor="middle">FOR RENT</text>`
+    + `<text class="stx xs" x="${x}" y="${base - 60}" text-anchor="middle">BENTON PROPERTIES</text>`;
+}
+function fence(x0, x1, y) {
+  let o = `<path class="sl" d="M${x0} ${y + 14} H${x1}M${x0} ${y + 34} H${x1}"/>`;
+  for (let x = x0; x <= x1; x += 56) o += `<path class="sl" d="M${x} ${y} V${y + 50}"/>`;
+  return o;
+}
+function gear(cx, cy, r, teeth) {
+  const pts = [];
+  for (let i = 0; i < teeth * 2; i++) {
+    const a0 = (i / (teeth * 2)) * Math.PI * 2, a1 = ((i + 1) / (teeth * 2)) * Math.PI * 2;
+    const rr = i % 2 ? r : r * 0.88;
+    pts.push([cx + Math.cos(a0) * rr, cy + Math.sin(a0) * rr], [cx + Math.cos(a1) * rr, cy + Math.sin(a1) * rr]);
+  }
+  return `<path class="sf" d="M${pts.map(p => p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join(' L')} Z"/>`;
+}
+function beam(x, y, x1, x2, cls) { return `<path class="${cls || 'sbeam'}" d="M${x - 4} ${y} L${x1} -20 L${x2} -20 L${x + 4} ${y} Z"/>`; }
+function ship(x, y, s) {
+  // The Ship: a long wedge hull, nose to the left.
+  const p = (dx, dy) => `${x + dx * s} ${y + dy * s}`;
+  return `<path class="sf" d="M${p(0, 60)} L${p(110, 8)} L${p(470, -22)} L${p(560, -22)} L${p(560, 120)} L${p(470, 132)} L${p(120, 110)} Z"/>`
+    + `<path class="sd" d="M${p(110, 8)} L${p(130, 104)}M${p(240, -2)} V${y + 118 * s}M${p(380, -14)} V${y + 126 * s}"/>`
+    + `<path class="sa" d="M${p(26, 60)} L${p(108, 22)}"/>`
+    + `<rect class="sw" x="${x + 140 * s}" y="${y + 30 * s}" width="${30 * s}" height="${10 * s}"/><rect class="sw" x="${x + 186 * s}" y="${y + 26 * s}" width="${30 * s}" height="${10 * s}"/>`
+    + `<circle class="sad" cx="${x + 300 * s}" cy="${y + 124 * s}" r="${4 * s}"/><circle class="sad" cx="${x + 430 * s}" cy="${y + 130 * s}" r="${4 * s}"/>`;
+}
+
+const SCENES = {
+  plaza() {
+    let o = stars(11, 90, 360) + moon(1480, 96);
+    o += `<path class="sf" d="M0 ${G} V700 H180 V684 H420 V706 H640 V690 H960 V706 H1180 V684 H1420 V700 H1600 V${G} Z"/>`;
+    for (let x = 0; x < 1600; x += 84) {
+      o += `<path class="sl" d="M${x + 6} 724 H${x + 78} L${x + 86} 742 H${x - 2} Z"/>`;
+      o += `<path class="sd" d="M${x - 2} 742 q10.5 10 21 0 q10.5 10 21 0 q10.5 10 21 0 q10.5 10 21 0"/>`;
+      o += win(x + 12, 760, 60, 44, x * 3 + 5, 55);
+    }
+    // the mall's entrance arch
+    o += `<path class="sf" d="M70 ${G} V560 H104 V${G} Z M246 ${G} V560 H280 V${G} Z"/>`;
+    o += `<path class="sl" d="M70 560 Q175 450 280 560"/><rect class="sf" x="78" y="580" width="194" height="40"/>`;
+    o += `<text class="stx" x="175" y="607" text-anchor="middle">MARKET PLAZA</text>`;
+    // the anchor store, right
+    o += `<path class="sf" d="M1300 ${G} V600 H1600 V${G} Z"/><path class="sd" d="M1300 640 H1600"/>` + grid(1318, 662, 5, 2, 42, 44, 12, 14, 77, 50);
+    // string lights
+    o += `<path class="sd" d="M330 520 Q800 640 1270 520"/>`;
+    for (let i = 1; i < 24; i++) { const t = i / 24, x = 330 + 940 * t, y = (1 - t) * (1 - t) * 520 + 2 * (1 - t) * t * 640 + t * t * 520; o += `<circle class="sw" cx="${x.toFixed(0)}" cy="${(y + 4).toFixed(0)}" r="3"/>`; }
+    o += palm(30, 440, 26) + palm(330, 360, -16) + palm(1272, 380, 22) + palm(1572, 460, -28);
+    o += lamp(430, 220, 1) + lamp(1170, 220, -1);
+    o += `<path class="sl" d="M760 ${G} V806 H840 V${G}M780 806 Q800 770 820 806M800 790 V770"/>`;
+    return o;
+  },
+  pvn() {
+    let o = stars(23, 80, 300) + moon(140, 90);
+    o += beam(1350, 70, 1120, 1190) + beam(1470, 70, 1560, 1640, 'sbeam c');
+    o += `<path class="sf" d="M1300 ${G} V110 H1520 V${G} Z"/>` + grid(1318, 140, 7, 18, 18, 18, 11, 12, 401, 18);
+    // the nightclub on the roof
+    o += `<path class="sf" d="M1286 110 V66 H1534 V110 Z"/><path class="sa" d="M1296 98 H1524"/>`;
+    for (let x = 1300; x < 1530; x += 26) o += `<path class="sd" d="M${x} 70 V96"/>`;
+    // the theatre below
+    o += `<path class="sf" d="M1262 760 V694 H1558 V760 Z"/>`;
+    for (let x = 1272; x <= 1548; x += 14) o += `<circle class="sw" cx="${x}" cy="700" r="2.4"/><circle class="sw" cx="${x}" cy="754" r="2.4"/>`;
+    o += `<text class="stx" x="1410" y="733" text-anchor="middle">NOW SHOWING</text>`;
+    o += `<path class="sd" d="M1340 ${G} V772 H1480 V${G}M1386 772 V${G}M1434 772 V${G}"/>`;
+    // the office park, left
+    o += `<path class="sf" d="M30 ${G} V500 H232 V${G} Z"/>`;
+    for (let y = 524; y < 800; y += 26) o += `<path class="${lit(y, 40) ? 'swl' : 'sd'}" d="M44 ${y} H218"/>`;
+    o += `<path class="sf" d="M214 ${G} V640 H330 V${G} Z"/>` + grid(228, 660, 3, 5, 24, 14, 10, 16, 909, 35);
+    o += tree(372, 34) + tree(1220, 30);
+    o += `<path class="sl" d="M0 ${G} H1600"/>`;
+    return o;
+  },
+  vault() {
+    let o = `<path class="sf rock" d="M0 0 H1600 V104 L1530 126 L1462 108 L1390 132 L1300 112 L1210 128 L1120 106 L1010 124 L900 110 L800 128 L700 108 L590 126 L480 110 L380 132 L290 112 L190 128 L90 108 L0 124 Z"/>`;
+    for (const x of [430, 800, 1170]) o += `<path class="sl" d="M${x} 118 V190"/><path class="sglow" d="M${x - 12} 204 L${x - 120} 840 H${x + 120} L${x + 12} 204 Z"/><path class="sf" d="M${x - 22} 204 L${x - 10} 190 H${x + 10} L${x + 22} 204 Z"/>`;
+    // the blast door
+    o += `<circle class="sl" cx="170" cy="560" r="262"/>` + gear(170, 560, 240, 14);
+    o += `<circle class="sd" cx="170" cy="560" r="176"/><circle class="sd" cx="170" cy="560" r="118"/><circle class="sf" cx="170" cy="560" r="40"/>`;
+    for (let i = 0; i < 8; i++) { const a = i / 8 * Math.PI * 2; o += `<circle class="sx" cx="${(170 + Math.cos(a) * 150).toFixed(0)}" cy="${(560 + Math.sin(a) * 150).toFixed(0)}" r="7"/>`; }
+    o += `<text class="stx big" x="170" y="470" text-anchor="middle">PC</text>`;
+    // pipes, valves and the overseer's panel
+    for (const x of [1310, 1346, 1382]) o += `<path class="sl" d="M${x} 120 V840"/>` + [260, 470, 690].map(y => `<path class="sd" d="M${x - 9} ${y} H${x + 9}"/>`).join('');
+    o += `<circle class="sl" cx="1346" cy="560" r="22"/><path class="sd" d="M1324 560 H1368M1346 538 V582"/>`;
+    o += `<path class="sf" d="M1436 760 V590 H1590 V760 Z"/><rect class="sa" x="1452" y="606" width="122" height="70"/>`;
+    for (let i = 0; i < 6; i++) o += `<circle class="${i % 3 ? 'sw' : 'sad'}" cx="${1460 + i * 22}" cy="${700}" r="5"/>`;
+    o += `<path class="sf" d="M0 840 H1600 V900 H0 Z"/>`;
+    for (let x = 0; x < 1600; x += 36) o += `<path class="shaz" d="M${x} 840 l18 0 l-14 18 l-18 0 Z"/>`;
+    return o;
+  },
+  ranch() {
+    let o = stars(37, 110, 420) + moon(1460, 110);
+    o += `<path class="sf" d="M0 792 Q200 742 420 772 T860 762 T1300 774 T1600 752 V900 H0 Z"/>`;
+    for (let i = -22; i <= 22; i++) o += `<path class="sd" d="M${800 + i * 14} 790 L${800 + i * 96} 900"/>`;
+    // the old barn
+    o += `<path class="sf" d="M50 ${G} V600 L84 540 L170 504 L256 540 L290 600 V${G} Z"/><path class="sd" d="M50 600 H290"/>`;
+    o += `<path class="sd" d="M128 ${G} V706 H212 V${G}M128 706 L212 ${G}M212 706 L128 ${G}"/>` + win(152, 556, 36, 30, 5, 100);
+    o += `<path class="sl" d="M170 504 V470M150 462 H186 L192 454M150 462 L146 452M156 462 V472M182 462 V472"/>`;
+    // the windmill
+    o += `<path class="sl" d="M1396 ${G} L1430 470 M1484 ${G} L1450 470 M1404 760 H1476 M1412 680 H1468 M1420 600 H1460 M1404 760 L1468 680 M1476 760 L1412 680"/>`;
+    o += `<circle class="sl" cx="1440" cy="450" r="64"/>`;
+    for (let i = 0; i < 12; i++) { const a = i / 12 * Math.PI * 2; o += `<path class="sd" d="M1440 450 L${(1440 + Math.cos(a) * 64).toFixed(0)} ${(450 + Math.sin(a) * 64).toFixed(0)}"/>`; }
+    o += `<path class="sl" d="M1440 450 L1530 446 L1546 420 L1546 470 Z"/>`;
+    o += fence(0, 340, 796) + fence(1260, 1600, 796);
+    return o;
+  },
+  starport() {
+    let o = stars(51, 100, 380) + moon(980, 70);
+    o += beam(160, 236, 60, 110, 'sbeam c');
+    o += `<path class="sf" d="M130 ${G} V360 H190 V${G} Z"/><path class="sf" d="M96 360 L80 300 H240 L224 360 Z"/>`;
+    o += grid(98, 316, 6, 1, 16, 14, 8, 0, 3, 80);
+    o += `<path class="sl" d="M160 300 V236"/><circle class="sw" cx="160" cy="232" r="6"/>`;
+    for (let i = 0; i < 6; i++) { const x = 224 + (i % 3) * 70, y = 776 - Math.floor(i / 3) * 44; o += `<path class="sf" d="M${x} ${y + 44} V${y} H${x + 64} V${y + 44} Z"/><path class="sd" d="M${x + 16} ${y + 6} V${y + 38}M${x + 32} ${y + 6} V${y + 38}M${x + 48} ${y + 6} V${y + 38}"/>`; }
+    // The Ship, on its pad
+    o += ship(1170, 610, 1.0);
+    o += `<path class="sl" d="M1330 726 L1316 812M1540 738 L1556 812M1302 812 H1330M1542 812 H1570"/>`;
+    o += `<path class="sf" d="M1400 734 H1452 L1424 812 H1372 Z"/><path class="sd" d="M1390 760 H1442M1382 786 H1434"/>`;
+    o += `<path class="sl" d="M0 ${G} H1600"/>`;
+    for (let x = 20; x < 1600; x += 40) o += `<circle class="${(x / 40) % 2 ? 'sad' : 'sw'}" cx="${x}" cy="${G + 10}" r="3"/>`;
+    return o;
+  },
+  convention() {
+    let o = stars(67, 90, 360) + moon(1470, 90);
+    o += beam(330, G, 140, 210) + beam(1270, G, 1400, 1480, 'sbeam c');
+    o += ship(140, 120, 0.28) + `<path class="sd" d="M300 150 Q420 160 560 150" stroke-dasharray="4 10"/>`;
+    o += `<path class="sf" d="M0 700 Q800 560 1600 700 V${G} H0 Z"/>`;
+    for (let x = 20; x < 1600; x += 40) {
+      if (x > 340 && x < 1260) continue;
+      const t = x / 1600, y = (1 - t) * (1 - t) * 700 + 2 * (1 - t) * t * 560 + t * t * 700;
+      o += `<path class="sd" d="M${x} ${(y + 8).toFixed(0)} V${G}"/>`;
+    }
+    for (const x of [50, 130, 210, 1390, 1470, 1550]) {
+      o += `<path class="sl" d="M${x} ${G} V420"/><path class="sl" d="M${x} 420 L${x + 26} 428 L${x} 436"/>`;
+      o += `<path class="sf" d="M${x + 4} 452 H${x + 34} V600 L${x + 19} 586 L${x + 4} 600 Z"/><path class="${rint(x, 2) ? 'sa' : 'swl'}" d="M${x + 4} 470 H${x + 34}"/>`;
+    }
+    o += `<text class="stx" x="130" y="680" text-anchor="middle">EXPO</text><text class="stx" x="1470" y="680" text-anchor="middle">EXPO</text>`;
+    return o;
+  },
+  suburbs() {
+    let o = stars(83, 100, 380) + moon(160, 100);
+    // Casey's tower on the skyline: you live in her city
+    o += `<path class="sf" d="M1446 760 V420 H1500 V760 Z"/><path class="sa" d="M1442 416 H1504"/>` + grid(1455, 440, 3, 9, 8, 10, 8, 18, 61, 30);
+    for (let x = 340; x < 1260; x += 116) o += house(x, 790, 90, 44, x, { garage: rint(x, 2) });
+    o += house(20, 850, 250, 150, 7, { garage: true }) + rentSign(300, 850);
+    o += `<rect class="sf" x="120" y="708" width="54" height="30"/><path class="sl" d="M135 740 q12 12 24 0"/>`;
+    o += house(1340, 850, 240, 140, 13) + rentSign(1300, 850);
+    o += tree(1196, 40, 850) + lamp(440, 230, 1) + lamp(1110, 230, -1);
+    o += `<path class="sl" d="M0 852 H1600M0 872 H1600"/>`;
+    return o;
+  },
+};
+
+const sceneCache = {};
+function sceneSVG(id) {
+  if (!sceneCache[id]) {
+    sceneCache[id] = `<svg viewBox="0 0 1600 900" preserveAspectRatio="xMidYMax slice" aria-hidden="true" focusable="false">
+<defs><linearGradient id="pcb" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#ffb000" stop-opacity=".16"/><stop offset="1" stop-color="#ffb000" stop-opacity="0"/></linearGradient>
+<linearGradient id="pcc" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#54f2ff" stop-opacity=".12"/><stop offset="1" stop-color="#54f2ff" stop-opacity="0"/></linearGradient></defs>
+${id === 'vault' ? '' : `<rect class="sground" x="0" y="${G}" width="1600" height="${900 - G}"/>`}${SCENES[id]()}</svg>`;
+  }
+  return sceneCache[id];
+}
+
+/* Crossfades to the new district's scene. The old layer is removed after the
+ * fade, so at most two are ever in the DOM. */
+const sceneEl = document.getElementById('pc-scene');
+let sceneNow = null;
+function setScene(id) {
+  if (!sceneEl || id === sceneNow) return;
+  sceneNow = id;
+  sceneEl.classList.toggle('under', id === 'vault');
+  const layer = document.createElement('div');
+  layer.className = 'layer';
+  layer.innerHTML = sceneSVG(id);
+  sceneEl.appendChild(layer);
+  const old = [...sceneEl.children].filter(c => c !== layer);
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    layer.classList.add('on');
+    for (const c of old) c.classList.remove('on');
+    setTimeout(() => old.forEach(c => c.remove()), 900);
+  }));
 }
 
 function setupHTML() {
@@ -1400,7 +1672,9 @@ function helpHTML(tab) {
 function render() {
   const modal = S ? modalHTML() : (ui.modal && ui.modal.kind === 'help'
     ? `<div class="back" data-act="backdrop"><div class="modal" role="dialog" aria-modal="true">${helpHTML(ui.modal.tab || 'basics')}</div></div>` : '');
+  setScene(S ? S.loc : 'pvn');
   root.innerHTML = `<div class="stage">${S ? gameHTML() : setupHTML()}</div>` + modal;
+  if (ui.arrived) { const h = root.querySelector('.place-name'); if (h) h.classList.add('arrive'); ui.arrived = false; }
   const log = document.getElementById('pc-log');
   if (log) log.scrollTop = log.scrollHeight;
   const elog = document.getElementById('pc-elog');
