@@ -180,6 +180,22 @@ scenario('sell: pays the price and keeps the average cost of what is left', () =
   assert.strictEqual(st.cost.nip, undefined);
   refused(C, st, { t: 'sell', good: 'nip', qty: 1 });
 });
+scenario('sell all: sells everything someone here buys, and keeps the rest', () => {
+  let { C, st } = fresh();
+  setPrices(C, st, 10);
+  st = ok(C, st, { t: 'buy', good: 'nip', qty: 5 });
+  st = ok(C, st, { t: 'buy', good: 'feathers', qty: 3 });
+  st = ok(C, st, { t: 'buy', good: 'zoomers', qty: 2 });
+  st.prices.nip = 40; st.prices.feathers = 70; st.prices.zoomers = null;
+  const cash = st.cash;
+  st = ok(C, st, { t: 'sellall' });
+  assert.strictEqual(st.cash, cash + 5 * 40 + 3 * 70);
+  assert.strictEqual(st.stash.nip, undefined);
+  assert.strictEqual(st.stash.feathers, undefined);
+  assert.strictEqual(st.stash.zoomers, 2, 'nobody here buys Zoomers, so they stay');
+  assert.ok(!C.waiting(st).options.includes('sellall'));
+  refused(C, st, { t: 'sellall' });
+});
 scenario('sell: a big sale raises heat, and Shades halve it', () => {
   let { C, st } = fresh();
   setPrices(C, st, 1);
@@ -677,7 +693,7 @@ scenario('step: every option waiting() offers is one the engine can act on', () 
       if (s.enc) tryAll(s, type);
     }
   }
-  for (const t of ['buy', 'sell', 'travel', 'finish', 'borrow', 'repay', 'deposit', 'withdraw', 'gear', 'heal',
+  for (const t of ['buy', 'sell', 'sellall', 'travel', 'finish', 'borrow', 'repay', 'deposit', 'withdraw', 'gear', 'heal',
     'run', 'fight', 'surrender', 'deal', 'leave', 'pay', 'refuse', 'decline']) {
     assert.ok(tried.has(t), `never got to try ${t}`);
   }

@@ -165,6 +165,18 @@ table.mk{width:100%;border-collapse:collapse}
 /* The trend arrow is direction only; colour on a row belongs to 'vs usual',
  * so a falling price never shows red beside a green 'cheap'. */
 .mk .tr{color:var(--steel);font-size:12px}
+.mk tr.trade-row{cursor:default}
+.mk tr.trade-row td,.mk tr.trade-row:hover td{background:#0b1222;padding:var(--s2) var(--s3);text-align:left;white-space:normal;border-bottom:1px solid var(--lit)}
+.trade{display:flex;flex-wrap:wrap;gap:var(--s1) var(--s3);align-items:baseline}
+.trade .tv{color:var(--accent);font-weight:600}
+.qrow{display:flex;flex-wrap:wrap;gap:6px;align-items:center;width:100%;margin-top:var(--s1)}
+.qrow input{width:6em}
+.qrow .total{margin-left:auto;margin-right:var(--s2)}
+.travel{position:absolute;inset:0;overflow:auto;padding:var(--s4) var(--s5)}
+.dest{list-style:none;margin:0 0 var(--s3);padding:0;display:grid;gap:6px}
+.dest button{width:100%;text-align:left;display:grid;grid-template-columns:auto minmax(0,1fr);gap:0 var(--s2);padding:6px var(--s3)}
+.dest button kbd{grid-row:span 2;align-self:center}
+.dest button span{font-size:12px;color:var(--dim)}
 .flash{margin-top:var(--s2);color:var(--danger)}
 .flash:empty{display:none}
 .market .bar{margin-top:var(--s4)}
@@ -271,6 +283,7 @@ table.mk{width:100%;border-collapse:collapse}
   .side{border-left:0;border-top:1px solid var(--line)}
   .logwrap{min-height:0}
   .log{position:static;max-height:260px;min-height:140px}
+  .travel{position:static}
   .status{grid-template-columns:repeat(2,minmax(0,1fr)) repeat(2,minmax(0,1fr))}
   .stat.lead{grid-column:span 2}
   .stat:nth-child(2){border-right:0}
@@ -293,7 +306,8 @@ table.mk{width:100%;border-collapse:collapse}
   .mk td,.mk th{padding:var(--s1) 3px}
   .mk td.name{width:auto}
   .mk td.held small{display:block;margin:0;font-size:11px}
-  .market,.place,.log{padding-left:var(--s3);padding-right:var(--s3)}
+  .market,.place,.log,.travel{padding-left:var(--s3);padding-right:var(--s3)}
+  .qrow .total{margin-left:0}
   .bar{position:sticky;bottom:6px;z-index:var(--z-sticky)}
   .bar button{flex:1 1 auto}
   kbd{display:none}
@@ -888,6 +902,7 @@ function takeGoods(st, id, q) {
 }
 
 // ---- market actions
+function sellableHere(st) { return GOODS.filter(g => (st.stash[g.id] || 0) > 0 && st.prices[g.id] != null); }
 function intAmt(v) { const n = Math.floor(Number(v)); return Number.isFinite(n) ? n : 0; }
 
 const MARKET = {
@@ -921,6 +936,14 @@ const MARKET = {
     st.stats.sold += value;
     heatUp(st, Math.min(8, Math.floor(value / 4000)));
     addLog(st, `Sold ${q} ${g.name} at ${fmt(p)}.`, 'trade');
+  },
+  /* Sells every good you hold that someone here is buying, each at today's
+   * price and through the same rule as a single sale (so heat adds up the
+   * same way). Goods nobody here is buying stay in the pouch. */
+  sellall(st) {
+    const goods = sellableHere(st);
+    if (!goods.length) return 'Nobody here is buying anything you carry.';
+    for (const g of goods) MARKET.sell(st, { good: g.id, qty: st.stash[g.id] });
   },
   travel(st, a) {
     const P = PLACE[a.to];
@@ -1015,6 +1038,7 @@ function waiting(st) {
   const o = [];
   if (GOODS.some(g => st.prices[g.id] != null)) o.push('buy');
   if (used(st) > 0) o.push('sell');
+  if (sellableHere(st).length) o.push('sellall');
   o.push(st.day < st.days ? 'travel' : 'finish');
   if (P.service === 'loan') o.push('borrow', 'repay');
   if (P.service === 'bank') o.push('deposit', 'withdraw');
@@ -1183,7 +1207,7 @@ function act(a) {
   }
   if (a.t === 'travel') ui.arrived = true;
   if (a.t === 'travel' || a.t === 'finish') ui.modal = S.over ? { kind: 'over' } : null;
-  else if (ui.modal && ui.modal.kind === 'qty') ui.modal = null;
+  if (['buy', 'sell', 'sellall', 'travel', 'finish'].includes(a.t)) { ui.trade = null; ui.travel = false; }
   render();
 }
 
@@ -1553,7 +1577,8 @@ function gameHTML() {
       <td class="range">${rangeCell(g, p)}</td>
       <td class="held">${held ? held + avg : '<span class="dim">—</span>'}</td>
       <td class="btns"><button data-act="buy" data-v="${i}" ${p == null ? 'disabled' : ''}>Buy</button>
-      <button data-act="sell" data-v="${i}" ${p == null || !held ? 'disabled' : ''}>Sell</button></td></tr>`;
+      <button data-act="sell" data-v="${i}" ${p == null || !held ? 'disabled' : ''}>Sell</button></td></tr>`
+      + (ui.trade && ui.trade.good === i ? tradeRowHTML(ui.trade) : '');
   }).join('');
   const gear = SLOTS.filter(s => st.gear[s]).map(s => GEAR[st.gear[s]].name);
   const svc = P.service || P.shop.length;
@@ -1561,6 +1586,7 @@ function gameHTML() {
     `${g.name} ${st.tip.prices[g.id] == null ? '—' : fmt(st.tip.prices[g.id])}`).join(' · ')}</div>` : '';
   const log = st.log.map(l => `<p class="${l.cls}">${esc(l.text)}</p>`).join('');
   const left = st.days - st.day;
+  const sellable = sellableHere(st).length > 0;
   return `<div class="pc">
   <header class="top">
     <h1 class="place-name">${P.name}</h1>
@@ -1583,22 +1609,25 @@ function gameHTML() {
       <tbody>${goods}</tbody></table>
       <div class="flash" role="status">${esc(ui.flash)}</div>
       <nav class="bar">
-        ${last ? '<button class="primary" data-act="finish"><kbd>E</kbd>Cash out</button>' : '<button class="primary" data-act="travel"><kbd>T</kbd>Travel</button>'}
+        ${last && sellable ? '<button class="primary" data-act="sellall"><kbd>A</kbd>Sell all</button><button data-act="finish"><kbd>E</kbd>Cash out</button>'
+          : last ? '<button class="primary" data-act="finish"><kbd>E</kbd>Cash out</button>'
+          : `<button class="primary" data-act="travel" aria-pressed="${!!ui.travel}"><kbd>T</kbd>Travel</button>`}
+        ${!last && u > 0 ? `<button data-act="sellall" ${sellable ? '' : 'disabled'} title="Sell everything you carry that someone here is buying"><kbd>A</kbd>Sell all</button>` : ''}
         ${svc ? `<button data-act="service"><kbd>V</kbd>${esc(P.serviceName)}</button>` : ''}
         <button data-act="gearview"><kbd>G</kbd>Gear</button>
         <span class="grow"></span>
-        <button data-act="help"><kbd>?</kbd>Help</button>
+        <button data-act="help" aria-label="Help" title="How to play (?)">?</button>
         <button data-act="menu"><kbd>Esc</kbd>Menu</button>
       </nav>
     </section>
     <aside class="side">
-      <div class="place">
+      ${ui.travel ? travelPanelHTML() : `<div class="place">
         <p class="blurb">${P.blurb}</p>
         <p class="spec">${P.special}</p>
         <p class="gear">${gear.length ? 'Gear: ' + gear.join(' · ') : 'No gear yet. Without a weapon you can only run or give up.'}</p>
         ${tip}
       </div>
-      <div class="logwrap"><div class="log" id="pc-log" tabindex="0" aria-label="Log">${log}</div></div>
+      <div class="logwrap"><div class="log" id="pc-log" tabindex="0" aria-label="Log">${log}</div></div>`}
     </aside>
   </div>
 </div>`;
@@ -1612,8 +1641,6 @@ function modalHTML() {
   if (!m) return '';
   let body = '';
   switch (m.kind) {
-    case 'qty': body = qtyHTML(m); break;
-    case 'travel': body = travelHTML(); break;
     case 'service': body = serviceHTML(); break;
     case 'gearview': body = gearViewHTML(); break;
     case 'help': body = helpHTML(m.tab || 'basics'); break;
@@ -1632,35 +1659,33 @@ function qtyMax(m) {
   if (m.side === 'buy') return p ? Math.max(0, Math.min(free(S), Math.floor(S.cash / p))) : 0;
   return S.stash[g.id] || 0;
 }
-function qtyHTML(m) {
-  const g = GOODS[m.good];
+function tradeRowHTML(t) {
+  const g = GOODS[t.good];
   const p = S.prices[g.id];
-  const max = qtyMax(m);
-  const verb = m.side === 'buy' ? 'Buy' : 'Sell';
-  const info = m.side === 'buy'
-    ? `You can afford ${Math.floor(S.cash / p)} · room for ${free(S)}`
-    : `You hold ${S.stash[g.id] || 0}${S.cost[g.id] ? `, paid ${fmt(Math.round(S.cost[g.id] / S.stash[g.id]))} each on average` : ''}`;
-  return `<h1 id="pc-mt">${verb} ${g.name}</h1>
-  <p>${fmt(p)} each. <span class="note">${info}</span></p>
-  <p class="note">${g.blurb}</p>
-  ${m.side === 'buy' && S.day === S.days ? '<p class="warn">It\'s your last day. Anything you can\'t sell today is worth nothing.</p>' : ''}
-  <form data-form="qty">
-  <div class="row">
-    <button type="button" data-act="qadj" data-v="-10">−10</button><button type="button" data-act="qadj" data-v="-1">−1</button>
-    <input id="pc-qty" inputmode="numeric" autocomplete="off" value="${m.qty}" aria-label="Quantity">
-    <button type="button" data-act="qadj" data-v="1">+1</button><button type="button" data-act="qadj" data-v="10">+10</button>
-    <button type="button" data-act="qmax"><kbd>M</kbd>Max ${max}</button>
-  </div>
-  <p>Total: <b id="pc-total">${fmt((intAmt(m.qty) || 0) * p)}</b></p>
-  <div class="acts"><button class="primary" type="submit"><kbd>Enter</kbd>${verb}</button><button type="button" data-act="close"><kbd>Esc</kbd>Cancel</button></div>
-  </form>`;
+  const max = qtyMax(t);
+  const verb = t.side === 'buy' ? 'Buy' : 'Sell';
+  const info = t.side === 'buy' ? `you can afford ${Math.floor(S.cash / p)}, room for ${free(S)}` : `you hold ${S.stash[g.id] || 0}`;
+  return `<tr class="trade-row"><td colspan="6"><form data-form="qty" class="trade" aria-label="${verb} ${g.name}">
+    <span class="tv">${verb} ${g.name}</span><span class="note">${fmt(p)} each · ${info}</span>
+    ${t.side === 'buy' && S.day === S.days ? `<span class="warn">Last day: anything you can't sell today is worth nothing.</span>` : ''}
+    <span class="qrow">
+      <button type="button" data-act="qadj" data-v="-10" aria-label="10 fewer">−10</button><button type="button" data-act="qadj" data-v="-1" aria-label="1 fewer">−1</button>
+      <input id="pc-qty" inputmode="numeric" autocomplete="off" value="${t.qty}" aria-label="Quantity to ${verb.toLowerCase()}">
+      <button type="button" data-act="qadj" data-v="1" aria-label="1 more">+1</button><button type="button" data-act="qadj" data-v="10" aria-label="10 more">+10</button>
+      <button type="button" data-act="qmax"><kbd>M</kbd>Max ${max}</button>
+      <span class="total">= <b id="pc-total">${fmt((intAmt(t.qty) || 0) * p)}</b></span>
+      <button class="primary" type="submit"><kbd>Enter</kbd>${verb}</button><button type="button" data-act="qcancel"><kbd>Esc</kbd>Cancel</button>
+    </span></form></td></tr>`;
 }
 
-function travelHTML() {
-  return `<h1 id="pc-mt">Travel</h1><p class="note">Every trip takes a day. The Boss's interest grows 10% each day you're out.</p>
-  <table>${PLACES.map((P, i) => `<tr><td><button style="width:100%;text-align:left" data-act="go" data-v="${P.id}" ${P.id === S.loc ? 'disabled' : ''}><kbd>${i + 1}</kbd>${P.name}${P.id === S.loc ? ' (you are here)' : ''}</button></td>
-    <td class="note">${P.special}</td></tr>`).join('')}</table>
-  <div class="acts"><button data-act="close"><kbd>Esc</kbd>Stay</button></div>`;
+function travelPanelHTML() {
+  const due = S.debt > 0 && CONFIG.goonDays - S.debtAge <= 1;
+  return `<div class="logwrap"><div class="travel" role="region" aria-label="Travel">
+    <h2>Where to?</h2>
+    <p class="note">Every trip takes a day, and the debt grows 10% overnight.${due ? " Her goons are due: PVN Tower is the one place they won't come for you." : ''}</p>
+    <ol class="dest">${PLACES.map((P, i) => `<li><button data-act="go" data-v="${P.id}" ${P.id === S.loc ? 'disabled' : ''}><kbd>${i + 1}</kbd><b>${P.name}</b><span>${P.id === S.loc ? 'You are here.' : P.special}</span></button></li>`).join('')}</ol>
+    <button data-act="stay"><kbd>Esc</kbd>Stay here</button>
+  </div></div>`;
 }
 
 function moneyForm(kind, label, max, hint) {
@@ -1860,9 +1885,10 @@ function helpHTML(tab) {
   }).join('')}</table><p class="note">Pouches and weapons only trade up: a new one replaces the old. Strays sometimes sell them cheap.</p>`;
   if (tab === 'keys') body = `<table>
     <tr><td><kbd>1</kbd>–<kbd>9</kbd></td><td>Select a good</td></tr>
-    <tr><td><kbd>B</kbd> / <kbd>S</kbd></td><td>Buy or sell the selected good</td></tr>
-    <tr><td><kbd>M</kbd></td><td>In the quantity box: the most you can</td></tr>
-    <tr><td><kbd>T</kbd></td><td>Travel, then <kbd>1</kbd>–<kbd>7</kbd> to pick a place</td></tr>
+    <tr><td><kbd>B</kbd> / <kbd>S</kbd></td><td>Buy or sell the selected good (the quantity opens under it)</td></tr>
+    <tr><td><kbd>M</kbd> <kbd>↑</kbd> <kbd>↓</kbd></td><td>In the quantity box: the most you can, one more, one fewer</td></tr>
+    <tr><td><kbd>A</kbd></td><td>Sell all: everything you carry that someone here is buying</td></tr>
+    <tr><td><kbd>T</kbd></td><td>Travel: the destinations open beside the market; <kbd>1</kbd>–<kbd>7</kbd> picks one</td></tr>
     <tr><td><kbd>E</kbd></td><td>Cash out (last day)</td></tr>
     <tr><td><kbd>V</kbd></td><td>Visit this place's shop or office</td></tr>
     <tr><td><kbd>G</kbd></td><td>Gear and stash</td></tr>
@@ -1929,6 +1955,13 @@ function render() {
       || dlg.querySelector('button.primary:not(:disabled)') || dlg.querySelector(FOCUSABLE);
   } else if (dlg) {
     target = findFocus(before, dlg) || q || dlg.querySelector(FOCUSABLE);
+  } else if (ui.panelFresh) {
+    target = ui.panelFresh === 'trade' ? q : root.querySelector('.travel [data-act="go"]:not(:disabled)');
+    if (ui.panelFresh === 'travel' && target && window.matchMedia('(max-width:900px)').matches) target.scrollIntoView({ block: 'nearest' });
+    ui.panelFresh = null;
+  } else if (ui.panelOpener && !ui.trade && !ui.travel) {
+    target = findFocus(ui.panelOpener) || findFocus(before);
+    ui.panelOpener = null;
   } else {
     target = findFocus(hadModal ? ui.opener : before) || (hadModal ? findFocus(before) : null);
     if (hadModal) ui.opener = null;
@@ -1943,21 +1976,34 @@ function openQty(i, side) {
   if (S.prices[g.id] == null) { ui.flash = `Nobody is trading ${g.name} here today.`; render(); return; }
   if (side === 'sell' && !S.stash[g.id]) { ui.flash = `You don't have any ${g.name}.`; render(); return; }
   ui.sel = i;
-  const m = { kind: 'qty', good: i, side, qty: 0 };
-  m.qty = qtyMax(m);
-  ui.modal = m;
+  const t = { good: i, side, qty: 0 };
+  t.qty = qtyMax(t);
+  if (!ui.trade && !ui.travel) ui.panelOpener = focusKey(document.activeElement) || { act: side, v: String(i) };
+  ui.trade = t;
+  ui.travel = false;
+  ui.panelFresh = 'trade';
+  ui.flash = '';
+  render();
+}
+function closePanels() { ui.trade = null; ui.travel = false; ui.flash = ''; render(); }
+function openTravel() {
+  if (S.day >= S.days) return;
+  if (!ui.trade && !ui.travel) ui.panelOpener = focusKey(document.activeElement) || { act: 'travel' };
+  ui.trade = null;
+  ui.travel = true;
+  ui.panelFresh = 'travel';
   ui.flash = '';
   render();
 }
 function setQty(n) {
-  const m = ui.modal;
+  const m = ui.trade;
   m.qty = clamp(n, 0, qtyMax(m));
   const input = document.getElementById('pc-qty');
   if (input) input.value = m.qty;
   updateTotal();
 }
 function updateTotal() {
-  const m = ui.modal;
+  const m = ui.trade;
   const input = document.getElementById('pc-qty');
   const t = document.getElementById('pc-total');
   if (!m || !input || !t) return;
@@ -1982,10 +2028,13 @@ root.addEventListener('click', e => {
     case 'sel': if (e.target.closest('button')) return; ui.sel = Number(v); render(); return;
     case 'buy': openQty(Number(v), 'buy'); return;
     case 'sell': openQty(Number(v), 'sell'); return;
-    case 'qadj': setQty(ui.modal.qty + Number(v)); return;
-    case 'qmax': setQty(qtyMax(ui.modal)); return;
+    case 'qadj': setQty(ui.trade.qty + Number(v)); return;
+    case 'qmax': setQty(qtyMax(ui.trade)); return;
+    case 'qcancel': closePanels(); return;
+    case 'stay': closePanels(); return;
+    case 'sellall': act({ t: 'sellall' }); return;
     case 'mmax': { const inp = el.closest('form').querySelector('input'); inp.value = v; inp.focus(); return; }
-    case 'travel': ui.modal = { kind: 'travel' }; ui.flash = ''; render(); return;
+    case 'travel': if (ui.travel) closePanels(); else openTravel(); return;
     case 'go': act({ t: 'travel', to: v }); return;
     case 'finish': ui.modal = { kind: 'finish' }; render(); return;
     case 'finishconfirm': act({ t: 'finish' }); return;
@@ -2008,7 +2057,7 @@ root.addEventListener('submit', e => {
   const kind = form.dataset.form;
   if (kind === 'qty') {
     updateTotal();
-    const m = ui.modal;
+    const m = ui.trade;
     act({ t: m.side, good: GOODS[m.good].id, qty: m.qty });
     return;
   }
@@ -2073,27 +2122,31 @@ document.addEventListener('keydown', e => {
   }
   if (m) {
     if (k === 'Escape') { e.preventDefault(); closeModal(); return; }
-    if (m.kind === 'qty') {
-      if (k === 'm') { e.preventDefault(); setQty(qtyMax(m)); }
-      else if (k === 'ArrowUp' || k === '+') { e.preventDefault(); setQty(m.qty + 1); }
-      else if (k === 'ArrowDown' || k === '-') { e.preventDefault(); setQty(m.qty - 1); }
-      return;
-    }
     if (inInput) return;
-    if (m.kind === 'travel' && /^[1-7]$/.test(k)) { const P = PLACES[Number(k) - 1]; if (P.id !== S.loc) act({ t: 'travel', to: P.id }); return; }
     if (m.kind === 'confirmNew' && k === 'y') { save(KEY_GAME, null); S = null; startRun(); return; }
     if (m.kind === 'finish' && (k === 'y' || k === 'Enter')) { e.preventDefault(); act({ t: 'finish' }); return; }
     if (m.kind === 'menu') { if (k === '?' || k === '/') { ui.modal = { kind: 'help', tab: 'basics' }; render(); } else if (k === 'q') quitToTitle(); else if (k === 'n') { ui.modal = { kind: 'confirmNew' }; render(); } }
     if (m.kind === 'help') helpKey(k);
     return;
   }
+  if (ui.trade) {
+    if (k === 'Escape') { e.preventDefault(); closePanels(); return; }
+    if (k === 'm') { e.preventDefault(); setQty(qtyMax(ui.trade)); return; }
+    if (k === 'ArrowUp' || k === '+') { e.preventDefault(); setQty(ui.trade.qty + 1); return; }
+    if (k === 'ArrowDown' || k === '-') { e.preventDefault(); setQty(ui.trade.qty - 1); return; }
+  }
+  if (ui.travel) {
+    if (k === 'Escape' || k === 't') { e.preventDefault(); closePanels(); return; }
+    if (/^[1-7]$/.test(k)) { const P = PLACES[Number(k) - 1]; if (P.id !== S.loc) act({ t: 'travel', to: P.id }); return; }
+  }
   if (inInput) return;
-  if (/^[1-9]$/.test(k)) { ui.sel = Number(k) - 1; ui.flash = ''; render(); return; }
+  if (/^[1-9]$/.test(k)) { ui.sel = Number(k) - 1; ui.trade = null; ui.flash = ''; render(); return; }
+  if (k === 'a') { act({ t: 'sellall' }); return; }
   if (k === 'ArrowDown') { e.preventDefault(); ui.sel = (ui.sel + 1) % GOODS.length; render(); return; }
   if (k === 'ArrowUp') { e.preventDefault(); ui.sel = (ui.sel + GOODS.length - 1) % GOODS.length; render(); return; }
   if (k === 'b') { openQty(ui.sel, 'buy'); return; }
   if (k === 's') { openQty(ui.sel, 'sell'); return; }
-  if (k === 't' && S.day < S.days) { ui.modal = { kind: 'travel' }; ui.flash = ''; render(); return; }
+  if (k === 't' && S.day < S.days) { openTravel(); return; }
   if (k === 'e' && S.day === S.days) { ui.modal = { kind: 'finish' }; render(); return; }
   if (k === 'v' && (here(S).service || here(S).shop.length)) { ui.modal = { kind: 'service' }; ui.flash = ''; render(); return; }
   if (k === 'g') { ui.modal = { kind: 'gearview' }; render(); return; }
