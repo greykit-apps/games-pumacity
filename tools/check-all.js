@@ -361,6 +361,14 @@ scenario('goons: paying clears the clock; refusing costs health and cash', () =>
   const hurt = ok(C, st, { t: 'refuse' });
   assert.ok(hurt.hp < 100 && hurt.cash < 2000 && hurt.debt < 8000);
   assert.strictEqual(hurt.debtAge, C.RULES.goonDays - 4);
+  // a short clock (Custom's 4 days) is never reset by a refusal: they come back
+  for (const goonDays of [4, 5, 6]) {
+    const s = JSON.parse(JSON.stringify(st));
+    s.rules.goonDays = goonDays;
+    const h = ok(C, s, { t: 'refuse' });
+    assert.ok(h.debtAge > 0 && h.debtAge < goonDays, `goonDays ${goonDays}: refusing left the clock at ${h.debtAge}`);
+    assert.ok(goonDays - h.debtAge <= 4, `goonDays ${goonDays}: back in ${goonDays - h.debtAge} days`);
+  }
 });
 
 // ---- the end
@@ -436,6 +444,21 @@ scenario('watchers: surrender confiscates the whole stash and fines you', () => 
   assert.strictEqual(st.bank, 5000, 'the bank is untouched');
   assert.ok(st.heat <= 10);
   assert.strictEqual(st.enc, null);
+});
+scenario('watchers: giving up with nothing on you is a fine, and keeps your heat', () => {
+  let { C, st } = fresh();
+  st.heat = 80;
+  st.cash = 0;
+  st.bank = 500000;
+  st = C.forceEncounter(st, 'watchers');
+  st = ok(C, st, { t: 'surrender' });
+  assert.strictEqual(st.heat, 80, 'a clean surrender must not wash heat');
+  assert.strictEqual(st.cash, 0);
+  st.cash = 3000;
+  st = C.forceEncounter(st, 'watchers');
+  st = ok(C, st, { t: 'surrender' });
+  assert.strictEqual(st.cash, 2700, 'the loitering fine is 10% of cash on you');
+  assert.strictEqual(st.heat, 80);
 });
 scenario('watchers: more heat brings more of them, and Joyeuse', () => {
   let { C, st } = fresh();
@@ -557,6 +580,25 @@ scenario('rival: a deal moves only what fits your pouch and wallet', () => {
   assert.strictEqual(st.cash, 2000 - 13 * 150);
   assert.strictEqual(st.enc, null);
 });
+scenario('rival: selling a rival a big load raises heat like a market sale', () => {
+  let { C, st } = fresh();
+  st.stash = { skooma: 10 };
+  st.cost = { skooma: 0 };
+  const deal = { side: 'buy', good: 'skooma', qty: 10, price: 20000 };
+  const rival = s => Object.assign(JSON.parse(JSON.stringify(s)), { enc: { type: 'rival', foes: [{ name: 'Jad', hp: 14, max: 14 }], n: 1, hostile: false, boss: 'Jad', deal, hitP: 0.28, dmg: [3, 7], loot: [150, 600] } });
+  const sold = ok(C, rival(st), { t: 'deal' });
+  assert.strictEqual(sold.cash, 2000 + 200000);
+  const mkt = JSON.parse(JSON.stringify(st));
+  setPrices(C, mkt, 20000);
+  const street = ok(C, mkt, { t: 'sell', good: 'skooma', qty: 10 });
+  assert.ok(sold.heat > 0, 'the deal added no heat');
+  assert.strictEqual(sold.heat, street.heat, 'the same sale, the same heat');
+  // and a small deal, like a small sale, adds none
+  const tiny = rival(Object.assign(JSON.parse(JSON.stringify(st)), { stash: { nip: 5 }, cost: {} }));
+  tiny.enc.deal = { side: 'buy', good: 'nip', qty: 5, price: 30 };
+  const small = ok(C, tiny, { t: 'deal' });
+  assert.strictEqual(small.heat, 0);
+});
 scenario('rival: hostile crews take half your stash when you give in', () => {
   let { C, st } = fresh();
   setPrices(C, st, 1);
@@ -653,6 +695,30 @@ scenario('map: the Watcher odds are a probability, never over 100%', () => {
   // the custom knobs' worst case
   st.rules = Object.assign(JSON.parse(JSON.stringify(C.RULES)), { watchBase: 0.12, carryWatchMax: 0.5 });
   assert.strictEqual(C.watchOdds(st, 100, C.PLACE.starport), 1);
+});
+scenario('map: the Watcher odds hold when the goons are also due', () => {
+  const { C, st } = fresh();
+  st.heat = 100;
+  st.stash = { skooma: 200 };
+  st.cost = { skooma: 0 };
+  st.debtAge = C.RULES.goonDays + 3;
+  assert.strictEqual(C.arrivalWatchOdds(st, 'starport'), 1, 'the test needs certain Watchers');
+  for (let seed = 1; seed <= 200; seed++) {
+    const s = Object.assign(JSON.parse(JSON.stringify(st)), { rng: C.hash32(seed) | 0 });
+    const r = C.step(s, { t: 'travel', to: 'starport' }).state;
+    assert.ok(r.enc && r.enc.type === 'watchers', `seed ${seed}: shown 100%, got ${r.enc ? r.enc.type : 'nothing'}`);
+  }
+  // at middling odds the Watchers still come about as often as shown, goons or not
+  st.heat = 30; st.stash = {}; st.cost = {};
+  const shown = C.arrivalWatchOdds(st, 'ranch');
+  let n = 0;
+  const N = 2000;
+  for (let seed = 1; seed <= N; seed++) {
+    const s = Object.assign(JSON.parse(JSON.stringify(st)), { rng: C.hash32(seed * 31) | 0 });
+    const r = C.step(s, { t: 'travel', to: 'ranch' }).state;
+    if (r.enc && r.enc.type === 'watchers') n++;
+  }
+  assert.ok(Math.abs(n / N - shown) < 0.03, `shown ${shown.toFixed(3)}, came ${(n / N).toFixed(3)}`);
 });
 scenario('map: goons are shown as due exactly when they can be waiting tomorrow', () => {
   const { C, st } = fresh();

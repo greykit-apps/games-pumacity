@@ -134,7 +134,7 @@ The rules are data plus a DOM-free engine, which sit between the
 
 ```
 node tools/check-assets.js   # every file index.html references exists
-node tools/check-all.js      # 67 named rule scenarios
+node tools/check-all.js      # 70 named rule scenarios
 node tools/replay.js         # fixed seeds replay exactly as recorded
 node tools/sim.js 20         # bots play whole runs; invariants after every step
 ```
