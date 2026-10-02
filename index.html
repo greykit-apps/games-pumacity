@@ -2249,8 +2249,8 @@ function helpHTML(tab) {
     <dt>The goal</dt><dd>Finish the run with as much money as you can. Your score is your cash plus your bank balance, minus whatever you still owe The Boss.</dd>
     <dt>The debt</dt><dd>You start owing Casey Benton, The Boss, ${fmt(CONFIG.startDebt)}. It grows 10% every day. Pay it down at PVN Tower. Go ${CONFIG.goonDays} days without a real payment (at least 10% of the debt) and her goons come to collect; the Debt box counts down to them.</dd>
     <dt>Trading</dt><dd>Each day you're somewhere new, and prices are new too. Buy cheap, carry it somewhere better, and sell. Your pouch holds ${CONFIG.baseCap} units until you buy a bigger one. The <i>vs usual</i> column says whether a price is a bargain, cheap, fair, steep or sky-high for that good, and the Held column shows what you paid and how today's price compares. A ▲ or ▼ compares a price with the last one you saw. A headline (shown above the market, and marked ! in it) sends one good's price wild.</dd>
-    <dt>Travel</dt><dd>Each trip takes one day. On your last day you can't travel; sell everything and cash out. Goods left in your pouch are worth nothing.</dd>
-    <dt>Heat</dt><dd>Big sales and fights raise your heat: cool, warm, hot, then wanted. The hotter you are, the more often the Watchers come and the more of them there are. It cools a little every day, faster at The Ranch, and The Boss will make it vanish for a price.</dd>
+    <dt>Travel</dt><dd>Each trip takes one day. Travel opens a map of PumaCity. Each district shows the chance the Watchers find you there tomorrow, and badges flag where the goons may be waiting (PVN Tower is always safe from them), where your Pawphone knows tomorrow's prices, and the vet when you're hurt. On your last day you can't travel; sell everything and cash out. Goods left in your pouch are worth nothing.</dd>
+    <dt>Heat</dt><dd>Big sales and fights raise your heat: cool, warm, hot, then wanted. The hotter you are, the more often the Watchers come and the more of them there are. A heavy load draws them too, whatever your heat: the Pouch box shows its pull, and the buy box tells you before you add to it. It cools a little every day, faster at The Ranch, and The Boss will make it vanish for a price.</dd>
     <dt>Encounters</dt><dd>Watchers and rival crews: run, fight (you need a weapon), or give up. Giving up to the Watchers costs your whole stash and a fine; a failed getaway spills part of your load. The more you carry, the more often they come. If your health hits zero, the run is over and scores nothing. Money in the bank is safe from muggers.</dd>
   </dl>`;
   if (tab === 'places') body = `<dl class="help">${PLACES.map(P => `<dt>${P.name}</dt><dd>${P.blurb} ${P.special}</dd>`).join('')}</dl>`;
@@ -2264,6 +2264,8 @@ function helpHTML(tab) {
     <tr><td><kbd>B</kbd> / <kbd>S</kbd></td><td>Buy or sell the selected good; <kbd>Enter</kbd> then trades the most you can, or type an amount first</td></tr>
     <tr><td><kbd>M</kbd> <kbd>↑</kbd> <kbd>↓</kbd></td><td>In the quantity box: the most you can, one more, one fewer</td></tr>
     <tr><td><kbd>A</kbd></td><td>Sell all: everything you carry that someone here is buying</td></tr>
+    <tr><td>Double-click</td><td>Buy or Sell with the mouse: trades the most you can</td></tr>
+    <tr><td><kbd>Z</kbd></td><td>Undo your last trade (for a few seconds after it)</td></tr>
     <tr><td><kbd>T</kbd></td><td>Travel: a map of PumaCity opens; <kbd>1</kbd>–<kbd>7</kbd> picks a district</td></tr>
     <tr><td><kbd>E</kbd></td><td>Cash out on the last day; <kbd>E</kbd> again confirms</td></tr>
     <tr><td><kbd>V</kbd></td><td>Visit this place's shop or office</td></tr>
