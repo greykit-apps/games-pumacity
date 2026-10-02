@@ -181,6 +181,9 @@ table.mk{width:100%;border-collapse:collapse}
 .qrow{display:flex;flex-wrap:wrap;gap:6px;align-items:center;width:100%;margin-top:var(--s1)}
 .qrow input{width:6em}
 .qrow .total{margin-left:auto;margin-right:var(--s2)}
+.qrow .risk{flex-basis:100%;font-size:12px;color:var(--steel)}
+.qrow .risk:empty{display:none}
+.stat.warn em{color:var(--warn)}
 .travel,.sidepanel{position:absolute;inset:0;overflow:auto;padding:var(--s4) var(--s5)}
 .sidepanel .row{display:flex;gap:var(--s2);align-items:center;flex-wrap:wrap;margin:var(--s2) 0}
 .sidepanel .row input{width:8em}
@@ -574,7 +577,13 @@ function rollTip(st) {
 /* Carrying a big load draws the Watchers' eye, whatever your heat. Valued at
  * each good's usual mid price, so the risk doesn't swing with today's market. */
 function carried(st) { let v = 0; for (const g of GOODS) v += (st.stash[g.id] || 0) * (g.lo + g.hi) / 2; return v; }
-function carryRisk(st) { return Math.min(CONFIG.carryWatchMax, carried(st) * CONFIG.carryWatch); }
+function carryRisk(st) { return carryRiskWith(st, null, 0); }
+/* The load risk if you also carried q more of a good; the screen's buy row
+ * shows this before you commit. */
+function carryRiskWith(st, id, q) {
+  const extra = id ? q * (GOOD[id].lo + GOOD[id].hi) / 2 : 0;
+  return Math.min(CONFIG.carryWatchMax, (carried(st) + extra) * CONFIG.carryWatch);
+}
 
 function rollEncounter(st) {
   const P = here(st);
@@ -1566,6 +1575,14 @@ const HEAT = [
   [70, 'wanted', 'Every patrol in PumaCity knows your face.'],
 ];
 function heatBand(h) { let b = HEAT[0]; for (const x of HEAT) if (h >= x[0]) b = x; return { word: b[1], effect: b[2] }; }
+/* The load note mirrors the goon countdown: quiet while the risk is small,
+ * then warning, then danger, at the same thresholds the buy row uses. */
+function riskClass(r) { return r >= 0.2 ? 'bad' : r >= 0.08 ? 'warn' : ''; }
+function loadLevel(st) { const c = riskClass(carryRisk(st)); return c ? ' ' + c : ''; }
+function loadNote(st) {
+  const r = carryRisk(st);
+  return r < 0.005 ? '' : `<em>Watchers +${Math.round(r * 100)}%</em>`;
+}
 function debtNote(st) {
   if (st.debt <= 0) return 'paid off';
   const n = CONFIG.goonDays - st.debtAge;
@@ -1621,8 +1638,8 @@ function gameHTML() {
     <div class="stat lead${st.debt > 0 ? (st.debtAge >= CONFIG.goonDays - 2 ? ' bad' : ' warn') : ''}"><small>Debt</small><span>${fmt(st.debt)}</span><em>${debtNote(st)}</em></div>
     <div class="stat"><small>Bank</small><span>${fmt(st.bank)}</span></div>
     <div class="stat${st.hp <= 30 ? ' bad' : ''}"><small>Health</small><span>${st.hp} / ${CONFIG.maxHp}</span>${meter(st.hp, CONFIG.maxHp, st.hp <= 30 ? 'low' : '')}</div>
-    <div class="stat"><small>Pouch</small><span>${u} / ${cap}</span>${meter(u, cap, 'heat')}</div>
-    <div class="stat${st.heat >= 40 ? ' bad' : ''}" title="${heatBand(st.heat).effect}"><small>Heat</small><span>${heatBand(st.heat).word} · ${st.heat}</span>${meter(st.heat, 100, st.heat >= 40 ? 'low' : 'heat')}</div>
+    <div class="stat${loadLevel(st)}" title="A heavy load draws the Watchers: up to +${Math.round(CONFIG.carryWatchMax * 100)}% a day, whatever your heat."><small>Pouch</small><span>${u} / ${cap}</span>${meter(u, cap, 'heat')}${loadNote(st)}</div>
+    <div class="stat${st.heat >= 40 ? ' bad' : ''}" title="${heatBand(st.heat).effect}${carryRisk(st) >= 0.005 ? ` Your load adds about +${Math.round(carryRisk(st) * 100)}% a day on top.` : ''}"><small>Heat</small><span>${heatBand(st.heat).word} · ${st.heat}</span>${meter(st.heat, 100, st.heat >= 40 ? 'low' : 'heat')}</div>
   </div>
   <div class="main">
     <section class="market">
@@ -1678,6 +1695,21 @@ function qtyMax(m) {
   if (m.side === 'buy') return p ? Math.max(0, Math.min(free(S), Math.floor(S.cash / p))) : 0;
   return S.stash[g.id] || 0;
 }
+function riskAfterText(t) {
+  const g = GOODS[t.good];
+  const now = carryRisk(S), after = carryRiskWith(S, g.id, intAmt(t.qty) || 0);
+  if (after < 0.005) return '';
+  const cls = riskClass(after);
+  const pct = x => Math.round(x * 100);
+  if (after - now < 0.005) {
+    return after >= CONFIG.carryWatchMax
+      ? `<span class="${cls}">Your load already draws the Watchers as hard as it can: about +${pct(after)}% a day.</span>`
+      : `<span class="${cls}">Barely changes the Watcher odds: about +${pct(after)}% a day.</span>`;
+  }
+  const capped = after >= CONFIG.carryWatchMax ? ', the most it gets' : '';
+  return `<span class="${cls}">After this, your load draws the Watchers: about +${pct(after)}% a day${capped}${now >= 0.005 ? `, up from +${pct(now)}%` : ''}.</span>`;
+}
+
 function tradeRowHTML(t) {
   const g = GOODS[t.good];
   const p = S.prices[g.id];
@@ -1693,6 +1725,7 @@ function tradeRowHTML(t) {
       <button type="button" data-act="qadj" data-v="1" aria-label="1 more">+1</button><button type="button" data-act="qadj" data-v="10" aria-label="10 more">+10</button>
       <button type="button" data-act="qmax"><kbd>M</kbd>Max ${max}</button>
       <span class="total">= <b id="pc-total">${fmt((intAmt(t.qty) || 0) * p)}</b></span>
+      ${t.side === 'buy' ? `<span class="risk" id="pc-risk">${riskAfterText(t)}</span>` : ''}
       <button class="primary" type="submit"><kbd>Enter</kbd>${verb}</button><button type="button" data-act="qcancel"><kbd>Esc</kbd>Cancel</button>
     </span></form></td></tr>`;
 }
@@ -2024,6 +2057,8 @@ function updateTotal() {
   if (!m || !input || !t) return;
   m.qty = intAmt(input.value.replace(/[^\d]/g, ''));
   t.textContent = fmt(m.qty * S.prices[GOODS[m.good].id]);
+  const risk = document.getElementById('pc-risk');
+  if (risk) risk.innerHTML = riskAfterText(m);
 }
 function closeModal() { ui.modal = null; ui.flash = ''; render(); }
 
