@@ -28,11 +28,14 @@ const verbose = args.includes('--verbose');
  * length. The bot knows every price band, so it is a strong player: a Regular
  * 30-day run should still fail for it sometimes. Longer runs leave time to
  * recover, so they may profit more often, but never trivially. Tourist should
- * almost never lose; Wanted should beat the bot more often than not. */
+ * almost never lose. Wanted bites in its first month: a 30-day run should
+ * beat the bot about as often as not. Over 60 and 90 days a debt that has
+ * stopped compounding (debtCap) is one a late run can catch, so those bands
+ * sit higher; their lower bounds keep Wanted from becoming Regular. */
 const PROFIT_BAND = {
   tourist: { 30: [0.9, 1], 60: [0.9, 1], 90: [0.9, 1] },
   regular: { 30: [0.55, 0.95], 60: [0.6, 1], 90: [0.6, 1] },
-  wanted:  { 30: [0.25, 0.6], 60: [0.25, 0.7], 90: [0.25, 0.7] },
+  wanted:  { 30: [0.25, 0.65], 60: [0.3, 0.85], 90: [0.4, 0.95] },
 };
 /* Presets where some reckless run must die: combat has to be able to kill. */
 const MUST_DIE = ['regular', 'wanted'];

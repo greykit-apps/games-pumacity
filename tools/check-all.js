@@ -286,6 +286,25 @@ scenario('travel: takes a day, compounds the debt 10% and the bank 1%', () => {
   assert.strictEqual(st.debt, 6655);
   assert.strictEqual(st.bank, 10201);
 });
+scenario("loan: past The Boss's limit the debt stops compounding and grows a flat day's interest on the limit", () => {
+  let { C, st } = fresh();
+  const cap = C.RULES.debtCap, flat = Math.round(cap * C.RULES.debtRate);
+  st.debt = cap - 1000;                       // one night short of the limit
+  st = travelQuiet(C, st, 'ranch');
+  assert.strictEqual(st.debt, cap, 'compounding stops exactly at the limit');
+  st = travelQuiet(C, st, 'vault');
+  assert.strictEqual(st.debt, cap + flat);
+  st = travelQuiet(C, st, 'ranch');
+  assert.strictEqual(st.debt, cap + 2 * flat, 'linear from there, never multiplying');
+  // the limit is a rule: a Custom run with a higher one compounds further
+  const big = fresh().st;
+  big.rules.debtCap = 250000;
+  big.debt = cap;
+  assert.strictEqual(travelQuiet(C, big, 'ranch').debt, Math.round(cap * 1.1));
+  // and borrowing is still refused past it
+  st.loc = 'pvn'; st.enc = null;
+  assert.match(refused(C, st, { t: 'borrow', amt: 1 }), /won't carry/);
+});
 scenario('travel: refused to where you already are, or to nowhere', () => {
   const { C, st } = fresh();
   refused(C, st, { t: 'travel', to: 'plaza' });
