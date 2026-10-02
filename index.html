@@ -284,6 +284,7 @@ button.link:hover{color:var(--text)}
 .bd.high,.bd.goons,.bd.vet{color:var(--danger);border-color:#5a1f2a}
 .bd.safe{color:var(--good);border-color:#1d4a2a}
 .bd.tip,.bd.here{color:var(--accent);border-color:#17485a}
+.legend .li{display:inline-flex;gap:6px;align-items:center;margin-right:var(--s3)}
 .legend{display:flex;flex-wrap:wrap;gap:4px var(--s2);align-items:center;margin:var(--s3) 0 0;font-size:12px;color:var(--dim)}
 .flash{margin-top:var(--s2);color:var(--danger)}
 .flash:empty{display:none}
@@ -2048,6 +2049,7 @@ function watchLevel(r) { return r >= 0.25 ? 'high' : r >= 0.12 ? 'mid' : 'low'; 
 function mapHTML() {
   const due = goonsDue(S);
   const hurt = S.hp < 60;
+  const shown = new Set(['eye']);  // the legend lists only what's on the map
   const spot = id => {
     const i = PLACES.findIndex(P => P.id === id);
     const P = PLACES[i];
@@ -2060,21 +2062,27 @@ function mapHTML() {
       badges.push(`<span class="bd ${watchLevel(r)}" title="Chance the Watchers find you on arrival">${ICON.eye}${Math.round(r * 100)}%</span>`);
       said.push(`Watchers about ${Math.round(r * 100)}% on arrival`);
     }
-    if (S.tip && S.tip.loc === P.id) { badges.push(`<span class="bd tip" title="Your Pawphone shows tomorrow's prices here">${ICON.phone}prices</span>`); said.push("your Pawphone knows tomorrow's prices"); }
-    if (due && P.id === 'pvn') { badges.push(`<span class="bd safe" title="Her goons won't come for you here">${ICON.safe}safe</span>`); said.push('safe from her goons'); }
-    else if (due && !here) { badges.push(`<span class="bd goons" title="Her goons may be waiting">${ICON.goons}goons</span>`); said.push('her goons may be waiting'); }
-    if (hurt && P.service === 'vet') { badges.push(`<span class="bd vet" title="The vet can patch you up">${ICON.vet}vet</span>`); said.push('the vet'); }
+    if (S.tip && S.tip.loc === P.id) { shown.add('tip'); badges.push(`<span class="bd tip" title="Your Pawphone shows tomorrow's prices here">${ICON.phone}prices</span>`); said.push("your Pawphone knows tomorrow's prices"); }
+    if (due && P.id === 'pvn') { shown.add('safe'); badges.push(`<span class="bd safe" title="Her goons won't come for you here">${ICON.safe}safe</span>`); said.push('safe from her goons'); }
+    else if (due && !here) { shown.add('goons'); badges.push(`<span class="bd goons" title="Her goons may be waiting">${ICON.goons}goons</span>`); said.push('her goons may be waiting'); }
+    if (hurt && P.service === 'vet') { shown.add('vet'); badges.push(`<span class="bd vet" title="The vet can patch you up">${ICON.vet}vet</span>`); said.push('the vet'); }
     const [x, y, w, h] = SPOT[id];
     const label = P.name.replace(/^The Convention Center$/, 'Convention Center');
     return `<button class="spot spot-${id}${here ? ' here' : ''}" style="left:${x}%;top:${y}%;width:${w}%;height:${h}%" data-act="go" data-v="${P.id}" ${here ? 'disabled aria-current="location"' : ''} aria-label="${P.name}. ${said.join('. ')}.">
       <span class="tag"><span class="lab"><kbd>${i + 1}</kbd><b>${label}</b></span><span class="badges">${badges.join('')}</span></span></button>`;
   };
+  const spots = PLACES.map(P => spot(P.id)).join('');
+  const key = {
+    eye: `<span class="bd low">${ICON.eye}%</span> Watcher odds when you arrive`,
+    tip: `<span class="bd tip">${ICON.phone}prices</span> Pawphone tip`,
+    goons: `<span class="bd goons">${ICON.goons}goons</span> goons may be waiting`,
+    safe: `<span class="bd safe">${ICON.safe}safe</span> safe from goons`,
+    vet: `<span class="bd vet">${ICON.vet}vet</span> the vet`,
+  };
   return `<h1 id="pc-mt">Where to?</h1>
   <p class="note">Every trip takes a day, and the debt grows 10% overnight.</p>
-  <div class="city" role="group" aria-label="Map of PumaCity">${cityMapSVG()}${PLACES.map(P => spot(P.id)).join('')}</div>
-  <p class="legend"><span class="bd low">${ICON.eye}%</span> Watcher odds when you arrive
-    <span class="bd tip">${ICON.phone}prices</span> Pawphone tip
-    <span class="bd goons">${ICON.goons}goons</span> goons due <span class="bd safe">${ICON.safe}safe</span> safe from them</p>
+  <div class="city" role="group" aria-label="Map of PumaCity">${cityMapSVG()}${spots}</div>
+  <p class="legend">${['eye', 'tip', 'goons', 'safe', 'vet'].filter(k => shown.has(k)).map(k => `<span class="li">${key[k]}</span>`).join('')}</p>
   <div class="acts"><button data-act="close"><kbd>Esc</kbd>Stay here</button></div>`;
 }
 
