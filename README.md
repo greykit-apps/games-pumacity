@@ -19,7 +19,7 @@ original text and code.
 One `index.html`: no build step, no dependencies, no network at play time.
 Saves stay in your browser's `localStorage`.
 
-![Day 24 at the Starport: the terminal sits over the district's scenery, a headline has sent Catnip sky-high, the vs-usual column marks the cheap goods, and the Held column shows a load of Nappers bought at $161 now down 32%](screenshots/market.png)
+![Day 12 of a Wanted run at the Starport: the terminal sits over the ship on its pad; the Debt box warns the goons could come any day and names the $4,152 payment that calls them off; a headline has crashed Skooma to a bargain; each price sits on its usual band beside a faint tick for the last price seen; and the Held column shows Catnip bought at $25 now down 44%](screenshots/market.png)
 
 ### How a run goes
 

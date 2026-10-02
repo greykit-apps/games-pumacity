@@ -2586,9 +2586,16 @@ function menuHTML() {
   </div>`;
 }
 
+const HELP_TABS = [['basics', 'Basics'], ['places', 'Places'], ['goods', 'Goods'], ['gear', 'Gear'], ['rules', 'Rules'], ['keys', 'Keys']];
+/* One difficulty in the Rules tab: its numbers come from its own rules. */
+function presetLine(id) {
+  const p = presetRules(id);
+  return `<dt>${PRESETS[id].name}</dt><dd>${esc(PRESETS[id].blurb)} ${fmt(p.startCash)} in cash against ${fmt(p.startDebt)} of debt at ${pctText(p.debtRate)} a day; her goons come after ${p.goonDays} days without a payment.</dd>`;
+}
 function helpHTML(tab) {
-  const r = S ? R(S) : RULES;  // help opens from the title screen too
-  const tabs = [['basics', 'Basics'], ['places', 'Places'], ['goods', 'Goods'], ['gear', 'Gear'], ['keys', 'Keys']];
+  // In a run, its own rules; on the title screen, the ones you've chosen.
+  const r = S ? R(S) : chosenRules();
+  const tabs = HELP_TABS;
   let body = '';
   if (tab === 'basics') body = `<dl class="help">
     <dt>The goal</dt><dd>Finish the run with as much money as you can. Your score is your cash plus your bank balance, minus whatever you still owe The Boss.</dd>
@@ -2604,6 +2611,14 @@ function helpHTML(tab) {
     const where = PLACES.filter(P => P.shop.includes(id)).map(P => P.name).join(', ');
     return `<tr><td><b>${GEAR[id].name}</b><br><span class="note">${GEAR[id].blurb}</span></td><td class="r">${fmt(GEAR[id].price)}</td><td class="note">${where}</td></tr>`;
   }).join('')}</table><p class="note">Pouches and weapons only trade up: a new one replaces the old. Strays sometimes sell them cheap.</p>`;
+  if (tab === 'rules') {
+    const id = S ? S.preset : prefs.preset;
+    const ch = rulesChanges(r);
+    body = `<p>${S ? 'This run is' : 'You have chosen'} <b>${presetName(id)}</b>${ch.length ? `: ${esc(ch.join(' · '))}.` : ', the rules as they come.'}</p>
+    <dl class="help">${PRESET_IDS.map(presetLine).join('')}
+    <dt>Custom</dt><dd>Set the rules yourself: your money, The Boss's patience, the Watchers, your luck and your cat. Start from any difficulty above and step any setting up or down; the title screen lists what yours change.</dd>
+    <dt>High scores</dt><dd>Each difficulty keeps its own top ten for each run length, since a score only means something next to scores played under the same rules. A Custom score shows the rules it was played under.</dd></dl>`;
+  }
   if (tab === 'keys') body = `<table>
     <tr><td><kbd>1</kbd>–<kbd>9</kbd></td><td>Select a good</td></tr>
     <tr><td><kbd>B</kbd> / <kbd>S</kbd></td><td>Buy or sell the selected good; <kbd>Enter</kbd> then trades the most you can, or type an amount first</td></tr>
@@ -2932,7 +2947,7 @@ const ENC_LOCK_MS = 400;
 function encLocked() { return S && S.enc && performance.now() < (ui.encUntil || 0); }
 
 function helpKey(k) {
-  const tabs = ['basics', 'places', 'goods', 'gear', 'keys'];
+  const tabs = HELP_TABS.map(t => t[0]);
   const i = tabs.indexOf(ui.modal.tab || 'basics');
   if (k === 'ArrowRight') { ui.modal = { kind: 'help', tab: tabs[(i + 1) % tabs.length] }; render(); }
   if (k === 'ArrowLeft') { ui.modal = { kind: 'help', tab: tabs[(i + tabs.length - 1) % tabs.length] }; render(); }
