@@ -42,9 +42,12 @@ Saves stay in your browser's `localStorage`.
 - **Read the market.** The *vs usual* column says whether each price is a
   bargain, cheap, fair, steep or sky-high for that good. The Held column
   shows what you paid and how today's price compares.
-- **Mind your load.** A heavy load draws the Watchers whatever your heat.
-  The Pouch box shows its pull, and the buy row tells you what a purchase
-  will do to it before you commit.
+- **Mind your load.** A heavy load draws the Watchers whatever your heat,
+  and brings a bigger patrol when they come. The Pouch box shows its pull,
+  and the buy row tells you what a purchase will do to it before you commit.
+- **Selling raises your heat**: a point per $4,000 sold in a day, up to 8,
+  however the sales are split. Fights raise it too. It cools a little every
+  day, faster at The Ranch.
 - **First run?** A coach line walks you through your first buy and first
   trip, then gets out of the way.
 - **The debt compounds 10% a day**, up to The Boss's $50,000 limit; past
@@ -140,7 +143,7 @@ The rules are data plus a DOM-free engine, which sit between the
 
 ```
 node tools/check-assets.js   # every file index.html references exists
-node tools/check-all.js      # 72 named rule scenarios
+node tools/check-all.js      # 73 named rule scenarios
 node tools/replay.js         # fixed seeds replay exactly as recorded
 node tools/sim.js 20         # bots play whole runs; invariants after every step
 ```
@@ -180,24 +183,24 @@ commit, with the reason in its message.
 
 | Difficulty | Days | Bot | Profit | Deaths | Median score |
 |---|---|---|---|---|---|
-| Tourist | 30 | careful | 20/20 | 0 | $795,661 |
-| Tourist | 30 | reckless | 20/20 | 0 | $522,124 |
-| Tourist | 60 | careful | 20/20 | 0 | $2,412,469 |
-| Tourist | 60 | reckless | 20/20 | 0 | $2,525,097 |
-| Tourist | 90 | careful | 20/20 | 0 | $5,704,519 |
-| Tourist | 90 | reckless | 20/20 | 0 | $4,752,011 |
-| Regular | 30 | careful | 18/20 | 0 | $303,217 |
-| Regular | 30 | reckless | 18/20 | 1 | $213,096 |
-| Regular | 60 | careful | 19/20 | 0 | $1,127,016 |
-| Regular | 60 | reckless | 17/20 | 2 | $1,877,369 |
-| Regular | 90 | careful | 20/20 | 0 | $2,868,544 |
-| Regular | 90 | reckless | 18/20 | 2 | $4,170,436 |
-| Wanted | 30 | careful | 11/20 | 0 | $137,531 |
-| Wanted | 30 | reckless | 11/20 | 0 | $44,983 |
-| Wanted | 60 | careful | 12/20 | 2 | $472,647 |
+| Tourist | 30 | careful | 20/20 | 0 | $737,264 |
+| Tourist | 30 | reckless | 20/20 | 0 | $484,468 |
+| Tourist | 60 | careful | 20/20 | 0 | $2,338,286 |
+| Tourist | 60 | reckless | 20/20 | 0 | $2,128,143 |
+| Tourist | 90 | careful | 20/20 | 0 | $5,121,214 |
+| Tourist | 90 | reckless | 19/20 | 1 | $5,675,814 |
+| Regular | 30 | careful | 18/20 | 0 | $267,231 |
+| Regular | 30 | reckless | 17/20 | 2 | $168,012 |
+| Regular | 60 | careful | 19/20 | 0 | $1,301,550 |
+| Regular | 60 | reckless | 16/20 | 3 | $1,495,033 |
+| Regular | 90 | careful | 19/20 | 0 | $2,374,977 |
+| Regular | 90 | reckless | 15/20 | 5 | $3,718,872 |
+| Wanted | 30 | careful | 11/20 | 0 | $15,529 |
+| Wanted | 30 | reckless | 10/20 | 1 | $36,390 |
+| Wanted | 60 | careful | 11/20 | 2 | $542,201 |
 | Wanted | 60 | reckless | 9/20 | 5 | $0 |
-| Wanted | 90 | careful | 17/20 | 0 | $1,274,110 |
-| Wanted | 90 | reckless | 16/20 | 2 | $3,850,425 |
+| Wanted | 90 | careful | 16/20 | 0 | $1,231,384 |
+| Wanted | 90 | reckless | 14/20 | 4 | $1,139,896 |
 
 ### Debugging
 

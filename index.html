@@ -758,8 +758,19 @@ function heatUp(st, n) {
   if (st.gear.shades) n = Math.ceil(n / 2);
   st.heat = Math.min(100, st.heat + n);
 }
-/* The heat a sale adds: a point per $4,000, at most 8, whoever is buying. */
-function saleHeat(st, value) { heatUp(st, Math.min(8, Math.floor(value / 4000))); }
+/* The heat selling adds: a point per $4,000 sold today, at most 8 a day,
+ * whoever is buying. It is tallied over the day rather than per sale, so
+ * splitting a sale neither dodges it nor multiplies it. Shades halve the
+ * day's points, not each sale's, for the same reason. */
+function saleHeat(st, value) {
+  st.soldToday = (st.soldToday || 0) + value;
+  let due = Math.min(8, Math.floor(st.soldToday / 4000));
+  if (st.gear.shades) due = Math.ceil(due / 2);
+  const add = due - (st.saleHeatToday || 0);
+  if (add <= 0) return;
+  st.saleHeatToday = due;
+  st.heat = Math.min(100, st.heat + add);
+}
 function addLog(st, text, cls) {
   st.logN++;
   st.log.push({ n: st.logN, d: st.day, text, cls: cls || '' });
@@ -779,7 +790,7 @@ function newGame(opts) {
   const st = {
     v: 1, version: VERSION, seed, rng: seed, name, days, day: 1, loc: CONFIG.startLoc, preset, rules,
     cash: rules.startCash, bank: 0, debt: rules.startDebt, debtAge: 0,
-    hp: rules.maxHp, heat: 0,
+    hp: rules.maxHp, heat: 0, soldToday: 0, saleHeatToday: 0,
     stash: {}, cost: {},
     gear: { pouch: null, weapon: null, armour: null, pawphone: null, mittens: null, shades: null },
     prices: {}, prev: {}, news: null, tip: null, enc: null, over: null,
@@ -904,7 +915,8 @@ function startEncounter(st, type) {
 function beginEncounter(st, type) {
   switch (type) {
     case 'watchers': {
-      const n = clamp(1 + Math.floor(st.heat / 30) + rndInt(st, 2), 1, 5);
+      // heat brings more of them; so does a heavy load (one more per 20% of load risk)
+      const n = clamp(1 + Math.floor(st.heat / 30) + Math.floor(carryRisk(st) / 0.2 + 1e-9) + rndInt(st, 2), 1, 5);
       const foes = [];
       if (st.heat >= 40) foes.push({ name: 'Watch-Captain Joyeuse', hp: 24, max: 24 });
       while (foes.length < n) foes.push({ name: 'Watcher', hp: 12, max: 12 });
@@ -1309,6 +1321,8 @@ const MARKET = {
     if (st.debt > 0) { st.debt = debtTomorrow(st); st.debtAge++; }
     if (st.bank > 0) st.bank = Math.floor(st.bank * (1 + R(st).bankRate));
     st.heat = Math.max(0, st.heat - R(st).heatDecay - (P.cool || 0));
+    st.soldToday = 0;
+    st.saleHeatToday = 0;
     addLog(st, `Day ${st.day}: ${P.name}.`, 'day');
     rollMarket(st);
     rollTip(st);
@@ -1414,7 +1428,7 @@ function step(st0, a) {
  * the heat a big sale added included. Refused (null) unless the only things
  * that changed are the ones a market trade touches, so it can never rewind a
  * trip, a roll of the dice, a debt payment or an encounter. */
-const TRADE_FIELDS = ['cash', 'stash', 'cost', 'heat', 'stats', 'log', 'logN'];
+const TRADE_FIELDS = ['cash', 'stash', 'cost', 'heat', 'soldToday', 'saleHeatToday', 'stats', 'log', 'logN'];
 function undoTrade(before, after) {
   if (!before || !after || before.over || after.over || before.enc || after.enc) return null;
   for (const k of Object.keys(after)) {
@@ -2167,7 +2181,7 @@ function gameHTML() {
     <div class="stat lead${st.debt > 0 ? (st.debtAge >= R(st).goonDays - 2 ? ' bad' : ' warn') : ''}"><small>Debt</small><span>${fmt(st.debt)}</span>${debtNote(st)}</div>
     <div class="stat"><small>Bank</small><span>${fmt(st.bank)}</span></div>
     <div class="stat${st.hp <= 30 ? ' bad' : ''}"><small>Health</small><span>${st.hp} / ${R(st).maxHp}</span>${meter(st.hp, R(st).maxHp, st.hp <= 30 ? 'low' : '')}${healthNote(st)}</div>
-    <div class="stat${loadLevel(st)}" title="A heavy load draws the Watchers: up to +${Math.round(R(st).carryWatchMax * 100)}% a day, whatever your heat."><small>Pouch</small><span>${u} / ${cap}</span>${meter(u, cap, 'heat')}${loadNote(st)}</div>
+    <div class="stat${loadLevel(st)}" title="A heavy load draws the Watchers: up to +${Math.round(R(st).carryWatchMax * 100)}% a day, whatever your heat, and a bigger patrol when they come."><small>Pouch</small><span>${u} / ${cap}</span>${meter(u, cap, 'heat')}${loadNote(st)}</div>
     <div class="stat${st.heat >= 40 ? ' bad' : ''}" title="${heatBand(st.heat).effect}${carryRisk(st) >= RISK_SHOW ? ` Your load adds about +${Math.round(carryRisk(st) * 100)}% a day on top.` : ''}"><small>Heat</small><span>${heatBand(st.heat).word} · ${st.heat}</span>${meter(st.heat, 100, st.heat >= 40 ? 'low' : 'heat')}</div>
   </div>
   <div class="main">
@@ -2659,7 +2673,7 @@ function helpHTML(tab) {
     <dt>The debt</dt><dd>You start owing Casey Benton, The Boss, ${fmt(r.startDebt)}. It grows ${pctText(r.debtRate)} every day, compounding, up to her limit of ${fmt(r.debtCap)}; past that it grows a flat ${fmt(Math.round(r.debtCap * r.debtRate))} a day. Pay it down at PVN Tower. Go ${r.goonDays} days without a real payment (at least ${pctText(r.repayReset)} of the debt) and her goons come to collect; the Debt box counts down to them. Pay what they ask and the clock resets; hand over what you have and they come back in a few days; refuse and they take it out of your hide.</dd>
     <dt>Trading</dt><dd>Each day you're somewhere new, and prices are new too. Buy cheap, carry it somewhere better, and sell. Your pouch holds ${r.baseCap} units until you buy a bigger one. The <i>vs usual</i> column says whether a price is a bargain, cheap, fair, steep or sky-high for that good, and the Held column shows what you paid and how today's price compares. A faint tick on the same line marks the last price you saw for it. A headline (shown above the market, and marked ! in it) sends one good's price wild.</dd>
     <dt>Travel</dt><dd>Each trip takes one day. Travel opens a map of PumaCity. Each district shows the chance the Watchers find you there tomorrow, and badges flag where the goons may be waiting (PVN Tower is always safe from them), where your Pawphone knows tomorrow's prices, and the vet when you're hurt. On your last day you can't travel; sell everything and cash out. Goods left in your pouch are worth nothing. You can also leave town early, from the menu: the run is scored at once under the same rules, but ranks below every run played to the end.</dd>
-    <dt>Heat</dt><dd>Big sales and fights raise your heat: cool, warm, hot, then wanted. The hotter you are, the more often the Watchers come and the more of them there are. A heavy load draws them too, whatever your heat: the Pouch box shows its pull, and the buy box tells you before you add to it. It cools a little every day, faster at The Ranch, and The Boss will make it vanish for a price.</dd>
+    <dt>Heat</dt><dd>Selling raises your heat, a point per $4,000 sold in a day, up to 8, however the sales are split; fights raise it too. Cool, warm, hot, then wanted: the hotter you are, the more often the Watchers come and the more of them there are. A heavy load draws them too, whatever your heat, and brings a bigger patrol when they come: the Pouch box shows its pull, and the buy box tells you before you add to it. It cools a little every day, faster at The Ranch, and The Boss will make it vanish for a price.</dd>
     <dt>Encounters</dt><dd>Watchers and rival crews: run, fight (you need a weapon), or give up. Giving up to the Watchers costs your whole stash and a fine; a failed getaway spills part of your load. The more you carry, the more often they come. If your health hits zero, the run is over: you keep any debt on your score but none of your money, and a death ranks below every run played out. Money in the bank is safe from muggers.</dd>
   </dl>`;
   if (tab === 'places') body = `<dl class="help">${PLACES.map(P => `<dt>${P.name}</dt><dd>${P.blurb} ${P.special}</dd>`).join('')}</dl>`;
