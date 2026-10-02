@@ -220,8 +220,13 @@ button.link:hover{color:var(--text)}
 .market .bar{margin-top:var(--s4)}
 .side{border-left:1px solid var(--line);display:flex;flex-direction:column;min-height:0;min-width:0}
 .place{padding:var(--s4) var(--s5);border-bottom:1px solid var(--line)}
-.place .blurb{color:var(--ink)}
-.place .spec{color:var(--steel)}
+.place .spec{color:var(--text);margin-bottom:var(--s2)}
+.place .blurb{color:var(--dim);font-style:italic;font-size:13px;line-height:1.45}
+.place h2{margin:var(--s3) 0 var(--s1)}
+.gearlist{list-style:none;margin:0;padding:0;display:grid;gap:2px;font-size:12px}
+.gearlist li{display:flex;justify-content:space-between;gap:var(--s3)}
+.gearlist li span:first-child{color:var(--ink)}
+.gearlist li span:last-child{color:var(--dim);text-align:right}
 .place .gear{color:var(--dim);font-size:12px;margin:0}
 .tip{margin-top:var(--s2);padding:6px var(--s2);border:1px dashed var(--line);font-size:12px;color:var(--steel)}
 .tip b{color:var(--accent);font-weight:600}
@@ -1672,7 +1677,10 @@ function gameHTML() {
       <button data-act="sell" data-v="${i}" ${p == null || !held ? 'disabled' : ''}>Sell</button></td></tr>`
       + (ui.trade && ui.trade.good === i ? tradeRowHTML(ui.trade) : '');
   }).join('');
-  const gear = SLOTS.filter(s => st.gear[s]).map(s => { const it = GEAR[st.gear[s]]; return `<span title="${esc(it.blurb)}">${it.name} <span class="dim">(${it.short})</span></span>`; });
+  const gear = SLOTS.filter(s => st.gear[s]).map(s => GEAR[st.gear[s]]);
+  const gearBlock = gear.length
+    ? `<h2>Gear</h2><ul class="gearlist">${gear.map(it => `<li title="${esc(it.blurb)}"><span>${it.name}</span><span>${it.short}</span></li>`).join('')}</ul>`
+    : '<p class="gear">No gear yet. Without a weapon you can only run or give up.</p>';
   const svc = P.service || P.shop.length;
   const tip = st.tip ? `<div class="tip"><b>Pawphone</b>: tomorrow at ${PLACE[st.tip.loc].name}<br>${GOODS.map(g =>
     `${g.name} ${st.tip.prices[g.id] == null ? '—' : fmt(st.tip.prices[g.id])}`).join(' · ')}</div>` : '';
@@ -1716,9 +1724,9 @@ function gameHTML() {
     </section>
     <aside class="side">
       ${ui.side === 'travel' ? travelPanelHTML() : ui.side === 'service' ? servicePanelHTML() : `<div class="place">
-        <p class="blurb">${P.blurb}</p>
         <p class="spec">${P.special}</p>
-        <p class="gear">${gear.length ? 'Gear: ' + gear.join(' · ') : 'No gear yet. Without a weapon you can only run or give up.'}</p>
+        <p class="blurb">${P.blurb}</p>
+        ${gearBlock}
         ${tip}
       </div>
       <div class="logwrap"><div class="log" id="pc-log" tabindex="0" aria-label="Log">${log}</div></div>`}
