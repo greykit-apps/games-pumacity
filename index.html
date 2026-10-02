@@ -202,7 +202,7 @@ button.link:hover{color:var(--text)}
 .qrow .risk{flex-basis:100%;font-size:12px;color:var(--steel)}
 .qrow .risk:empty{display:none}
 .stat.warn em{color:var(--warn)}
-.travel,.sidepanel{position:absolute;inset:0;overflow:auto;padding:var(--s4) var(--s5)}
+.sidepanel{position:absolute;inset:0;overflow:auto;padding:var(--s4) var(--s5)}
 .sidepanel .row{display:flex;gap:var(--s2);align-items:center;flex-wrap:wrap;margin:var(--s2) 0}
 .sidepanel .row input{width:8em}
 .sidepanel table{width:100%;border-collapse:collapse}
@@ -211,10 +211,23 @@ button.link:hover{color:var(--text)}
 .sidepanel .note{color:var(--dim);font-size:12px}
 .sidepanel .acts{margin-top:var(--s3)}
 .confirm-note{margin:var(--s3) 0 0;color:var(--warn)}
-.dest{list-style:none;margin:0 0 var(--s3);padding:0;display:grid;gap:6px}
-.dest button{width:100%;text-align:left;display:grid;grid-template-columns:auto minmax(0,1fr);gap:0 var(--s2);padding:6px var(--s3)}
-.dest button kbd{grid-row:span 2;align-self:center}
-.dest button span{font-size:12px;color:var(--dim)}
+/* The map: PumaCity's six blocks, with the streets as the gaps between them. */
+.modal.map{max-width:640px}
+.city{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:12px;margin-top:var(--s3);background:#0c1324;
+  border:1px solid var(--line);border-radius:4px;
+  background-image:linear-gradient(90deg,transparent calc(50% - 1px),#1a2541 calc(50% - 1px),#1a2541 calc(50% + 1px),transparent calc(50% + 1px))}
+.sq{display:flex;flex-direction:column;gap:6px;min-height:108px}
+.sq.split .sq-name{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);margin-bottom:-2px}
+.block{flex:1;display:grid;grid-template-columns:auto minmax(0,1fr);align-content:start;gap:2px var(--s2);
+  padding:var(--s2) var(--s3);text-align:left;background:var(--bg);border-color:var(--line)}
+.block kbd{grid-row:span 3;align-self:start;margin:2px 0 0}
+.block b{color:var(--text);font-weight:600}
+.block b small{font-weight:400;font-size:11px;color:var(--dim);margin-left:var(--s1)}
+.block span{font-size:12px;color:var(--dim)}
+.block em{grid-column:2;font-style:normal;font-size:11px;color:var(--accent)}
+.block:hover:not(:disabled){background:#0d1628}
+.block.here,.block.here:disabled{opacity:1;cursor:default;border-color:var(--accent)}
+.block.here b,.block.here span{color:var(--accent)}
 .flash{margin-top:var(--s2);color:var(--danger)}
 .flash:empty{display:none}
 .market .bar{margin-top:var(--s4)}
@@ -326,7 +339,7 @@ button.link:hover{color:var(--text)}
   .side{border-left:0;border-top:1px solid var(--line)}
   .logwrap{min-height:0}
   .log{position:static;max-height:260px;min-height:140px}
-  .travel,.sidepanel{position:static}
+  .sidepanel{position:static}
   .status{grid-template-columns:repeat(2,minmax(0,1fr)) repeat(2,minmax(0,1fr))}
   .stat.lead{grid-column:span 2}
   .stat:nth-child(2){border-right:0}
@@ -350,7 +363,12 @@ button.link:hover{color:var(--text)}
   .mk td,.mk th{padding:var(--s1) 3px}
   .mk td.name{width:auto}
   .mk td.held small{display:block;margin:0;font-size:11px}
-  .market,.place,.log,.travel,.sidepanel{padding-left:var(--s3);padding-right:var(--s3)}
+  .market,.place,.log,.sidepanel{padding-left:var(--s3);padding-right:var(--s3)}
+  .city{gap:8px;padding:8px}
+  .sq{min-height:0}
+  .block{grid-template-columns:minmax(0,1fr);padding:6px var(--s2)}
+  .block em{grid-column:auto}
+  .block span{font-size:11px;line-height:1.3}
   .qrow .total{margin-left:0}
   .bar{position:sticky;bottom:6px;z-index:var(--z-sticky)}
   .bar button{flex:1 1 auto}
@@ -415,31 +433,31 @@ const GOOD = Object.fromEntries(GOODS.map(g => [g.id, g]));
 /* mods multiply a good's price here; `all` multiplies every good. watch, mug
  * and boss scale those encounters; cool is extra heat shed per day here. */
 const PLACES = [
-  { id: 'plaza', name: 'Market Plaza', service: null, serviceName: 'Outfitter', shop: ['fanny', 'saddle', 'spray', 'laser', 'claws', 'collar', 'mittens', 'shades'],
+  { id: 'plaza', name: 'Market Plaza', tag: "outfitter · tourists pay more", service: null, serviceName: 'Outfitter', shop: ['fanny', 'saddle', 'spray', 'laser', 'claws', 'collar', 'mittens', 'shades'],
     mods: { psychos: 1.1, reddot: 1.15, moonsugar: 1.15, skooma: 1.15 }, watch: 1, mug: 1.5,
     blurb: "Downtown: an open-air mall of stucco arcades, palms and fountains, full of tourists with money to spend.",
     special: 'Tourists pay a premium for luxury goods. The outfitter sells pouches, weapons and accessories.' },
-  { id: 'pvn', name: 'PVN Tower', service: 'loan', serviceName: "The Boss's office", shop: [],
+  { id: 'pvn', name: 'PVN Tower', tag: "The Boss's loans · Skooma sells high", service: 'loan', serviceName: "The Boss's office", shop: [],
     mods: { skooma: 1.25 }, watch: 1, boss: 3,
     blurb: "Casey Benton's office tower: a theater at ground level, a nightclub above it, and her office in the penthouse.",
     special: 'The Boss lends money from the penthouse. Skooma sells high at the club.' },
-  { id: 'vault', name: 'The Vault', service: 'bank', serviceName: "Overseer's terminal", shop: [],
+  { id: 'vault', name: 'The Vault', tag: "the bank", service: 'bank', serviceName: "Overseer's terminal", shop: [],
     mods: {}, watch: 0.8, mug: 0.3,
     blurb: "A fully stocked vault under the city, waiting for PumaCity's leadership in case of war. Until then, the Overseer runs it as a bank.",
     special: 'Money in the Vault is safe from muggers and the Watchers.' },
-  { id: 'ranch', name: 'The Ranch', service: null, serviceName: '', shop: [],
+  { id: 'ranch', name: 'The Ranch', tag: "cheap 'nip · few Watchers", service: null, serviceName: '', shop: [],
     mods: { nip: 0.45 }, watch: 0.5, cool: 6,
     blurb: "An old horse ranch on the edge of town, its paddocks turned over to grow fields.",
     special: "Catnip is cheap, and the Watchers rarely come out this far." },
-  { id: 'starport', name: 'Starport', service: null, serviceName: 'Bay 9 outfitter', shop: ['hovercrate', 'mech'],
+  { id: 'starport', name: 'Starport', tag: "cheap Moonsugar & Skooma · Bay 9", service: null, serviceName: 'Bay 9 outfitter', shop: ['hovercrate', 'mech'],
     mods: { moonsugar: 0.8, skooma: 0.8 }, watch: 1.3,
     blurb: "Where the ship lands, trading PumaCity's goods with other ports.",
     special: "Moonsugar and Skooma come in cheap off the ship. The outfitter in Bay 9 sells gear you can't get in town." },
-  { id: 'convention', name: 'The Convention Center', service: null, serviceName: 'Tech expo', shop: ['pawphone'],
+  { id: 'convention', name: 'The Convention Center', tag: "everything sells high · pickpockets", service: null, serviceName: 'Tech expo', shop: ['pawphone'],
     all: 1.2, mods: {}, watch: 1.1, mug: 3,
     blurb: 'The convention center by the starport, with a different event every week.',
     special: 'Crowds pay over the odds for everything. Pickpockets work the crowd.' },
-  { id: 'suburbs', name: 'Suburbs', service: 'vet', serviceName: 'Vet', shop: [],
+  { id: 'suburbs', name: 'Suburbs', tag: "the vet", service: 'vet', serviceName: 'Vet', shop: [],
     mods: {}, watch: 0.9,
     blurb: 'Single-family homes on quiet cul-de-sacs, every one of them rented from Casey Benton.',
     special: 'The vet patches you up.' },
@@ -1715,7 +1733,7 @@ function gameHTML() {
         ${last && ui.confirmCash ? '<button class="danger" data-act="finishconfirm"><kbd>E</kbd>Confirm cash out</button><button data-act="finishcancel"><kbd>Esc</kbd>Not yet</button>'
           : last && sellable ? '<button class="primary" data-act="sellall"><kbd>A</kbd>Sell all</button><button data-act="finish"><kbd>E</kbd>Cash out</button>'
           : last ? '<button class="primary" data-act="finish"><kbd>E</kbd>Cash out</button>'
-          : `<button class="primary" data-act="travel" aria-pressed="${ui.side === 'travel'}"><kbd>T</kbd>Travel</button>`}
+          : `<button class="primary" data-act="travel" aria-pressed="${!!(ui.modal && ui.modal.kind === 'map')}"><kbd>T</kbd>Travel</button>`}
         ${!last && u > 0 ? `<button data-act="sellall" ${sellable ? '' : 'disabled'} title="Sell everything you carry that someone here is buying"><kbd>A</kbd>Sell all</button>` : ''}
         ${svc && !last ? `<button data-act="service"><kbd>V</kbd>${esc(P.serviceName)}</button>` : ''}
         <span class="grow"></span>
@@ -1724,7 +1742,7 @@ function gameHTML() {
       </nav>
     </section>
     <aside class="side">
-      ${ui.side === 'travel' ? travelPanelHTML() : ui.side === 'service' ? servicePanelHTML() : `<div class="place">
+      ${ui.side === 'service' ? servicePanelHTML() : `<div class="place">
         <p class="spec">${P.special}</p>
         <p class="blurb">${P.blurb}</p>
         ${gearBlock}
@@ -1746,10 +1764,11 @@ function modalHTML() {
   switch (m.kind) {
     case 'help': body = helpHTML(m.tab || 'basics'); break;
     case 'menu': body = menuHTML(); break;
+    case 'map': body = mapHTML(); break;
     case 'confirmNew': body = `<h1 id="pc-mt">Abandon this run?</h1><p>Your current run will not be scored.</p>
       <div class="acts"><button class="danger" data-act="newconfirm"><kbd>Y</kbd>Abandon and start over</button><button data-act="close"><kbd>Esc</kbd>Keep playing</button></div>`; break;
   }
-  return `<div class="back" data-act="backdrop"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="pc-mt">${body}</div></div>`;
+  return `<div class="back" data-act="backdrop"><div class="modal${m.kind === 'map' ? ' map' : ''}" role="dialog" aria-modal="true" aria-labelledby="pc-mt">${body}</div></div>`;
 }
 
 function qtyMax(m) {
@@ -1793,14 +1812,29 @@ function tradeRowHTML(t) {
     </span></form></td></tr>`;
 }
 
-function travelPanelHTML() {
+/* PumaCity is a 2x3 grid of blocks. Downtown holds both Market Plaza and
+ * PVN Tower; the Vault's block is its entrance. Keys stay 1-7 in PLACES order. */
+const CITY = ['convention', 'vault', 'ranch', 'suburbs', 'starport', ['plaza', 'pvn']];
+function mapHTML() {
   const due = S.debt > 0 && CONFIG.goonDays - S.debtAge <= 1;
-  return `<div class="logwrap"><div class="travel" role="region" aria-label="Travel">
-    <h2>Where to?</h2>
-    <p class="note">Every trip takes a day, and the debt grows 10% overnight.${due ? " Her goons are due: PVN Tower is the one place they won't come for you." : ''}</p>
-    <ol class="dest">${PLACES.map((P, i) => `<li><button data-act="go" data-v="${P.id}" ${P.id === S.loc ? 'disabled' : ''}><kbd>${i + 1}</kbd><b>${P.name}</b><span>${P.id === S.loc ? 'You are here.' : P.special}</span></button></li>`).join('')}</ol>
-    <button data-act="stay"><kbd>Esc</kbd>Stay here</button>
-  </div></div>`;
+  const block = id => {
+    const i = PLACES.findIndex(P => P.id === id);
+    const P = PLACES[i];
+    const here = P.id === S.loc;
+    const notes = [];
+    if (S.tip && S.tip.loc === P.id) notes.push("Pawphone: you know tomorrow's prices");
+    if (due && P.id === 'pvn') notes.push("her goons won't come here");
+    return `<button class="block${here ? ' here' : ''}" data-act="go" data-v="${P.id}" ${here ? 'disabled aria-current="location"' : ''}>
+      <kbd>${i + 1}</kbd><b>${P.name}${P.id === 'vault' ? ' <small>entrance</small>' : ''}</b>
+      <span>${here ? 'You are here' : P.tag}</span>${notes.map(n => `<em>${n}</em>`).join('')}</button>`;
+  };
+  const square = c => Array.isArray(c)
+    ? `<div class="sq split"><span class="sq-name">Downtown</span>${c.map(block).join('')}</div>`
+    : `<div class="sq">${block(c)}</div>`;
+  return `<h1 id="pc-mt">Where to?</h1>
+  <p class="note">Every trip takes a day, and the debt grows 10% overnight.${due ? " Her goons are due: PVN Tower is the one place they won't come for you." : ''}</p>
+  <div class="city" role="group" aria-label="Map of PumaCity">${CITY.map(square).join('')}</div>
+  <div class="acts"><button data-act="close"><kbd>Esc</kbd>Stay here</button></div>`;
 }
 
 function moneyForm(kind, label, max, hint) {
@@ -1989,7 +2023,7 @@ function helpHTML(tab) {
     <tr><td><kbd>B</kbd> / <kbd>S</kbd></td><td>Buy or sell the selected good (the quantity opens under it)</td></tr>
     <tr><td><kbd>M</kbd> <kbd>↑</kbd> <kbd>↓</kbd></td><td>In the quantity box: the most you can, one more, one fewer</td></tr>
     <tr><td><kbd>A</kbd></td><td>Sell all: everything you carry that someone here is buying</td></tr>
-    <tr><td><kbd>T</kbd></td><td>Travel: the destinations open beside the market; <kbd>1</kbd>–<kbd>7</kbd> picks one</td></tr>
+    <tr><td><kbd>T</kbd></td><td>Travel: a map of PumaCity opens; <kbd>1</kbd>–<kbd>7</kbd> picks a district</td></tr>
     <tr><td><kbd>E</kbd></td><td>Cash out on the last day; <kbd>E</kbd> again confirms</td></tr>
     <tr><td><kbd>V</kbd></td><td>Visit this place's shop or office</td></tr>
     <tr><td><kbd>R</kbd> <kbd>F</kbd> <kbd>U</kbd></td><td>Encounters: run, fight, give up. <kbd>Y</kbd> accepts an offer and <kbd>N</kbd> turns it down; every choice shows its key. None of them is a market key, so a key you were already pressing can't answer an encounter by mistake.</td></tr>
@@ -2097,11 +2131,10 @@ function render() {
     target = findFocus(before, dlg) || q || dlg.querySelector(FOCUSABLE);
   } else if (ui.panelFresh) {
     target = ui.panelFresh === 'trade' ? q
-      : ui.panelFresh === 'travel' ? root.querySelector('.travel [data-act="go"]:not(:disabled)')
       : ui.panelFresh === 'confirm' ? root.querySelector('[data-act="finishconfirm"]')
       : root.querySelector('.sidepanel input') || root.querySelector('.sidepanel button.primary:not(:disabled)') || root.querySelector('.sidepanel button:not(:disabled)');
-    if ((ui.panelFresh === 'travel' || ui.panelFresh === 'service') && window.matchMedia('(max-width:900px)').matches) {
-      const panel = root.querySelector('.travel, .sidepanel');
+    if (ui.panelFresh === 'service' && window.matchMedia('(max-width:900px)').matches) {
+      const panel = root.querySelector('.sidepanel');
       if (panel) panel.scrollIntoView({ block: 'start' });
     }
     ui.panelFresh = null;
@@ -2146,7 +2179,14 @@ function openSide(which) {
   ui.flash = '';
   render();
 }
-function openTravel() { openSide('travel'); }
+function openTravel() {
+  if (S.day >= S.days) return;
+  ui.trade = null;
+  ui.side = null;
+  ui.flash = '';
+  ui.modal = ui.modal && ui.modal.kind === 'map' ? null : { kind: 'map' };
+  render();
+}
 function setQty(n) {
   const m = ui.trade;
   m.qty = clamp(n, 0, qtyMax(m));
@@ -2190,7 +2230,7 @@ root.addEventListener('click', e => {
     case 'finishcancel': ui.confirmCash = false; ui.panelOpener = null; render(); return;
     case 'sellall': act({ t: 'sellall' }); return;
     case 'mmax': { const inp = el.closest('form').querySelector('input'); inp.value = v; inp.focus(); return; }
-    case 'travel': openSide('travel'); return;
+    case 'travel': openTravel(); return;
     case 'go': act({ t: 'travel', to: v }); return;
     case 'finish': ui.confirmCash = true; ui.trade = null; ui.panelOpener = null; ui.panelFresh = 'confirm'; render(); return;
     case 'finishconfirm': act({ t: 'finish' }); return;
@@ -2278,6 +2318,11 @@ document.addEventListener('keydown', e => {
   if (m) {
     if (k === 'Escape') { e.preventDefault(); closeModal(); return; }
     if (inInput) return;
+    if (m.kind === 'map') {
+      if (k === 't') { closeModal(); return; }
+      if (/^[1-7]$/.test(k)) { const P = PLACES[Number(k) - 1]; if (P.id !== S.loc) act({ t: 'travel', to: P.id }); }
+      return;
+    }
     if (m.kind === 'confirmNew' && k === 'y') { save(KEY_GAME, null); S = null; startRun(); return; }
     if (m.kind === 'menu') { if (k === '?' || k === '/') { ui.modal = { kind: 'help', tab: 'basics' }; render(); } else if (k === 'q') quitToTitle(); else if (k === 'n') { ui.modal = { kind: 'confirmNew' }; render(); } }
     if (m.kind === 'help') helpKey(k);
@@ -2291,10 +2336,6 @@ document.addEventListener('keydown', e => {
   }
   if (ui.side === 'service') {
     if (k === 'Escape' || (!inInput && k === 'v')) { e.preventDefault(); closePanels(); return; }
-  }
-  if (ui.side === 'travel') {
-    if (k === 'Escape' || k === 't') { e.preventDefault(); closePanels(); return; }
-    if (/^[1-7]$/.test(k)) { const P = PLACES[Number(k) - 1]; if (P.id !== S.loc) act({ t: 'travel', to: P.id }); return; }
   }
   if (inInput) return;
   if (/^[1-9]$/.test(k)) { ui.sel = Number(k) - 1; ui.trade = null; ui.flash = ''; render(); return; }
