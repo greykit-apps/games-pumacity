@@ -180,6 +180,13 @@ table.mk{width:100%;border-collapse:collapse}
 .rw.steep{color:var(--warn)}
 .rw.sky-high{color:var(--warn)}
 .ticker{margin:0 0 var(--s3);padding:6px var(--s3);border:1px solid #3a2e10;border-radius:3px;background:rgba(255,176,0,.06);color:var(--warn)}
+.coach{display:flex;gap:var(--s3);align-items:baseline;margin:0 0 var(--s3);padding:6px var(--s3);border:1px solid #17485a;border-radius:3px;background:rgba(84,242,255,.05);color:var(--text)}
+.coach b{flex:none;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent)}
+.coach span{flex:1}
+.coach kbd{margin:0 2px}
+button.link{min-height:0;padding:0 var(--s1);border:0;background:none;color:var(--steel);text-decoration:underline;cursor:pointer}
+button.link:hover{color:var(--text)}
+@media (max-width:700px){.coach{flex-wrap:wrap}.coach kbd{display:inline}}
 .ticker b{font-size:11px;letter-spacing:.12em;text-transform:uppercase;margin-right:var(--s2)}
 .up{color:var(--good)}.down{color:var(--danger)}
 /* The trend arrow is direction only; colour on a row belongs to 'vs usual',
@@ -1226,6 +1233,20 @@ function recordScore(st) {
   return all[st.days].findIndex(e => e.id === entry.id);
 }
 
+/* First-run coach: two steps (buy something cheap, then travel), shown once
+ * ever. Anyone who already has a finished run on the board is no newcomer. */
+if (prefs.coachDone == null) {
+  const all = scores();
+  prefs.coachDone = Object.keys(all).some(k => Array.isArray(all[k]) && all[k].length > 0);
+}
+function coachStep(a) {
+  if (prefs.coachDone || !a) return;
+  if (a.t === 'buy' && !S.enc) prefs.coachTraded = true;
+  if (a.t === 'travel') prefs.coachTravelled = true;
+  if (prefs.coachTraded && prefs.coachTravelled) prefs.coachDone = true;
+  save(KEY_PREFS, prefs);
+}
+
 // ---- actions
 const TRADES = ['buy', 'sell', 'sellall', 'deal'];
 function act(a) {
@@ -1237,6 +1258,7 @@ function act(a) {
   ui.flash = '';
   announce(r.events.map(l => l.text));
   // A trade gets a beat: the cash moves, and the rows that changed light up.
+  coachStep(a);
   if (a && TRADES.includes(a.t) && S.cash !== before.cash) {
     ui.fx = { from: before.cash, to: S.cash, rows: GOODS.map((g, i) => (S.stash[g.id] || 0) !== (before.stash[g.id] || 0) ? i : -1).filter(i => i >= 0) };
   }
@@ -1573,6 +1595,20 @@ function priceStanding(g, p) {
   const word = r < 0 ? 'bargain' : r < 0.33 ? 'cheap' : r < 0.67 ? 'fair' : r <= 1 ? 'steep' : 'sky-high';
   return { r, word };
 }
+function coachHTML(st) {
+  if (prefs.coachDone || st.enc || st.over) return '';
+  let tip;
+  if (!prefs.coachTraded) {
+    const buyable = GOODS.map((g, i) => ({ g, i, p: st.prices[g.id] })).filter(x => x.p != null && x.p <= st.cash);
+    if (!buyable.length) return '';
+    const best = buyable.reduce((a, b) => priceStanding(b.g, b.p).r < priceStanding(a.g, a.p).r ? b : a);
+    tip = `${best.g.name} is ${priceStanding(best.g, best.p).word} here. Press <kbd>${best.i + 1}</kbd> then <kbd>B</kbd> to buy some, or tap its Buy button.`;
+  } else {
+    tip = `Now travel (<kbd>T</kbd>) and sell wherever it shows <span class="rw steep">steep</span>. Every trip takes a day, and the debt grows overnight.`;
+  }
+  return `<p class="coach"><b>First run</b> <span>${tip}</span><button class="link" data-act="coachoff">Got it</button></p>`;
+}
+
 function headlineToday(st) {
   if (!st.news) return '';
   const line = [...st.log].reverse().find(l => l.cls === 'news' && l.d === st.day);
@@ -1593,11 +1629,12 @@ const HEAT = [
 function heatBand(h) { let b = HEAT[0]; for (const x of HEAT) if (h >= x[0]) b = x; return { word: b[1], effect: b[2] }; }
 /* The load note mirrors the goon countdown: quiet while the risk is small,
  * then warning, then danger, at the same thresholds the buy row uses. */
+const RISK_SHOW = 0.02;  // below this the load's pull is noise, so it isn't shown
 function riskClass(r) { return r >= 0.2 ? 'bad' : r >= 0.08 ? 'warn' : ''; }
 function loadLevel(st) { const c = riskClass(carryRisk(st)); return c ? ' ' + c : ''; }
 function loadNote(st) {
   const r = carryRisk(st);
-  return r < 0.005 ? '' : `<em>Watchers +${Math.round(r * 100)}%</em>`;
+  return r < RISK_SHOW ? '' : `<em>Watchers +${Math.round(r * 100)}%</em>`;
 }
 function debtNote(st) {
   if (st.debt <= 0) return 'paid off';
@@ -1655,10 +1692,11 @@ function gameHTML() {
     <div class="stat"><small>Bank</small><span>${fmt(st.bank)}</span></div>
     <div class="stat${st.hp <= 30 ? ' bad' : ''}"><small>Health</small><span>${st.hp} / ${CONFIG.maxHp}</span>${meter(st.hp, CONFIG.maxHp, st.hp <= 30 ? 'low' : '')}</div>
     <div class="stat${loadLevel(st)}" title="A heavy load draws the Watchers: up to +${Math.round(CONFIG.carryWatchMax * 100)}% a day, whatever your heat."><small>Pouch</small><span>${u} / ${cap}</span>${meter(u, cap, 'heat')}${loadNote(st)}</div>
-    <div class="stat${st.heat >= 40 ? ' bad' : ''}" title="${heatBand(st.heat).effect}${carryRisk(st) >= 0.005 ? ` Your load adds about +${Math.round(carryRisk(st) * 100)}% a day on top.` : ''}"><small>Heat</small><span>${heatBand(st.heat).word} · ${st.heat}</span>${meter(st.heat, 100, st.heat >= 40 ? 'low' : 'heat')}</div>
+    <div class="stat${st.heat >= 40 ? ' bad' : ''}" title="${heatBand(st.heat).effect}${carryRisk(st) >= RISK_SHOW ? ` Your load adds about +${Math.round(carryRisk(st) * 100)}% a day on top.` : ''}"><small>Heat</small><span>${heatBand(st.heat).word} · ${st.heat}</span>${meter(st.heat, 100, st.heat >= 40 ? 'low' : 'heat')}</div>
   </div>
   <div class="main">
     <section class="market">
+      ${coachHTML(st)}
       ${headlineToday(st)}
       <table class="mk"><thead><tr><th class="key"></th><th class="name">Good</th><th>Price</th><th class="range">vs usual</th><th class="held">Held</th><th></th></tr></thead>
       <tbody>${goods}</tbody></table>
@@ -1714,7 +1752,7 @@ function qtyMax(m) {
 function riskAfterText(t) {
   const g = GOODS[t.good];
   const now = carryRisk(S), after = carryRiskWith(S, g.id, intAmt(t.qty) || 0);
-  if (after < 0.005) return '';
+  if (after < RISK_SHOW) return '';
   const cls = riskClass(after);
   const pct = x => Math.round(x * 100);
   if (after - now < 0.005) {
@@ -1723,7 +1761,7 @@ function riskAfterText(t) {
       : `<span class="${cls}">Barely changes the Watcher odds: about +${pct(after)}% a day.</span>`;
   }
   const capped = after >= CONFIG.carryWatchMax ? ', the most it gets' : '';
-  return `<span class="${cls}">After this, your load draws the Watchers: about +${pct(after)}% a day${capped}${now >= 0.005 ? `, up from +${pct(now)}%` : ''}.</span>`;
+  return `<span class="${cls}">After this, your load draws the Watchers: about +${pct(after)}% a day${capped}${now >= RISK_SHOW ? `, up from +${pct(now)}%` : ''}.</span>`;
 }
 
 function tradeRowHTML(t) {
@@ -2139,6 +2177,7 @@ root.addEventListener('click', e => {
     case 'qmax': setQty(qtyMax(ui.trade)); return;
     case 'qcancel': closePanels(); return;
     case 'stay': closePanels(); return;
+    case 'coachoff': prefs.coachDone = true; save(KEY_PREFS, prefs); render(); return;
     case 'finishcancel': ui.confirmCash = false; ui.panelOpener = null; render(); return;
     case 'sellall': act({ t: 'sellall' }); return;
     case 'mmax': { const inp = el.closest('form').querySelector('input'); inp.value = v; inp.focus(); return; }
