@@ -162,12 +162,12 @@ table.mk{width:100%;border-collapse:collapse}
 .mk tr.sel td.key{color:var(--accent);box-shadow:inset 2px 0 var(--accent)}
 .mk tr.sel td.name{color:var(--accent)}
 .mk tr.news td.name::after{content:" !";color:var(--warn)}
-.mk td.btns{width:1%;padding-right:0}
+.mk td.btns{width:1%;padding-right:0;position:relative;white-space:nowrap}
 /* Eighteen trade buttons are noise until you're on their row: ghosted, then solid. */
-.mk td.btns button{min-width:52px;padding:3px 8px;min-height:30px;background:transparent;border-color:transparent;color:var(--steel)}
-.mk td.btns button:disabled{color:var(--dim)}
-.mk tr:hover td.btns button:not(:disabled),.mk tr.sel td.btns button:not(:disabled),
-.mk td.btns button:focus-visible{background:var(--panel2);border-color:var(--line);color:var(--text)}
+.mk td.btns > button{width:54px;margin-left:4px;padding:3px 0;min-height:30px;background:transparent;border-color:transparent;color:var(--steel)}
+.mk td.btns > button:disabled{color:var(--dim)}
+.mk tr:hover td.btns > button:not(:disabled),.mk tr.sel td.btns > button:not(:disabled),
+.mk td.btns > button:focus-visible,.mk td.btns > button[aria-expanded=true]{background:var(--panel2);border-color:var(--line);color:var(--text)}
 .mk .out{color:var(--dim)}
 .mk th.range,.mk td.range{text-align:left}
 .mk td.range{width:13em}
@@ -192,15 +192,25 @@ button.link:hover{color:var(--text)}
 /* The trend arrow is direction only; colour on a row belongs to 'vs usual',
  * so a falling price never shows red beside a green 'cheap'. */
 .mk .tr{color:var(--steel);font-size:12px}
-.mk tr.trade-row{cursor:default}
-.mk tr.trade-row td,.mk tr.trade-row:hover td{background:#0b1222;padding:var(--s2) var(--s3);text-align:left;white-space:normal;border-bottom:1px solid var(--lit)}
-.trade{display:flex;flex-wrap:wrap;gap:var(--s1) var(--s3);align-items:baseline}
-.trade .tv{color:var(--accent);font-weight:600}
-.qrow{display:flex;flex-wrap:wrap;gap:6px;align-items:center;width:100%;margin-top:var(--s1)}
-.qrow input{width:6em}
-.qrow .total{margin-left:auto;margin-right:var(--s2)}
-.qrow .risk{flex-basis:100%;font-size:12px;color:var(--steel)}
-.qrow .risk:empty{display:none}
+.tradepop{position:absolute;top:calc(100% - 2px);right:-8px;z-index:6;display:flex;flex-direction:column;align-items:stretch;gap:6px;
+  width:228px;padding:var(--s2);background:var(--panel);border:1px solid var(--lit);border-radius:4px;box-shadow:0 14px 34px rgba(0,0,0,.55);
+  text-align:left;white-space:normal;animation:popIn .14s cubic-bezier(.22,1,.36,1)}
+/* right edges line up: the Max button sits exactly under the button that opened it */
+.tradepop.buy{right:50px}
+.tradepop.up{top:auto;bottom:calc(100% - 2px);flex-direction:column-reverse}
+.tradepop .maxbtn{align-self:flex-end;min-width:0;padding:4px 10px}
+.tradepop .qline{display:flex;gap:4px;align-items:center}
+.tradepop .qline input{flex:1;min-width:0;width:auto;text-align:right}
+.tradepop .qline button{min-width:30px;padding:3px 8px}
+.tradepop .qinfo{font-size:12px;color:var(--dim)}
+.tradepop .qinfo b{color:var(--text);font-weight:600}
+.tradepop .risk{font-size:12px;color:var(--steel)}
+.tradepop .risk:empty{display:none}
+.tradepop .warn{font-size:12px}
+@keyframes popIn{from{opacity:0;transform:translateY(-4px)}}
+.tradepop.up{animation-name:popUp}
+@keyframes popUp{from{opacity:0;transform:translateY(4px)}}
+@media (prefers-reduced-motion:reduce){.tradepop{animation:none}}
 .stat.warn em{color:var(--warn)}
 .sidepanel{position:absolute;inset:0;overflow:auto;padding:var(--s4) var(--s5)}
 .sidepanel .row{display:flex;gap:var(--s2);align-items:center;flex-wrap:wrap;margin:var(--s2) 0}
@@ -399,7 +409,10 @@ button.link:hover{color:var(--text)}
   .stat{padding:var(--s2) var(--s3)}
   .stat.lead span{font-size:17px}
   .status{grid-template-columns:repeat(4,minmax(0,1fr))}
-  .mk td.btns button{min-height:40px;min-width:46px;padding:2px 6px;background:var(--panel2);border-color:var(--line);color:var(--text)}
+  .mk td.btns > button{min-height:40px;width:48px;margin-left:4px;padding:2px 0;background:var(--panel2);border-color:var(--line);color:var(--text)}
+  .tradepop{width:min(228px,calc(100vw - 40px))}
+  .tradepop.buy{right:44px}
+  .tradepop .qline button,.tradepop .maxbtn{min-height:40px}
   .mk .key,.mk .range{display:none}
   .mk td.price{width:auto}
   .rw-m{display:block;font-size:11px;line-height:1.2}
@@ -413,7 +426,6 @@ button.link:hover{color:var(--text)}
   .bd svg{width:9px;height:9px}
   .spot-starport{padding-left:calc(14% + 3px)}
   .legend{font-size:11px}
-  .qrow .total{margin-left:0}
   .bar{position:sticky;bottom:6px;z-index:var(--z-sticky)}
   .bar button{flex:1 1 auto}
   kbd{display:none}
@@ -1759,9 +1771,7 @@ function gameHTML() {
       <td class="price">${p == null ? '<span class="out">—</span>' : fmt(p) + arrow + `<small class="rw rw-m ${priceStanding(g, p).word}">${priceStanding(g, p).word}</small>`}</td>
       <td class="range">${rangeCell(g, p)}</td>
       <td class="held">${held ? `<b class="hq">${held}</b>` + avg : '<span class="dim">—</span>'}</td>
-      <td class="btns"><button data-act="buy" data-v="${i}" ${p == null ? 'disabled' : ''}>Buy</button>
-      <button data-act="sell" data-v="${i}" ${p == null || !held ? 'disabled' : ''}>Sell</button></td></tr>`
-      + (ui.trade && ui.trade.good === i ? tradeRowHTML(ui.trade) : '');
+      <td class="btns"><button data-act="buy" data-v="${i}" ${p == null ? 'disabled' : ''} aria-expanded="${!!(ui.trade && ui.trade.good === i && ui.trade.side === 'buy')}">Buy</button><button data-act="sell" data-v="${i}" ${p == null || !held ? 'disabled' : ''} aria-expanded="${!!(ui.trade && ui.trade.good === i && ui.trade.side === 'sell')}">Sell</button>${ui.trade && ui.trade.good === i ? tradePopHTML(ui.trade, i) : ''}</td></tr>`;
   }).join('');
   const gear = SLOTS.filter(s => st.gear[s]).map(s => GEAR[st.gear[s]]);
   const gearBlock = gear.length
@@ -1859,24 +1869,29 @@ function riskAfterText(t) {
   return `<span class="${cls}">After this, your load draws the Watchers: about +${pct(after)}% a day${capped}${now >= RISK_SHOW ? `, up from +${pct(now)}%` : ''}.</span>`;
 }
 
-function tradeRowHTML(t) {
+/* The trade pop-over hangs off the Buy or Sell button that opened it, over
+ * the table rather than pushing rows down. Its first control, right under
+ * that button, trades the most you can: Buy then Max is two clicks, and
+ * B then Enter is two keys. Near the foot of the table it opens upward. */
+function tradePopHTML(t, i) {
   const g = GOODS[t.good];
   const p = S.prices[g.id];
   const max = qtyMax(t);
   const verb = t.side === 'buy' ? 'Buy' : 'Sell';
-  const info = t.side === 'buy' ? `you can afford ${Math.floor(S.cash / p)}, room for ${free(S)}` : `you hold ${S.stash[g.id] || 0}`;
-  return `<tr class="trade-row"><td colspan="6"><form data-form="qty" class="trade" aria-label="${verb} ${g.name}">
-    <span class="tv">${verb} ${g.name}</span><span class="note">${fmt(p)} each · ${info}</span>
-    ${t.side === 'buy' && S.day === S.days ? `<span class="warn">Last day: anything you can't sell today is worth nothing.</span>` : ''}
-    <span class="qrow">
-      <button type="button" data-act="qadj" data-v="-10" aria-label="10 fewer">−10</button><button type="button" data-act="qadj" data-v="-1" aria-label="1 fewer">−1</button>
-      <input id="pc-qty" inputmode="numeric" autocomplete="off" value="${t.qty}" aria-label="Quantity to ${verb.toLowerCase()}">
-      <button type="button" data-act="qadj" data-v="1" aria-label="1 more">+1</button><button type="button" data-act="qadj" data-v="10" aria-label="10 more">+10</button>
-      <button type="button" data-act="qmax"><kbd>M</kbd>Max ${max}</button>
-      <span class="total">= <b id="pc-total">${fmt((intAmt(t.qty) || 0) * p)}</b></span>
-      ${t.side === 'buy' ? `<span class="risk" id="pc-risk">${riskAfterText(t)}</span>` : ''}
-      <button class="primary" type="submit"><kbd>Enter</kbd>${verb}</button><button type="button" data-act="qcancel"><kbd>Esc</kbd>Cancel</button>
-    </span></form></td></tr>`;
+  const up = i >= GOODS.length - 3;
+  const last = t.side === 'buy' && S.day === S.days;
+  return `<form data-form="qty" class="tradepop ${t.side}${up ? ' up' : ''}" aria-label="${verb} ${g.name}">
+    <button type="button" class="primary maxbtn" data-act="qmaxgo" ${max < 1 ? 'disabled' : ''}>${verb} max · ${max}</button>
+    <div class="qline">
+      <button type="button" data-act="qadj" data-v="-1" aria-label="One fewer">−</button>
+      <input id="pc-qty" inputmode="numeric" autocomplete="off" value="${t.qty}" aria-label="How many to ${verb.toLowerCase()}">
+      <button type="button" data-act="qadj" data-v="1" aria-label="One more">+</button>
+      <button type="submit">${verb}</button>
+    </div>
+    <div class="qinfo"><b id="pc-total">${fmt((intAmt(t.qty) || 0) * p)}</b> at ${fmt(p)} each</div>
+    ${t.side === 'buy' ? `<div class="risk" id="pc-risk">${riskAfterText(t)}</div>` : ''}
+    ${last ? `<div class="warn">Last day: anything you can't sell today is worth nothing.</div>` : ''}
+  </form>`;
 }
 
 /* An overhead map of PumaCity, as the author laid it out (600x600; each of
@@ -2197,7 +2212,7 @@ function helpHTML(tab) {
   }).join('')}</table><p class="note">Pouches and weapons only trade up: a new one replaces the old. Strays sometimes sell them cheap.</p>`;
   if (tab === 'keys') body = `<table>
     <tr><td><kbd>1</kbd>–<kbd>9</kbd></td><td>Select a good</td></tr>
-    <tr><td><kbd>B</kbd> / <kbd>S</kbd></td><td>Buy or sell the selected good (the quantity opens under it)</td></tr>
+    <tr><td><kbd>B</kbd> / <kbd>S</kbd></td><td>Buy or sell the selected good; <kbd>Enter</kbd> then trades the most you can, or type an amount first</td></tr>
     <tr><td><kbd>M</kbd> <kbd>↑</kbd> <kbd>↓</kbd></td><td>In the quantity box: the most you can, one more, one fewer</td></tr>
     <tr><td><kbd>A</kbd></td><td>Sell all: everything you carry that someone here is buying</td></tr>
     <tr><td><kbd>T</kbd></td><td>Travel: a map of PumaCity opens; <kbd>1</kbd>–<kbd>7</kbd> picks a district</td></tr>
@@ -2342,6 +2357,10 @@ function openQty(i, side) {
   ui.flash = '';
   render();
 }
+function toggleQty(i, side) {
+  if (ui.trade && ui.trade.good === i && ui.trade.side === side) { closePanels(); return; }
+  openQty(i, side);
+}
 function closePanels() { ui.trade = null; ui.side = null; ui.confirmCash = false; ui.flash = ''; render(); }
 /* Travel and the shop/office share one slot beside the market, in place of
  * the place panel and log, so the prices and your cash stay in view. */
@@ -2384,6 +2403,11 @@ function updateTotal() {
 function closeModal() { ui.modal = null; ui.flash = ''; render(); }
 
 root.addEventListener('click', e => {
+  if (ui.trade && !e.target.closest('.tradepop') && !e.target.closest('[data-act="buy"],[data-act="sell"]')) {
+    ui.trade = null;
+    ui.flash = '';
+    if (!e.target.closest('[data-act]')) { render(); return; }
+  }
   const el = e.target.closest('[data-act]');
   if (!el) return;
   const v = el.dataset.v;
@@ -2397,11 +2421,11 @@ root.addEventListener('click', e => {
     case 'helptab': ui.modal = { kind: 'help', tab: v }; render(); return;
     case 'close': closeModal(); return;
     case 'sel': if (e.target.closest('button')) return; ui.sel = Number(v); render(); return;
-    case 'buy': openQty(Number(v), 'buy'); return;
-    case 'sell': openQty(Number(v), 'sell'); return;
+    case 'buy': toggleQty(Number(v), 'buy'); return;
+    case 'sell': toggleQty(Number(v), 'sell'); return;
     case 'qadj': setQty(ui.trade.qty + Number(v)); return;
     case 'qmax': setQty(qtyMax(ui.trade)); return;
-    case 'qcancel': closePanels(); return;
+    case 'qmaxgo': { const t = ui.trade; act({ t: t.side, good: GOODS[t.good].id, qty: qtyMax(t) }); return; }
     case 'stay': closePanels(); return;
     case 'coachoff': prefs.coachDone = true; save(KEY_PREFS, prefs); render(); return;
     case 'finishcancel': ui.confirmCash = false; ui.panelOpener = null; render(); return;
