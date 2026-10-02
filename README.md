@@ -105,6 +105,11 @@ The rules are data plus a DOM-free engine, which sit between the
   refused move returns the input untouched.
 - **The state is plain JSON, and it is the whole save.** Its randomness is one
   32-bit LCG whose state lives in `st.rng`, so a seed replays a run exactly.
+- **A run carries its own rules.** `RULES` holds the defaults (the Regular
+  game): money, interest, the goons' patience, heat, headline and encounter
+  odds. `newGame` copies them into `st.rules`, and the engine reads them
+  through `R(st)`, never the defaults. A save keeps the rules it started
+  with; a save from before this gets the defaults.
 - **Bots play through the same door.** They read the state and never advance
   the RNG.
 
@@ -112,15 +117,23 @@ The rules are data plus a DOM-free engine, which sit between the
 
 ```
 node tools/check-assets.js   # every file index.html references exists
-node tools/check-all.js      # 61 named rule scenarios
+node tools/check-all.js      # 62 named rule scenarios
+node tools/replay.js         # fixed seeds replay exactly as recorded
 node tools/sim.js 20         # bots play whole runs; invariants after every step
 ```
 
 `tools/core.js` cuts the core block out of `index.html` and evaluates it, so
-the checks run exactly the code the browser runs. CI runs all three on every
+the checks run exactly the code the browser runs. CI runs all four on every
 pipeline. Each check has been seen failing against a deliberately broken rule
 before it was trusted. `check-all.js` refuses to pass with zero scenarios, and
-`sim.js` refuses zero runs.
+`sim.js` and `replay.js` refuse zero runs.
+
+`replay.js` holds the Regular game still. Bots play 48 fixed-seed runs, and
+every event line and the final state must hash to what `tools/replay.json`
+recorded. A refactor that should change nothing proves it there; a change
+that is meant to move the game (a balance tweak) fails there first, and is
+re-recorded on purpose with `node tools/replay.js --record` in the same
+commit, with the reason in its message.
 
 `sim.js` fails if:
 - a run crashes, the engine refuses a bot's move, or a bot moves the RNG

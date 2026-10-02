@@ -481,11 +481,20 @@ button.link:hover{color:var(--text)}
 
 const VERSION = '1.0.0';
 
+/* Fixed facts of the game. What a run can vary lives in RULES. */
 const CONFIG = {
   lengths: [30, 60, 90],
+  startLoc: 'plaza',
+  logMax: 150,
+};
+
+/* The rules a run is played under. These are the defaults, which are the
+ * Regular game; every run carries its own full copy in st.rules (read it with
+ * R(st)), so a save keeps the rules it started with and a seed replays exactly
+ * under them. */
+const RULES = {
   startCash: 1500,
   startDebt: 8000,
-  startLoc: 'plaza',
   baseCap: 100,
   maxHp: 100,
   debtRate: 0.10,     // per day, compounding
@@ -501,8 +510,24 @@ const CONFIG = {
   carryWatchMax: 0.35,     // ...capped here
   dropOnFail: 0.4,     // share of each good you drop when a getaway fails
   vetPerHp: 15,
-  logMax: 150,
+  // what's waiting when you arrive: the daily odds of each encounter
+  goonRate: 0.3,      // once the goons are due (never at PVN Tower)
+  rivalRate: 0.07,
+  bossRate: 0.035,    // times the district's own boss factor
+  mugRate: 0.04,      // times the district's own mugging factor
+  stashRate: 0.04,
+  strayRate: 0.04,
+  hostile: 0.45,      // share of rival dealers who jump you instead of dealing
+  runBase: 0.55,      // getaway odds before mittens and numbers
+  soldOut: [1, 2],    // how many goods are missing from a market, fewest to most
 };
+function R(st) { return st.rules; }
+/* A rate as players read it: 0.1 -> '10%', 0.035 -> '3.5%'. */
+function pctText(x) { return `${+(x * 100).toFixed(1)}%`; }
+/* The same rate as Casey says it out loud: 0.1 -> 'Ten percent'. */
+const NUMBER_WORDS = ['Zero', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten',
+  'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen', 'Twenty'];
+function pctSaid(x) { const n = +(x * 100).toFixed(1); return `${NUMBER_WORDS[n] || n} percent`; }
 
 const GOODS = [
   { id: 'nip',        name: 'Catnip',     lo: 10,    hi: 60,    blurb: "Ditch-grade 'nip. Cheap, bulky, everywhere." },
@@ -610,7 +635,7 @@ function fmt(n) {
 }
 function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
 function here(st) { return PLACE[st.loc]; }
-function capacity(st) { return CONFIG.baseCap + (st.gear.pouch ? GEAR[st.gear.pouch].cap : 0); }
+function capacity(st) { return R(st).baseCap + (st.gear.pouch ? GEAR[st.gear.pouch].cap : 0); }
 function used(st) { let n = 0; for (const g of GOODS) n += st.stash[g.id] || 0; return n; }
 function free(st) { return capacity(st) - used(st); }
 function netWorth(st) { return st.cash + st.bank - st.debt; }
@@ -640,18 +665,19 @@ function newGame(opts) {
   const seed = (opts.seed == null ? 1 : opts.seed) | 0;
   // Count characters, not UTF-16 units, so a cut never splits an emoji in half.
   const name = Array.from(String(opts.name || '').trim()).slice(0, 16).join('') || 'Stray';
+  const rules = JSON.parse(JSON.stringify(RULES));
   const st = {
-    v: 1, version: VERSION, seed, rng: seed, name, days, day: 1, loc: CONFIG.startLoc,
-    cash: CONFIG.startCash, bank: 0, debt: CONFIG.startDebt, debtAge: 0,
-    hp: CONFIG.maxHp, heat: 0,
+    v: 1, version: VERSION, seed, rng: seed, name, days, day: 1, loc: CONFIG.startLoc, rules,
+    cash: rules.startCash, bank: 0, debt: rules.startDebt, debtAge: 0,
+    hp: rules.maxHp, heat: 0,
     stash: {}, cost: {},
     gear: { pouch: null, weapon: null, armour: null, pawphone: null, mittens: null, shades: null },
     prices: {}, prev: {}, news: null, tip: null, enc: null, over: null,
     log: [], logN: 0,
-    stats: { bought: 0, sold: 0, fights: 0, won: 0, fled: 0, busted: 0, peak: CONFIG.startCash - CONFIG.startDebt },
+    stats: { bought: 0, sold: 0, fights: 0, won: 0, fled: 0, busted: 0, peak: rules.startCash - rules.startDebt },
   };
   addLog(st, `Day 1: ${PLACE[st.loc].name}.`, 'day');
-  addLog(st, `Welcome to PumaCity, ${name}. Casey Benton owns all of it, including your ${fmt(st.debt)} debt, at 10% a day.`, '');
+  addLog(st, `Welcome to PumaCity, ${name}. Casey Benton owns all of it, including your ${fmt(st.debt)} debt, at ${pctText(rules.debtRate)} a day.`, '');
   addLog(st, `You have ${days} days. Buy low, sell high, and pay her back at PVN Tower.`, '');
   rollMarket(st);
   rollTip(st);
@@ -666,7 +692,8 @@ function basePrice(st, g, P) {
 function basePrices(st, P) {
   const prices = {};
   for (const g of GOODS) prices[g.id] = basePrice(st, g, P);
-  const gone = 1 + rndInt(st, 2);
+  const [few, most] = R(st).soldOut;
+  const gone = few + rndInt(st, most - few + 1);
   for (let i = 0; i < gone; i++) prices[pick(st, GOODS).id] = null;
   return prices;
 }
@@ -682,11 +709,11 @@ function rollMarket(st) {
   const prices = tipped ? Object.assign({}, st.tip.prices) : basePrices(st, P);
   st.tip = null;
   st.news = null;
-  if (rnd(st) < CONFIG.eventChance) {
+  if (rnd(st) < R(st).eventChance) {
     const g = pick(st, GOODS);
     const up = rnd(st) < 0.5;
     const base = prices[g.id] != null ? prices[g.id] : basePrice(st, g, P);
-    const [a, b] = up ? CONFIG.eventUp : CONFIG.eventDown;
+    const [a, b] = up ? R(st).eventUp : R(st).eventDown;
     prices[g.id] = Math.max(1, Math.round(base * (a + rnd(st) * (b - a))));
     st.news = { good: g.id, up };
     addLog(st, headline(st, g, up), 'news');
@@ -711,7 +738,7 @@ function carryRisk(st) { return carryRiskWith(st, null, 0); }
  * shows this before you commit. */
 function carryRiskWith(st, id, q) {
   const extra = id ? q * (GOOD[id].lo + GOOD[id].hi) / 2 : 0;
-  return Math.min(CONFIG.carryWatchMax, (carried(st) + extra) * CONFIG.carryWatch);
+  return Math.min(R(st).carryWatchMax, (carried(st) + extra) * R(st).carryWatch);
 }
 
 /* The daily chance the Watchers find you at P, at a given heat. */
@@ -720,21 +747,21 @@ function watchOdds(st, heat, P) { return (0.05 + heat / 250 + carryRisk(st)) * P
  * before the roll. The map shows this for every district. */
 function arrivalWatchOdds(st, id) {
   const P = PLACE[id];
-  return watchOdds(st, Math.max(0, st.heat - CONFIG.heatDecay - (P.cool || 0)), P);
+  return watchOdds(st, Math.max(0, st.heat - R(st).heatDecay - (P.cool || 0)), P);
 }
 /* Whether the goons can be waiting when you arrive tomorrow (never at PVN Tower). */
-function goonsDue(st) { return st.debt > 0 && st.debtAge + 1 >= CONFIG.goonDays; }
+function goonsDue(st) { return st.debt > 0 && st.debtAge + 1 >= R(st).goonDays; }
 
 function rollEncounter(st) {
   const P = here(st);
   const table = [
-    ['goons',    st.debt > 0 && st.debtAge >= CONFIG.goonDays && P.id !== 'pvn' ? 0.3 : 0],
+    ['goons',    st.debt > 0 && st.debtAge >= R(st).goonDays && P.id !== 'pvn' ? R(st).goonRate : 0],
     ['watchers', watchOdds(st, st.heat, P)],
-    ['rival',    0.07],
-    ['boss',     0.035 * (P.boss || 1)],
-    ['mugging',  0.04 * (P.mug == null ? 1 : P.mug)],
-    ['stash',    0.04],
-    ['stray',    0.04],
+    ['rival',    R(st).rivalRate],
+    ['boss',     R(st).bossRate * (P.boss || 1)],
+    ['mugging',  R(st).mugRate * (P.mug == null ? 1 : P.mug)],
+    ['stash',    R(st).stashRate],
+    ['stray',    R(st).strayRate],
   ];
   const r = rnd(st);
   let acc = 0;
@@ -769,7 +796,7 @@ function beginEncounter(st, type) {
       const boss = pick(st, RIVALS);
       const foes = [{ name: boss, hp: 14, max: 14 }];
       while (foes.length < n) foes.push({ name: 'Henchcat', hp: 10, max: 10 });
-      const hostile = rnd(st) < 0.45;
+      const hostile = rnd(st) < R(st).hostile;
       const deal = hostile ? null : makeDeal(st);
       st.enc = { type, foes, n, hostile, deal, boss, hitP: 0.28, dmg: [3, 7], loot: [150, 600] };
       if (hostile) addLog(st, `${boss}'s crew jumps you! "This is our turf."`, 'enc');
@@ -898,7 +925,7 @@ function winFight(st) {
 /* The odds and costs an encounter choice carries. The screen shows exactly
  * these numbers beside the buttons, and the actions below use them, so what
  * a choice says it will cost is what it costs. */
-function runChance(st) { return clamp(0.55 + (st.gear.mittens ? 0.25 : 0) - 0.05 * st.enc.foes.length, 0.15, 0.9); }
+function runChance(st) { return clamp(R(st).runBase + (st.gear.mittens ? 0.25 : 0) - 0.05 * st.enc.foes.length, 0.15, 0.9); }
 function giveUpCost(st) {
   const held = used(st);
   if (st.enc.type === 'watchers') return { units: held, cash: Math.round(st.cash * (held > 0 ? 0.25 : 0.1)), all: true };
@@ -917,7 +944,7 @@ const ENC = {
       st.enc = null;
       return;
     }
-    const lost = dropGoods(st, CONFIG.dropOnFail);
+    const lost = dropGoods(st, R(st).dropOnFail);
     addLog(st, lost ? `You can't shake them, and ${lost} ${plural(lost, 'unit')} of your load spill${lost === 1 ? 's' : ''} in the scramble!` : "You can't shake them!", 'bad');
     foesStrike(st);
   },
@@ -1036,7 +1063,7 @@ const ENC = {
     st.hp = Math.max(0, st.hp - dmg);
     st.cash -= take;
     st.debt -= take;
-    st.debtAge = CONFIG.goonDays - 4;
+    st.debtAge = R(st).goonDays - 4;
     st.enc = null;
     addLog(st, `The goons rough you up (${dmg} HP)${take ? ` and take ${fmt(take)} toward the debt` : ''}. "We'll be back."`, 'bad');
     if (st.hp <= 0) die(st, "The Boss's goons go too far.");
@@ -1123,9 +1150,9 @@ const MARKET = {
     if (st.day >= st.days) return 'This is your last day. Cash out.';
     st.day++;
     st.loc = P.id;
-    if (st.debt > 0) { st.debt = Math.round(st.debt * (1 + CONFIG.debtRate)); st.debtAge++; }
-    if (st.bank > 0) st.bank = Math.floor(st.bank * (1 + CONFIG.bankRate));
-    st.heat = Math.max(0, st.heat - CONFIG.heatDecay - (P.cool || 0));
+    if (st.debt > 0) { st.debt = Math.round(st.debt * (1 + R(st).debtRate)); st.debtAge++; }
+    if (st.bank > 0) st.bank = Math.floor(st.bank * (1 + R(st).bankRate));
+    st.heat = Math.max(0, st.heat - R(st).heatDecay - (P.cool || 0));
     addLog(st, `Day ${st.day}: ${P.name}.`, 'day');
     rollMarket(st);
     rollTip(st);
@@ -1149,11 +1176,11 @@ const MARKET = {
   borrow(st, a) {
     const amt = intAmt(a.amt);
     if (amt < 1) return 'Borrow at least $1.';
-    if (st.debt + amt > CONFIG.debtCap) return `The Boss won't carry more than ${fmt(CONFIG.debtCap)} for you.`;
+    if (st.debt + amt > R(st).debtCap) return `The Boss won't carry more than ${fmt(R(st).debtCap)} for you.`;
     if (st.debt === 0) st.debtAge = 0;
     st.debt += amt;
     st.cash += amt;
-    addLog(st, `The Boss lends you ${fmt(amt)}. "Ten percent a day. Don't make me send anyone."`, 'warn');
+    addLog(st, `The Boss lends you ${fmt(amt)}. "${pctSaid(R(st).debtRate)} a day. Don't make me send anyone."`, 'warn');
   },
   repay(st, a) {
     const amt = intAmt(a.amt);
@@ -1161,7 +1188,7 @@ const MARKET = {
     if (amt < 1) return 'Repay at least $1.';
     if (amt > st.cash) return "You don't have that much cash on you.";
     if (amt > st.debt) return `You only owe ${fmt(st.debt)}.`;
-    if (amt >= st.debt * CONFIG.repayReset) st.debtAge = 0;
+    if (amt >= st.debt * R(st).repayReset) st.debtAge = 0;
     st.debt -= amt;
     st.cash -= amt;
     addLog(st, st.debt === 0 ? `You pay The Boss off in full. "Pleasure doing business."` : `You pay The Boss ${fmt(amt)}. You still owe ${fmt(st.debt)}.`, 'good');
@@ -1191,13 +1218,13 @@ const MARKET = {
     if (it.slot === 'pawphone') rollTip(st);
   },
   heal(st) {
-    const missing = CONFIG.maxHp - st.hp;
+    const missing = R(st).maxHp - st.hp;
     if (missing <= 0) return 'The vet says you are in perfect health.';
-    const hp = Math.min(missing, Math.floor(st.cash / CONFIG.vetPerHp));
-    if (hp < 1) return `The vet charges ${fmt(CONFIG.vetPerHp)} per HP.`;
-    st.cash -= hp * CONFIG.vetPerHp;
+    const hp = Math.min(missing, Math.floor(st.cash / R(st).vetPerHp));
+    if (hp < 1) return `The vet charges ${fmt(R(st).vetPerHp)} per HP.`;
+    st.cash -= hp * R(st).vetPerHp;
     st.hp += hp;
-    addLog(st, `The vet patches you up: +${hp} HP for ${fmt(hp * CONFIG.vetPerHp)}.`, 'good');
+    addLog(st, `The vet patches you up: +${hp} HP for ${fmt(hp * R(st).vetPerHp)}.`, 'good');
   },
 };
 
@@ -1313,7 +1340,7 @@ function botAct(st, style) {
     if (st.cash > 40000) return { t: 'deposit', amt: st.cash - 20000 };
     if (st.cash < 3000 && st.bank > 0) return { t: 'withdraw', amt: Math.min(st.bank, 20000) };
   }
-  if (P.service === 'vet' && st.hp < 60 && st.cash > (CONFIG.maxHp - st.hp) * CONFIG.vetPerHp * 3) return { t: 'heal' };
+  if (P.service === 'vet' && st.hp < 60 && st.cash > (R(st).maxHp - st.hp) * R(st).vetPerHp * 3) return { t: 'heal' };
   for (const id of P.shop) {
     const it = GEAR[id];
     if (['pouch', 'weapon', 'armour'].includes(it.slot) && canUpgrade(st, id) && st.cash >= it.price * 3) return { t: 'gear', item: id };
@@ -1375,7 +1402,11 @@ function validSave(st) {
 }
 function loadGame() {
   const st = load(KEY_GAME, null);
-  return validSave(st) ? st : null;
+  if (!validSave(st)) return null;
+  // Saves from before runs carried their rules were all played under the
+  // defaults; a save missing a rule (one added later) gets its default too.
+  st.rules = Object.assign(JSON.parse(JSON.stringify(RULES)), st.rules || {});
+  return st;
 }
 
 function scores() {
@@ -1750,7 +1781,7 @@ function setupHTML() {
   <ol class="primer">
     <li>Buy where a good is <span class="rw cheap">cheap</span>.</li>
     <li>Travel across town. Every trip takes a day.</li>
-    <li>Sell where it's <span class="rw steep">steep</span>, and pay Casey Benton back before her 10% a day eats you.</li>
+    <li>Sell where it's <span class="rw steep">steep</span>, and pay Casey Benton back before her ${pctText(RULES.debtRate)} a day eats you.</li>
   </ol>
   <div class="row"><label for="pc-name">Name</label><input id="pc-name" maxlength="16" autocomplete="off" placeholder="Stray" value="${esc(prefs.name)}"></div>
   <div class="row"><label>Run length</label>${CONFIG.lengths.map(d => `<button data-act="days" data-v="${d}" aria-pressed="${prefs.days === d}">${d} days</button>`).join('')}</div>
@@ -1841,21 +1872,21 @@ function loadNote(st) {
 const HURT = 40;
 function healthNote(st) {
   if (st.hp >= HURT) return '';
-  const cost = (CONFIG.maxHp - st.hp) * CONFIG.vetPerHp;
+  const cost = (R(st).maxHp - st.hp) * R(st).vetPerHp;
   const where = st.loc === 'suburbs' ? 'vet here' : '<span class="lg">Suburbs vet</span><span class="sm">vet</span>';
-  return `<em class="fix hp" title="The vet in the Suburbs patches you up for ${fmt(CONFIG.vetPerHp)} per HP">${where} ${fmt(cost)}</em>`;
+  return `<em class="fix hp" title="The vet in the Suburbs patches you up for ${fmt(R(st).vetPerHp)} per HP">${where} ${fmt(cost)}</em>`;
 }
 /* The smallest payment that resets the goon clock (repayReset of the debt). */
-function realPayment(st) { return Math.ceil(st.debt * CONFIG.repayReset); }
+function realPayment(st) { return Math.ceil(st.debt * R(st).repayReset); }
 /* Under the Debt figure: the countdown, and once it's close, the way out:
  * the payment that calls the goons off, and where. Cash sits right beside
  * it, so whether you can cover it reads at a glance. */
 function debtNote(st) {
   if (st.debt <= 0) return '<em>paid off</em>';
-  const n = CONFIG.goonDays - st.debtAge;
+  const n = R(st).goonDays - st.debtAge;
   const when = n <= 0 ? 'goons: any day now' : `goons in ${n} ${plural(n, 'day')}`;
   if (n > 2) return `<em>${when}</em>`;
-  return `<em>${when}</em><em class="fix" title="A payment of 10% of the debt resets the goons' clock">repay ${fmt(realPayment(st))} ${st.loc === 'pvn' ? 'here' : 'at PVN&nbsp;Tower'}</em>`;
+  return `<em>${when}</em><em class="fix" title="A payment of ${pctText(R(st).repayReset)} of the debt resets the goons' clock">repay ${fmt(realPayment(st))} ${st.loc === 'pvn' ? 'here' : 'at PVN&nbsp;Tower'}</em>`;
 }
 
 /* Back-to-back trades in the same good at the same price read as one:
@@ -1942,10 +1973,10 @@ function gameHTML() {
   <div class="dayline${last ? ' last' : ''}"><i style="width:${Math.round(st.day / st.days * 100)}%"></i></div>
   <div class="status">
     <div class="stat lead cash"><small>Cash</small><span>${fmt(st.cash)}</span>${ui.undo && ui.undo.after === st ? '<button class="undo" data-act="undo" title="Undo that trade (Z)">Undo<kbd>Z</kbd></button>' : ''}</div>
-    <div class="stat lead${st.debt > 0 ? (st.debtAge >= CONFIG.goonDays - 2 ? ' bad' : ' warn') : ''}"><small>Debt</small><span>${fmt(st.debt)}</span>${debtNote(st)}</div>
+    <div class="stat lead${st.debt > 0 ? (st.debtAge >= R(st).goonDays - 2 ? ' bad' : ' warn') : ''}"><small>Debt</small><span>${fmt(st.debt)}</span>${debtNote(st)}</div>
     <div class="stat"><small>Bank</small><span>${fmt(st.bank)}</span></div>
-    <div class="stat${st.hp <= 30 ? ' bad' : ''}"><small>Health</small><span>${st.hp} / ${CONFIG.maxHp}</span>${meter(st.hp, CONFIG.maxHp, st.hp <= 30 ? 'low' : '')}${healthNote(st)}</div>
-    <div class="stat${loadLevel(st)}" title="A heavy load draws the Watchers: up to +${Math.round(CONFIG.carryWatchMax * 100)}% a day, whatever your heat."><small>Pouch</small><span>${u} / ${cap}</span>${meter(u, cap, 'heat')}${loadNote(st)}</div>
+    <div class="stat${st.hp <= 30 ? ' bad' : ''}"><small>Health</small><span>${st.hp} / ${R(st).maxHp}</span>${meter(st.hp, R(st).maxHp, st.hp <= 30 ? 'low' : '')}${healthNote(st)}</div>
+    <div class="stat${loadLevel(st)}" title="A heavy load draws the Watchers: up to +${Math.round(R(st).carryWatchMax * 100)}% a day, whatever your heat."><small>Pouch</small><span>${u} / ${cap}</span>${meter(u, cap, 'heat')}${loadNote(st)}</div>
     <div class="stat${st.heat >= 40 ? ' bad' : ''}" title="${heatBand(st.heat).effect}${carryRisk(st) >= RISK_SHOW ? ` Your load adds about +${Math.round(carryRisk(st) * 100)}% a day on top.` : ''}"><small>Heat</small><span>${heatBand(st.heat).word} · ${st.heat}</span>${meter(st.heat, 100, st.heat >= 40 ? 'low' : 'heat')}</div>
   </div>
   <div class="main">
@@ -2011,11 +2042,11 @@ function riskAfterText(t) {
   const cls = riskClass(after);
   const pct = x => Math.round(x * 100);
   if (after - now < 0.005) {
-    return after >= CONFIG.carryWatchMax
+    return after >= R(S).carryWatchMax
       ? `<span class="${cls}">Your load already draws the Watchers as hard as it can: about +${pct(after)}% a day.</span>`
       : `<span class="${cls}">Barely changes the Watcher odds: about +${pct(after)}% a day.</span>`;
   }
-  const capped = after >= CONFIG.carryWatchMax ? ', the most it gets' : '';
+  const capped = after >= R(S).carryWatchMax ? ', the most it gets' : '';
   return `<span class="${cls}">After this, your load draws the Watchers: about +${pct(after)}% a day${capped}${now >= RISK_SHOW ? `, up from +${pct(now)}%` : ''}.</span>`;
 }
 
@@ -2224,7 +2255,7 @@ function mapHTML() {
     vet: `<span class="bd vet">${ICON.vet}vet</span> the vet`,
   };
   return `<h1 id="pc-mt">Where to?</h1>
-  <p class="note">Every trip takes a day, and the debt grows 10% overnight.</p>
+  <p class="note">Every trip takes a day, and the debt grows ${pctText(R(S).debtRate)} overnight.</p>
   <div class="city" role="group" aria-label="Map of PumaCity">${cityMapSVG()}${spots}</div>
   <p class="legend">${['eye', 'tip', 'goons', 'safe', 'vet'].filter(k => shown.has(k)).map(k => `<span class="li">${key[k]}</span>`).join('')}</p>
   <div class="acts"><button data-act="close"><kbd>Esc</kbd>Stay here</button></div>`;
@@ -2251,23 +2282,23 @@ function servicePanelHTML() {
   let out = `<h2>${esc(P.serviceName)}</h2>`;
   if (P.service === 'loan') {
     out += `<p>Casey Benton looks up from a desk the size of a car. "Back so soon?"</p>
-    <p>You owe <b>${fmt(st.debt)}</b>.${st.debt > 0 ? ` <span class="note">${st.debtAge} ${plural(st.debtAge, 'day')} since your last real payment (at least 10% of the debt). Her goons come after ${CONFIG.goonDays} days without one.</span>` : ''}</p>
+    <p>You owe <b>${fmt(st.debt)}</b>.${st.debt > 0 ? ` <span class="note">${st.debtAge} ${plural(st.debtAge, 'day')} since your last real payment (at least ${pctText(R(st).repayReset)} of the debt). Her goons come after ${R(st).goonDays} days without one.</span>` : ''}</p>
     ${quickPay(st)}
     ${st.debt > 0 ? moneyForm('repay', 'Repay', Math.min(st.cash, st.debt)) : ''}
-    ${moneyForm('borrow', 'Borrow', Math.max(0, CONFIG.debtCap - st.debt), `She'll carry up to ${fmt(CONFIG.debtCap)}.`)}`;
+    ${moneyForm('borrow', 'Borrow', Math.max(0, R(st).debtCap - st.debt), `She'll carry up to ${fmt(R(st).debtCap)}.`)}`;
   }
   if (P.service === 'bank') {
     out += `<p>The blast door rolls aside and the Overseer's terminal flickers awake. WELCOME BACK, DWELLER.</p>
-    <p>Cash on you: <b>${fmt(st.cash)}</b> · In the Vault: <b>${fmt(st.bank)}</b>. <span class="note">The Vault pays 1% a day.</span></p>
+    <p>Cash on you: <b>${fmt(st.cash)}</b> · In the Vault: <b>${fmt(st.bank)}</b>. <span class="note">The Vault pays ${pctText(R(st).bankRate)} a day.</span></p>
     ${moneyForm('deposit', 'Deposit', st.cash)}
     ${moneyForm('withdraw', 'Withdraw', st.bank)}`;
   }
   if (P.service === 'vet') {
-    const missing = CONFIG.maxHp - st.hp;
-    out += `<p>Health ${st.hp} / ${CONFIG.maxHp}. ${fmt(CONFIG.vetPerHp)} per HP.</p>`;
+    const missing = R(st).maxHp - st.hp;
+    out += `<p>Health ${st.hp} / ${R(st).maxHp}. ${fmt(R(st).vetPerHp)} per HP.</p>`;
     out += missing <= 0 ? `<p class="note">You're in full health. Nothing to patch.</p>`
-      : st.cash < CONFIG.vetPerHp ? `<p class="note">Even one HP costs ${fmt(CONFIG.vetPerHp)}; you have ${fmt(st.cash)}.</p>`
-      : `<div class="row"><button class="primary" data-act="heal">Patch me up (${fmt(Math.min(missing, Math.floor(st.cash / CONFIG.vetPerHp)) * CONFIG.vetPerHp)})</button></div>`;
+      : st.cash < R(st).vetPerHp ? `<p class="note">Even one HP costs ${fmt(R(st).vetPerHp)}; you have ${fmt(st.cash)}.</p>`
+      : `<div class="row"><button class="primary" data-act="heal">Patch me up (${fmt(Math.min(missing, Math.floor(st.cash / R(st).vetPerHp)) * R(st).vetPerHp)})</button></div>`;
   }
   if (P.shop.length) {
     if (P.service) out += `<h2>For sale</h2>`;  // a shop-only panel's heading already says what it is
@@ -2295,7 +2326,7 @@ function choiceCost(st, o) {
   switch (o) {
     case 'run': {
       const pct = Math.round(runChance(st) * 100);
-      return `${pct}% to get away${st.gear.mittens ? ', with your Sneaky Mittens' : ''}. If not, ${held ? `you spill ${Math.round(CONFIG.dropOnFail * 100)}% of your ${units(held)} and ` : ''}they get a swing at you.`;
+      return `${pct}% to get away${st.gear.mittens ? ', with your Sneaky Mittens' : ''}. If not, ${held ? `you spill ${Math.round(R(st).dropOnFail * 100)}% of your ${units(held)} and ` : ''}they get a swing at you.`;
     }
     case 'fight': {
       const W = GEAR[st.gear.weapon];
@@ -2346,7 +2377,7 @@ function encHTML() {
     } else {
       body += `<div class="foes">${e.foes.map(f => `<div class="foe"><span>${esc(f.name)} <span class="dim">${Math.max(0, f.hp)} HP</span></span>${meter(f.hp, f.max, 'low')}</div>`).join('')}</div>`;
     }
-    body += `<div class="foe"><span>You <span class="dim">${st.hp} HP</span></span>${meter(st.hp, CONFIG.maxHp, st.hp <= 30 ? 'low' : '')}</div>`;
+    body += `<div class="foe"><span>You <span class="dim">${st.hp} HP</span></span>${meter(st.hp, R(st).maxHp, st.hp <= 30 ? 'low' : '')}</div>`;
     // only where a fight would have been on offer: a deal has no Fight to miss
     if (!st.gear.weapon && opts.includes('run')) body += '<p class="note">You have no weapon, so you can only run or give up. The outfitter at Market Plaza sells them.</p>';
   } else if (e.type === 'boss') {
@@ -2411,12 +2442,13 @@ function menuHTML() {
 }
 
 function helpHTML(tab) {
+  const r = S ? R(S) : RULES;  // help opens from the title screen too
   const tabs = [['basics', 'Basics'], ['places', 'Places'], ['goods', 'Goods'], ['gear', 'Gear'], ['keys', 'Keys']];
   let body = '';
   if (tab === 'basics') body = `<dl class="help">
     <dt>The goal</dt><dd>Finish the run with as much money as you can. Your score is your cash plus your bank balance, minus whatever you still owe The Boss.</dd>
-    <dt>The debt</dt><dd>You start owing Casey Benton, The Boss, ${fmt(CONFIG.startDebt)}. It grows 10% every day. Pay it down at PVN Tower. Go ${CONFIG.goonDays} days without a real payment (at least 10% of the debt) and her goons come to collect; the Debt box counts down to them.</dd>
-    <dt>Trading</dt><dd>Each day you're somewhere new, and prices are new too. Buy cheap, carry it somewhere better, and sell. Your pouch holds ${CONFIG.baseCap} units until you buy a bigger one. The <i>vs usual</i> column says whether a price is a bargain, cheap, fair, steep or sky-high for that good, and the Held column shows what you paid and how today's price compares. A faint tick on the same line marks the last price you saw for it. A headline (shown above the market, and marked ! in it) sends one good's price wild.</dd>
+    <dt>The debt</dt><dd>You start owing Casey Benton, The Boss, ${fmt(r.startDebt)}. It grows ${pctText(r.debtRate)} every day. Pay it down at PVN Tower. Go ${r.goonDays} days without a real payment (at least ${pctText(r.repayReset)} of the debt) and her goons come to collect; the Debt box counts down to them.</dd>
+    <dt>Trading</dt><dd>Each day you're somewhere new, and prices are new too. Buy cheap, carry it somewhere better, and sell. Your pouch holds ${r.baseCap} units until you buy a bigger one. The <i>vs usual</i> column says whether a price is a bargain, cheap, fair, steep or sky-high for that good, and the Held column shows what you paid and how today's price compares. A faint tick on the same line marks the last price you saw for it. A headline (shown above the market, and marked ! in it) sends one good's price wild.</dd>
     <dt>Travel</dt><dd>Each trip takes one day. Travel opens a map of PumaCity. Each district shows the chance the Watchers find you there tomorrow, and badges flag where the goons may be waiting (PVN Tower is always safe from them), where your Pawphone knows tomorrow's prices, and the vet when you're hurt. On your last day you can't travel; sell everything and cash out. Goods left in your pouch are worth nothing.</dd>
     <dt>Heat</dt><dd>Big sales and fights raise your heat: cool, warm, hot, then wanted. The hotter you are, the more often the Watchers come and the more of them there are. A heavy load draws them too, whatever your heat: the Pouch box shows its pull, and the buy box tells you before you add to it. It cools a little every day, faster at The Ranch, and The Boss will make it vanish for a price.</dd>
     <dt>Encounters</dt><dd>Watchers and rival crews: run, fight (you need a weapon), or give up. Giving up to the Watchers costs your whole stash and a fine; a failed getaway spills part of your load. The more you carry, the more often they come. If your health hits zero, the run is over: you keep any debt on your score but none of your money, and a death ranks below every run played out. Money in the bank is safe from muggers.</dd>

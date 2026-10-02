@@ -53,6 +53,22 @@ function travelQuiet(C, st, to) {
 }
 
 // ---- data
+scenario('rules: a run carries its own copy, and the engine reads that copy', () => {
+  const { C, st } = fresh();
+  assert.deepStrictEqual(st.rules, C.RULES, 'a new run starts on the default rules');
+  assert.notStrictEqual(st.rules, C.RULES, 'a copy, not the shared defaults');
+  // Change this run's rules only: the debt and the bank follow them overnight.
+  st.rules.debtRate = 0.25;
+  st.rules.bankRate = 0.5;
+  st.bank = 1000;
+  const debt = st.debt;
+  const next = travelQuiet(C, st, 'ranch');
+  assert.strictEqual(next.debt, Math.round(debt * 1.25));
+  assert.strictEqual(next.bank, 1500);
+  assert.strictEqual(C.RULES.debtRate, 0.10, 'the defaults are untouched');
+  // A run's rules survive the trip, so a save keeps what it started with.
+  assert.strictEqual(next.rules.debtRate, 0.25);
+});
 scenario('data: nine goods, seven places, unique ids, sane bands', () => {
   const { C } = fresh();
   assert.strictEqual(C.GOODS.length, 9);
@@ -246,7 +262,7 @@ scenario('loan: only at PVN Tower, capped, and a real repayment resets the clock
   st = ok(C, st, { t: 'borrow', amt: 1000 });
   assert.strictEqual(st.debt, 6500);
   assert.strictEqual(st.cash, 3000);
-  assert.match(refused(C, st, { t: 'borrow', amt: C.CONFIG.debtCap }), /won't carry/);
+  assert.match(refused(C, st, { t: 'borrow', amt: C.RULES.debtCap }), /won't carry/);
   st = ok(C, st, { t: 'repay', amt: 100 });
   assert.strictEqual(st.debtAge, 7, 'a token payment does not count');
   st = ok(C, st, { t: 'repay', amt: 1000 });
@@ -268,7 +284,7 @@ scenario('bank: only at The Vault; deposits and withdrawals balance', () => {
 });
 scenario('goons: come after the debt goes unpaid too long, and never in PVN Tower', () => {
   let { C, st } = fresh();
-  st.debtAge = C.CONFIG.goonDays - 1;
+  st.debtAge = C.RULES.goonDays - 1;
   let seen = 0;
   for (let seed = 1; seed <= 60; seed++) {
     const s = JSON.parse(JSON.stringify(st));
@@ -298,7 +314,7 @@ scenario('goons: paying clears the clock; refusing costs health and cash', () =>
   assert.strictEqual(paid.enc, null);
   const hurt = ok(C, st, { t: 'refuse' });
   assert.ok(hurt.hp < 100 && hurt.cash < 2000 && hurt.debt < 8000);
-  assert.strictEqual(hurt.debtAge, C.CONFIG.goonDays - 4);
+  assert.strictEqual(hurt.debtAge, C.RULES.goonDays - 4);
 });
 
 // ---- the end
@@ -533,7 +549,7 @@ scenario('getaway: a failed run spills part of every load, and a light one can c
     if (r.enc) failed = r;
   }
   assert.ok(failed, 'never failed a getaway');
-  const share = C.CONFIG.dropOnFail;
+  const share = C.RULES.dropOnFail;
   assert.strictEqual(failed.stash.nip, 10 - Math.floor(10 * share));
   assert.strictEqual(failed.stash.skooma, 2 - Math.floor(2 * share));
   assert.ok(failed.log.some(l => /spill/.test(l.text)));
@@ -544,7 +560,7 @@ scenario('watchers: a heavy load draws them, capped', () => {
   st.stash = { skooma: 3 };
   assert.ok(C.carryRisk(st) > 0);
   st.stash = { skooma: 500 };
-  assert.strictEqual(C.carryRisk(st), C.CONFIG.carryWatchMax);
+  assert.strictEqual(C.carryRisk(st), C.RULES.carryWatchMax);
   const count = load => {
     let n = 0;
     for (let seed = 1; seed <= 600; seed++) {
@@ -565,7 +581,7 @@ scenario('watchers: the load risk shown before a buy is the risk after it', () =
   const shown = C.carryRiskWith(st, 'skooma', 6);
   st = ok(C, st, { t: 'buy', good: 'skooma', qty: 6 });
   assert.strictEqual(C.carryRisk(st), shown);
-  assert.ok(shown > 0 && shown <= C.CONFIG.carryWatchMax);
+  assert.ok(shown > 0 && shown <= C.RULES.carryWatchMax);
 });
 scenario('map: the Watcher odds shown for a district are the odds rolled on arrival', () => {
   const { C, st } = fresh();
@@ -581,9 +597,9 @@ scenario('map: the Watcher odds shown for a district are the odds rolled on arri
 });
 scenario('map: goons are shown as due exactly when they can be waiting tomorrow', () => {
   const { C, st } = fresh();
-  st.debtAge = C.CONFIG.goonDays - 2;
+  st.debtAge = C.RULES.goonDays - 2;
   assert.ok(!C.goonsDue(st));
-  st.debtAge = C.CONFIG.goonDays - 1;
+  st.debtAge = C.RULES.goonDays - 1;
   assert.ok(C.goonsDue(st));
   let seen = 0;
   for (let seed = 1; seed <= 80; seed++) {
@@ -603,7 +619,7 @@ scenario('news: headlines move a price within the declared range', () => {
     seen++;
     const g = C.GOOD[st.news.good];
     const p = st.prices[g.id];
-    const [lo, hi] = st.news.up ? C.CONFIG.eventUp : C.CONFIG.eventDown;
+    const [lo, hi] = st.news.up ? C.RULES.eventUp : C.RULES.eventDown;
     const m = (C.PLACE.plaza.mods[g.id] || 1);
     assert.ok(p >= Math.floor(g.lo * m * lo) - 1 && p <= Math.ceil(g.hi * m * hi) + 1, `${g.id} ${p}`);
   }

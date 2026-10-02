@@ -11,7 +11,7 @@ const fs = require('fs');
 const path = require('path');
 
 const EXPORTS = [
-  'VERSION', 'CONFIG', 'GOODS', 'GOOD', 'PLACES', 'PLACE', 'GEAR', 'SLOTS',
+  'VERSION', 'CONFIG', 'RULES', 'R', 'GOODS', 'GOOD', 'PLACES', 'PLACE', 'GEAR', 'SLOTS',
   'newGame', 'step', 'waiting', 'forceEncounter', 'botAct', 'encOptions', 'dealQty',
   'capacity', 'used', 'free', 'netWorth', 'canUpgrade', 'hash32', 'fmt', 'carried', 'carryRisk', 'runChance', 'giveUpCost', 'goonTake', 'carryRiskWith', 'watchOdds', 'arrivalWatchOdds', 'goonsDue', 'cheat', 'CHEAT_CASH', 'undoTrade', 'scoreOrder',
 ];
