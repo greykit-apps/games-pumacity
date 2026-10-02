@@ -24,11 +24,21 @@ const C = loadCore();
 const args = process.argv.slice(2);
 const N = Number(args.find(a => /^\d+$/.test(a)) || 20);
 const verbose = args.includes('--verbose');
-/* Target share of careful-bot runs that finish in profit, per run length. The
- * bot knows every price band, so it is a strong player: a 30-day run should
- * still fail for it sometimes. Longer runs leave time to recover, so they may
- * profit more often, but never trivially. */
-const PROFIT_BAND = { 30: [0.55, 0.95], 60: [0.6, 1], 90: [0.6, 1] };
+/* Target share of careful-bot runs that finish in profit, per preset and run
+ * length. The bot knows every price band, so it is a strong player: a Regular
+ * 30-day run should still fail for it sometimes. Longer runs leave time to
+ * recover, so they may profit more often, but never trivially. Tourist should
+ * almost never lose; Wanted should beat the bot more often than not. */
+const PROFIT_BAND = {
+  tourist: { 30: [0.9, 1], 60: [0.9, 1], 90: [0.9, 1] },
+  regular: { 30: [0.55, 0.95], 60: [0.6, 1], 90: [0.6, 1] },
+  wanted:  { 30: [0.25, 0.6], 60: [0.25, 0.7], 90: [0.25, 0.7] },
+};
+/* Presets where some reckless run must die: combat has to be able to kill. */
+const MUST_DIE = ['regular', 'wanted'];
+const only = (args.find(a => a.startsWith('--preset=')) || '').slice(9);
+const PRESETS = only ? [only] : C.PRESET_IDS;
+if (PRESETS.some(p => !PROFIT_BAND[p])) { console.error(`sim: no profit band for ${PRESETS.find(p => !PROFIT_BAND[p])}`); process.exit(1); }
 const MAX_ACTIONS = 6000;
 
 if (!(N > 0)) { console.error('sim: N must be at least 1; a sim of zero runs proves nothing'); process.exit(1); }
@@ -56,9 +66,9 @@ function checkInvariants(st, where) {
   return !bad.length;
 }
 
-function playRun(seed, days, style) {
-  let st = C.newGame({ seed, days, name: 'Bot' });
-  const where = `seed ${seed}, ${days} days, ${style}`;
+function playRun(seed, days, style, preset) {
+  let st = C.newGame({ seed, days, name: 'Bot', preset });
+  const where = `${preset}, seed ${seed}, ${days} days, ${style}`;
   checkInvariants(st, where);
   for (let i = 0; i < MAX_ACTIONS; i++) {
     if (st.over) return st;
@@ -77,14 +87,16 @@ function playRun(seed, days, style) {
 }
 
 const rows = [];
+for (const preset of PRESETS) {
 let reckDeaths = 0;
 for (const days of C.CONFIG.lengths) {
   for (const style of ['careful', 'reckless']) {
     const res = [];
     for (let i = 0; i < N; i++) {
-      const seed = C.hash32(days * 1000003 + i * 7919 + (style === 'reckless' ? 17 : 0)) | 0;
+      // Regular keeps the seeds it always had, so its figures stay comparable.
+      const seed = C.hash32(days * 1000003 + i * 7919 + (style === 'reckless' ? 17 : 0) + C.PRESET_IDS.indexOf(preset) * 104729 - C.PRESET_IDS.indexOf('regular') * 104729) | 0;
       let st;
-      try { st = playRun(seed, days, style); } catch (e) { fail(`seed ${seed}, ${days} days, ${style}: crash: ${e.stack}`); st = null; }
+      try { st = playRun(seed, days, style, preset); } catch (e) { fail(`${preset}, seed ${seed}, ${days} days, ${style}: crash: ${e.stack}`); st = null; }
       if (st) res.push(st);
     }
     const scores = res.map(s => s.over.score).sort((a, b) => a - b);
@@ -92,20 +104,21 @@ for (const days of C.CONFIG.lengths) {
     const profit = res.filter(s => s.over.reason === 'days' && s.over.score > 0).length;
     const median = scores.length ? scores[Math.floor(scores.length / 2)] : 0;
     const best = scores.length ? scores[scores.length - 1] : 0;
-    rows.push({ days, style, runs: res.length, profit, deaths, median, best });
+    rows.push({ preset, days, style, runs: res.length, profit, deaths, median, best });
     if (style === 'reckless') reckDeaths += deaths;
-    const [lo, hi] = PROFIT_BAND[days];
+    const [lo, hi] = PROFIT_BAND[preset][days];
     if (style === 'careful' && res.length && (profit / res.length < lo || (hi < 1 && profit / res.length > hi))) {
-      fail(`${days} days, careful: ${profit}/${res.length} runs finished in profit; the target band is ${Math.round(lo * 100)}–${Math.round(hi * 100)}%`);
+      fail(`${preset}, ${days} days, careful: ${profit}/${res.length} runs finished in profit; the target band is ${Math.round(lo * 100)}–${Math.round(hi * 100)}%`);
     }
-    if (verbose) for (const s of res) console.log(`  ${days}d ${style} seed ${s.seed}: ${s.over.reason} ${C.fmt(s.over.score)} (peak ${C.fmt(s.stats.peak)}, won ${s.stats.won}, fled ${s.stats.fled}, busted ${s.stats.busted})`);
+    if (verbose) for (const s of res) console.log(`  ${preset} ${days}d ${style} seed ${s.seed}: ${s.over.reason} ${C.fmt(s.over.score)} (peak ${C.fmt(s.stats.peak)}, won ${s.stats.won}, fled ${s.stats.fled}, busted ${s.stats.busted})`);
   }
 }
-if (reckDeaths === 0) fail('no reckless run ever died: combat cannot kill you, or the bots never fight');
+if (MUST_DIE.includes(preset) && reckDeaths === 0) fail(`${preset}: no reckless run ever died: combat cannot kill you, or the bots never fight`);
+}
 
-console.log('days  bot        runs  profit  deaths  median score   best score');
+console.log('preset   days  bot        runs  profit  deaths  median score   best score');
 for (const r of rows) {
-  console.log(`${String(r.days).padStart(4)}  ${r.style.padEnd(9)}  ${String(r.runs).padStart(4)}  ${String(r.profit).padStart(6)}  ${String(r.deaths).padStart(6)}  ${C.fmt(r.median).padStart(12)}  ${C.fmt(r.best).padStart(11)}`);
+  console.log(`${r.preset.padEnd(7)}  ${String(r.days).padStart(4)}  ${r.style.padEnd(9)}  ${String(r.runs).padStart(4)}  ${String(r.profit).padStart(6)}  ${String(r.deaths).padStart(6)}  ${C.fmt(r.median).padStart(12)}  ${C.fmt(r.best).padStart(11)}`);
 }
 if (failures.length) {
   console.error(`\n${failures.length} failure(s):`);

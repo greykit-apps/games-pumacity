@@ -25,11 +25,12 @@ const MAX_ACTIONS = 6000;
 const record = process.argv.includes('--record');
 
 /* The final state, minus what is allowed to differ between engine versions
- * without changing the game: nothing, today, except the rules the run carries
- * (a run's rules are an input, not an outcome). */
+ * without changing the game: the preset and rules the run carries (they are
+ * inputs, not outcomes). */
 function outcome(st) {
   const o = JSON.parse(JSON.stringify(st));
   delete o.rules;
+  delete o.preset;
   return o;
 }
 const sha = s => crypto.createHash('sha256').update(s).digest('hex').slice(0, 16);
