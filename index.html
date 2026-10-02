@@ -198,7 +198,10 @@ button.link:hover{color:var(--text)}
 /* right edges line up: the Max button sits exactly under the button that opened it */
 .tradepop.buy{right:50px}
 .tradepop.up{top:auto;bottom:calc(100% - 2px);flex-direction:column-reverse}
-.tradepop .maxbtn{align-self:flex-end;min-width:0;padding:4px 10px}
+.tradepop{padding-right:0}
+.tradepop > :not(.maxbtn){margin-right:var(--s2)}
+/* flush to the pop-over's right edge, so the pop-over never reaches past the button it covers */
+.tradepop .maxbtn{align-self:flex-end;padding:0 10px}
 .tradepop .qline{display:flex;gap:4px;align-items:center}
 .tradepop .qline input{flex:1;min-width:0;width:auto;text-align:right}
 .tradepop .qline button{min-width:30px;padding:3px 8px}
@@ -207,9 +210,8 @@ button.link:hover{color:var(--text)}
 .tradepop .risk{font-size:12px;color:var(--steel)}
 .tradepop .risk:empty{display:none}
 .tradepop .warn{font-size:12px}
-@keyframes popIn{from{opacity:0;transform:translateY(-4px)}}
-.tradepop.up{animation-name:popUp}
-@keyframes popUp{from{opacity:0;transform:translateY(4px)}}
+/* opacity only: the max button must not move while the cursor waits on it */
+@keyframes popIn{from{opacity:0}}
 @media (prefers-reduced-motion:reduce){.tradepop{animation:none}}
 .stat.warn em{color:var(--warn)}
 .sidepanel{position:absolute;inset:0;overflow:auto;padding:var(--s4) var(--s5)}
@@ -418,7 +420,8 @@ button.link:hover{color:var(--text)}
   .rw-m{display:block;font-size:11px;line-height:1.2}
   .mk td,.mk th{padding:var(--s1) 3px}
   .mk td.name{width:auto}
-  .mk td.held small{display:block;margin:0;font-size:11px}
+  .mk td.held{white-space:normal}
+  .mk td.held small{display:block;margin:0;font-size:11px;line-height:1.25}
   .market,.place,.log,.sidepanel{padding-left:var(--s3);padding-right:var(--s3)}
   .spot{padding:3px}
   .spot .lab b{font-size:10px;white-space:normal;line-height:1.15}
@@ -2292,7 +2295,35 @@ function runFx() {
   }
 }
 
+/* Put the pop-over's max button exactly over the Buy or Sell button that
+ * opened it (same top, right edge and height; wider to the left for its
+ * label), so a second click without moving the mouse trades the max. */
+function placeTradePop() {
+  const pop = root.querySelector('.tradepop');
+  if (!pop || !ui.trade) return;
+  const trig = pop.parentElement.querySelector(`:scope > button[data-act="${ui.trade.side}"]`);
+  const max = pop.querySelector('.maxbtn');
+  if (!trig || !max) return;
+  // 1px of overhang on every side, so rounding can never leave a sliver of
+  // the original button exposed
+  max.style.minHeight = (trig.offsetHeight + 2) + 'px';
+  max.style.minWidth = (trig.offsetWidth + 2) + 'px';
+  pop.style.right = 'auto';
+  pop.style.bottom = 'auto';
+  pop.style.left = (trig.offsetLeft + trig.offsetWidth - max.offsetLeft - max.offsetWidth) + 'px';
+  pop.style.top = (trig.offsetTop - max.offsetTop) + 'px';
+  // offsets ignore borders and table-cell rounding; finish against the real boxes
+  const tr = trig.getBoundingClientRect(), mr = max.getBoundingClientRect();
+  pop.style.left = (parseFloat(pop.style.left) + (tr.right + 1 - mr.right)) + 'px';
+  pop.style.top = (parseFloat(pop.style.top) + (tr.top - 1 - mr.top)) + 'px';
+}
+
 function render() {
+  // Rebuilding the page can let the browser clamp the scroll position at the
+  // first layout (it did when a trade pop-over opened low on a phone, sliding
+  // the max button out from under the finger). Every render holds the page
+  // where it was; deliberate scrolls happen after this.
+  const scrollAt = [window.scrollX, window.scrollY];
   const before = focusKey(document.activeElement);
   const hadModal = !!root.querySelector('.back');
   const modal = S ? modalHTML() : (ui.modal && ui.modal.kind === 'help'
@@ -2309,6 +2340,8 @@ function render() {
   if (log) log.scrollTop = log.scrollHeight;
   const elog = document.getElementById('pc-elog');
   if (elog) elog.scrollTop = elog.scrollHeight;
+  placeTradePop();
+  if (window.scrollX !== scrollAt[0] || window.scrollY !== scrollAt[1]) window.scrollTo(scrollAt[0], scrollAt[1]);
   const dlg = root.querySelector('.back .modal');
   const q = document.getElementById('pc-qty');
   let target = null;
@@ -2337,8 +2370,13 @@ function render() {
     target = findFocus(hadModal ? ui.opener : before) || (hadModal ? findFocus(before) : null);
     if (hadModal) ui.opener = null;
   }
+  // select() scrolls the input into view whatever focus() was told, and on a
+  // phone that would slide the max button out from under the finger that
+  // just tapped Buy. Hold the page exactly where it was.
+  const sx = window.scrollX, sy = window.scrollY;
   if (target) target.focus({ preventScroll: true });
-  if (target === q && q) q.select();
+  if (target === q && q) q.setSelectionRange(0, q.value.length);
+  if (window.scrollX !== sx || window.scrollY !== sy) window.scrollTo(sx, sy);
   runFx();
 }
 
