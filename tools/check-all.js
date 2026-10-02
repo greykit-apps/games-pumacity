@@ -708,6 +708,24 @@ scenario('keys: encounter keys share no letter with market keys, and cover every
   assert.ok(/ENC_KEYS\[k\]/.test(html), 'the encounter key handler does not read ENC_KEYS');
 });
 
+scenario('cheat: the Konami code adds $25,000, clears heat, marks the run, and changes nothing else', () => {
+  let { C, st } = fresh();
+  st.heat = 73;
+  st.stash = { nip: 4 };
+  st.cost = { nip: 40 };
+  const before = JSON.parse(JSON.stringify(st));
+  const after = C.cheat(st);
+  assert.deepStrictEqual(st, before, 'cheat must not modify its input');
+  assert.strictEqual(after.cash, before.cash + C.CHEAT_CASH);
+  assert.strictEqual(C.CHEAT_CASH, 25000);
+  assert.strictEqual(after.heat, 0);
+  assert.ok(after.stats.cheated);
+  for (const k of ['debt', 'bank', 'hp', 'day', 'loc', 'rng', 'days']) assert.deepStrictEqual(after[k], before[k], k);
+  assert.deepStrictEqual(after.stash, before.stash);
+  assert.ok(/likes you/.test(after.log[after.log.length - 1].text));
+  ok(C, after, C.botAct(after));
+});
+
 // ---- the door
 scenario('step: never modifies the state it was given', () => {
   let { C, st } = fresh();

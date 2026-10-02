@@ -343,6 +343,7 @@ button.link:hover{color:var(--text)}
 .scores td.r,.scores th.r{text-align:right}
 .scores td:last-child{white-space:nowrap}
 .scores .rip{color:var(--danger)}
+.scores .cheat{font-size:11px;color:var(--violet)}
 .final{font-size:32px;font-weight:600;color:var(--text);margin:var(--s1) 0 0;font-variant-numeric:tabular-nums}
 .final.neg{color:var(--danger)}
 .verdict{margin:0 0 var(--s3)}
@@ -1186,6 +1187,18 @@ function step(st0, a) {
 }
 
 /* For the debug hook and the tests: the same state with a given encounter started. */
+/* The Konami code: $25,000 and a clean slate with the Watchers. The run is
+ * marked as cheated, and its high-score entry says so. */
+const CHEAT_CASH = 25000;
+function cheat(st0) {
+  const st = JSON.parse(JSON.stringify(st0));
+  st.cash += CHEAT_CASH;
+  st.heat = 0;
+  st.stats.cheated = true;
+  addLog(st, `Somebody up there likes you: +${fmt(CHEAT_CASH)}, and the Watchers forget your face.`, 'good');
+  return st;
+}
+
 function forceEncounter(st0, type) {
   const st = JSON.parse(JSON.stringify(st0));
   st.enc = null;
@@ -1303,7 +1316,7 @@ function scores() {
 function recordScore(st) {
   const all = scores();
   const list = Array.isArray(all[st.days]) ? all[st.days] : [];
-  const entry = { name: st.name, score: st.over.score, dead: st.over.reason === 'dead', day: st.over.day, at: new Date().toISOString().slice(0, 10), id: st.seed + ':' + st.logN };
+  const entry = { name: st.name, score: st.over.score, cheat: !!st.stats.cheated, dead: st.over.reason === 'dead', day: st.over.day, at: new Date().toISOString().slice(0, 10), id: st.seed + ':' + st.logN };
   list.push(entry);
   list.sort((a, b) => b.score - a.score);
   all[st.days] = list.slice(0, 10);
@@ -1663,7 +1676,7 @@ function setupHTML() {
 function scoreTable(list, hi) {
   if (!list.length) return '<p class="dim">No runs finished yet.</p>';
   return `<table class="scores"><tr><th>#</th><th>Name</th><th class="r">Score</th><th>Date</th></tr>${list.map((e, i) =>
-    `<tr${i === hi ? ' class="warn"' : ''}><td>${i + 1}</td><td>${esc(e.name)}${e.dead ? ` <span class="rip">RIP, day ${e.day}</span>` : ''}</td><td class="r">${fmt(e.score)}</td><td class="dim">${esc(e.at || '')}</td></tr>`).join('')}</table>`;
+    `<tr${i === hi ? ' class="warn"' : ''}><td>${i + 1}</td><td>${esc(e.name)}${e.cheat ? ' <span class="cheat" title="The Konami code was used this run">cheat</span>' : ''}${e.dead ? ` <span class="rip">RIP, day ${e.day}</span>` : ''}</td><td class="r">${fmt(e.score)}</td><td class="dim">${esc(e.at || '')}</td></tr>`).join('')}</table>`;
 }
 
 /* Where a price sits in its good's usual range. The word carries the meaning;
@@ -2442,8 +2455,34 @@ function helpKey(k) {
   if (k === 'ArrowLeft') { ui.modal = { kind: 'help', tab: tabs[(i + tabs.length - 1) % tabs.length] }; render(); }
 }
 
+/* The Konami code. The arrows keep doing their normal jobs while it is typed;
+ * only the B and A that finish the sequence are swallowed, so the code never
+ * opens a buy or sells your stash. */
+const KONAMI = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'];
+let konamiAt = 0;
+function konamiKey(k) {
+  if (k === KONAMI[konamiAt]) {
+    konamiAt++;
+    if (konamiAt === KONAMI.length) { konamiAt = 0; konamiFire(); return true; }
+    return konamiAt > KONAMI.length - 2;  // the B that sets up the final A
+  }
+  // a run of three or more ups still counts its last two
+  konamiAt = k === 'ArrowUp' ? (konamiAt === 2 ? 2 : 1) : 0;
+  return false;
+}
+function konamiFire() {
+  const from = S.cash;
+  S = cheat(S);
+  save(KEY_GAME, S);
+  ui.trade = null;
+  ui.fx = { from, to: S.cash, rows: [] };
+  announce([S.log[S.log.length - 1].text]);
+  render();
+}
+
 document.addEventListener('keydown', e => {
   if (e.metaKey || e.ctrlKey || e.altKey) return;
+  if (S && !S.over && e.key !== 'Tab' && konamiKey(e.key.length === 1 ? e.key.toLowerCase() : e.key)) { e.preventDefault(); return; }
   // Keep Tab inside an open dialog.
   if (e.key === 'Tab') {
     const dlg = root.querySelector('.back .modal');
