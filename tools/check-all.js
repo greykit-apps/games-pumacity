@@ -476,7 +476,7 @@ scenario('boss: buys your Skooma at a premium', () => {
 });
 scenario('rival: a deal moves only what fits your pouch and wallet', () => {
   let { C, st } = fresh();
-  st.enc = { type: 'rival', foes: [{ name: 'Velvet', hp: 14, max: 14 }], n: 1, hostile: false, boss: 'Velvet',
+  st.enc = { type: 'rival', foes: [{ name: 'Jad', hp: 14, max: 14 }], n: 1, hostile: false, boss: 'Jad',
     deal: { side: 'sell', good: 'zoomers', qty: 20, price: 150 }, hitP: 0.28, dmg: [3, 7], loot: [150, 600] };
   assert.strictEqual(C.dealQty(st, st.enc.deal), 13);
   st = ok(C, st, { t: 'deal' });
@@ -488,7 +488,7 @@ scenario('rival: hostile crews take half your stash when you give in', () => {
   let { C, st } = fresh();
   setPrices(C, st, 1);
   st = ok(C, st, { t: 'buy', good: 'nip', qty: 9 });
-  st.enc = { type: 'rival', foes: [{ name: 'Velvet', hp: 14, max: 14 }], n: 1, hostile: true, boss: 'Velvet', deal: null, hitP: 0.28, dmg: [3, 7], loot: [150, 600] };
+  st.enc = { type: 'rival', foes: [{ name: 'Jad', hp: 14, max: 14 }], n: 1, hostile: true, boss: 'Jad', deal: null, hitP: 0.28, dmg: [3, 7], loot: [150, 600] };
   st = ok(C, st, { t: 'surrender' });
   assert.strictEqual(st.stash.nip, 4);
 });
