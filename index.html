@@ -53,7 +53,7 @@ body{margin:0;min-height:100dvh;background:var(--bg);color:var(--ink);font:14px/
 button{font:inherit;color:var(--text);background:var(--panel2);border:1px solid var(--line);border-radius:3px;
   padding:5px 10px;cursor:pointer;min-height:34px}
 button:hover:not(:disabled){border-color:var(--lit)}
-button:focus-visible,input:focus-visible,tr:focus-visible{outline:1px solid var(--accent);outline-offset:1px}
+button:focus-visible,input:focus-visible,tr:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
 button:disabled{opacity:.4;cursor:default}
 button.primary{border-color:var(--accent);color:var(--accent)}
 button.primary:disabled{border-color:var(--line);color:var(--dim)}
@@ -126,7 +126,8 @@ p{margin:0 0 var(--s2)}
 .stat.lead span{font-size:20px;font-weight:600;line-height:1.3}
 .stat em{display:block;font-style:normal;font-size:12px;color:var(--dim)}
 .stat.bad span,.stat.bad em{color:var(--danger)}
-.stat.bad em.fix{color:var(--text)}  /* the way out reads apart from the alarm */
+.stat.bad em.fix{color:var(--text)}
+.stat em.hp{white-space:nowrap}  /* the way out reads apart from the alarm */
 .stat.warn span{color:var(--warn)}
 .stat.cash{position:relative}
 .stat.cash .undo{position:absolute;right:var(--s3);bottom:var(--s2);min-height:0;padding:1px 8px;font-size:12px;
@@ -324,12 +325,13 @@ button.link:hover{color:var(--text)}
 .trade{color:var(--steel)}.dim{color:var(--dim)}.warn{color:var(--warn)}
 .bar{display:flex;gap:var(--s2);flex-wrap:wrap;padding:var(--s2);border:1px solid var(--line);border-radius:3px;background:var(--panel)}
 .bar .grow{flex:1}
-.bar .sm{display:none}
+.bar .sm,.stat .sm{display:none}
 
 .back{position:fixed;inset:0;background:rgba(2,4,10,.8);display:flex;align-items:center;justify-content:center;padding:var(--s4);z-index:var(--z-modal)}
 .modal{background:var(--panel);border:1px solid var(--lit);border-radius:4px;max-width:540px;width:100%;
   max-height:calc(100dvh - 32px);overflow:auto;padding:var(--s4) var(--s5)}
 .modal h1{margin-bottom:var(--s3)}
+.modal.dead h1{color:var(--danger)}
 .modal .row{display:flex;gap:var(--s2);align-items:center;flex-wrap:wrap;margin:var(--s2) 0}
 .modal .row input{width:9em}
 .modal .acts{display:flex;gap:var(--s2);flex-wrap:wrap;margin-top:var(--s4)}
@@ -454,8 +456,8 @@ button.link:hover{color:var(--text)}
   .bar{position:sticky;bottom:6px;z-index:var(--z-sticky);flex-wrap:nowrap;gap:6px}
   .bar .grow,.bar [data-act=help]{display:none}
   .bar button{flex:1 1 auto;min-width:0;padding:0 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .bar .lg{display:none}
-  .bar .sm{display:inline}
+  .bar .lg,.stat .lg{display:none}
+  .bar .sm,.stat .sm{display:inline}
   .stat.cash .undo{min-height:32px;padding:0 10px}
   kbd{display:none}
   .modal{padding:14px}
@@ -853,10 +855,15 @@ function encOptions(st) {
   return [];
 }
 
+/* A death scores what you were worth when you fell, never more than nothing,
+ * and on the board it ranks below every run that was played out (scoreOrder).
+ * The debt compounds, so a capped score alone would still let a losing run
+ * lock in its loss early; the ranking is what makes dying never pay. */
 function die(st, why) {
   st.hp = 0;
   st.enc = null;
-  st.over = { reason: 'dead', why, score: 0, net: netWorth(st), day: st.day };
+  const net = netWorth(st);
+  st.over = { reason: 'dead', why, score: Math.min(net, 0), net, day: st.day };
   addLog(st, `${why} Your run ends on day ${st.day}.`, 'bad');
 }
 
@@ -1329,6 +1336,8 @@ function botAct(st, style) {
   else if (st.cash > 60000 && st.loc !== 'vault') to = 'vault';
   return { t: 'travel', to };
 }
+/* High-score order: finished runs first, best score first; deaths after them all. */
+function scoreOrder(a, b) { return (!!a.dead - !!b.dead) || (b.score - a.score); }
 // ===== @core-end =====
 
 /* ---------------------------------------------------------------------------
@@ -1378,7 +1387,7 @@ function recordScore(st) {
   const list = Array.isArray(all[st.days]) ? all[st.days] : [];
   const entry = { name: st.name, score: st.over.score, cheat: !!st.stats.cheated, dead: st.over.reason === 'dead', day: st.over.day, at: new Date().toISOString().slice(0, 10), id: st.seed + ':' + st.logN };
   list.push(entry);
-  list.sort((a, b) => b.score - a.score);
+  list.sort(scoreOrder);
   all[st.days] = list.slice(0, 10);
   save(KEY_SCORES, all);
   return all[st.days].findIndex(e => e.id === entry.id);
@@ -1776,7 +1785,13 @@ function coachHTML(st) {
   if (!prefs.coachTraded) {
     const buyable = GOODS.map((g, i) => ({ g, i, p: st.prices[g.id] })).filter(x => x.p != null && x.p <= st.cash);
     if (!buyable.length) return '';
-    const best = buyable.reduce((a, b) => priceStanding(b.g, b.p).r < priceStanding(a.g, a.p).r ? b : a);
+    // Point at a cheap good you can buy a real load of: the row you've
+    // selected if it's cheap, else the cheap one you can afford most of.
+    const cheap = buyable.filter(x => priceStanding(x.g, x.p).r < 0.33);
+    const units = x => Math.min(Math.floor(st.cash / x.p), free(st));
+    const best = cheap.find(x => x.i === ui.sel)
+      || cheap.reduce((a, b) => (a && units(a) >= units(b) ? a : b), null)
+      || buyable.reduce((a, b) => priceStanding(b.g, b.p).r < priceStanding(a.g, a.p).r ? b : a);
     tip = `${best.g.name} is ${priceStanding(best.g, best.p).word} here. Press <kbd>${best.i + 1}</kbd> then <kbd>B</kbd> to buy some, or tap its Buy button.`;
   } else {
     tip = `Now travel (<kbd>T</kbd>) and sell wherever it shows <span class="rw steep">steep</span>. Every trip takes a day, and the debt grows overnight.`;
@@ -1821,6 +1836,15 @@ function loadNote(st) {
   const r = carryRisk(st);
   return r < RISK_SHOW ? '' : `<em>Watchers +${Math.round(r * 100)}%</em>`;
 }
+/* Hurt, the Health box points at the way back, as the Debt box does: where
+ * the vet is and what patching up all the way costs. */
+const HURT = 40;
+function healthNote(st) {
+  if (st.hp >= HURT) return '';
+  const cost = (CONFIG.maxHp - st.hp) * CONFIG.vetPerHp;
+  const where = st.loc === 'suburbs' ? 'vet here' : '<span class="lg">Suburbs vet</span><span class="sm">vet</span>';
+  return `<em class="fix hp" title="The vet in the Suburbs patches you up for ${fmt(CONFIG.vetPerHp)} per HP">${where} ${fmt(cost)}</em>`;
+}
 /* The smallest payment that resets the goon clock (repayReset of the debt). */
 function realPayment(st) { return Math.ceil(st.debt * CONFIG.repayReset); }
 /* Under the Debt figure: the countdown, and once it's close, the way out:
@@ -1831,7 +1855,7 @@ function debtNote(st) {
   const n = CONFIG.goonDays - st.debtAge;
   const when = n <= 0 ? 'goons: any day now' : `goons in ${n} ${plural(n, 'day')}`;
   if (n > 2) return `<em>${when}</em>`;
-  return `<em>${when}</em><em class="fix" title="A payment of 10% of the debt resets the goons' clock">repay ${fmt(realPayment(st))} ${st.loc === 'pvn' ? 'here' : 'at PVN Tower'}</em>`;
+  return `<em>${when}</em><em class="fix" title="A payment of 10% of the debt resets the goons' clock">repay ${fmt(realPayment(st))} ${st.loc === 'pvn' ? 'here' : 'at PVN&nbsp;Tower'}</em>`;
 }
 
 /* Back-to-back trades in the same good at the same price read as one:
@@ -1920,7 +1944,7 @@ function gameHTML() {
     <div class="stat lead cash"><small>Cash</small><span>${fmt(st.cash)}</span>${ui.undo && ui.undo.after === st ? '<button class="undo" data-act="undo" title="Undo that trade (Z)">Undo<kbd>Z</kbd></button>' : ''}</div>
     <div class="stat lead${st.debt > 0 ? (st.debtAge >= CONFIG.goonDays - 2 ? ' bad' : ' warn') : ''}"><small>Debt</small><span>${fmt(st.debt)}</span>${debtNote(st)}</div>
     <div class="stat"><small>Bank</small><span>${fmt(st.bank)}</span></div>
-    <div class="stat${st.hp <= 30 ? ' bad' : ''}"><small>Health</small><span>${st.hp} / ${CONFIG.maxHp}</span>${meter(st.hp, CONFIG.maxHp, st.hp <= 30 ? 'low' : '')}</div>
+    <div class="stat${st.hp <= 30 ? ' bad' : ''}"><small>Health</small><span>${st.hp} / ${CONFIG.maxHp}</span>${meter(st.hp, CONFIG.maxHp, st.hp <= 30 ? 'low' : '')}${healthNote(st)}</div>
     <div class="stat${loadLevel(st)}" title="A heavy load draws the Watchers: up to +${Math.round(CONFIG.carryWatchMax * 100)}% a day, whatever your heat."><small>Pouch</small><span>${u} / ${cap}</span>${meter(u, cap, 'heat')}${loadNote(st)}</div>
     <div class="stat${st.heat >= 40 ? ' bad' : ''}" title="${heatBand(st.heat).effect}${carryRisk(st) >= RISK_SHOW ? ` Your load adds about +${Math.round(carryRisk(st) * 100)}% a day on top.` : ''}"><small>Heat</small><span>${heatBand(st.heat).word} · ${st.heat}</span>${meter(st.heat, 100, st.heat >= 40 ? 'low' : 'heat')}</div>
   </div>
@@ -2212,13 +2236,23 @@ function moneyForm(kind, label, max, hint) {
     ${hint ? `<span class="note">${hint}</span>` : ''}</form>`;
 }
 
+/* The one payment the Debt box points at, a click away: the smallest that
+ * resets the goons' clock. Offered only while the clock is running and you
+ * can cover it, and only when it's less than paying the lot. */
+function quickPay(st) {
+  const need = realPayment(st);
+  if (st.debt <= 0 || st.debtAge === 0 || need >= st.debt || st.cash < need) return '';
+  return `<div class="row"><button class="primary" data-act="quickpay" data-v="${need}">Pay ${fmt(need)} · resets the clock</button></div>`;
+}
+
 function servicePanelHTML() {
   const st = S;
   const P = here(st);
   let out = `<h2>${esc(P.serviceName)}</h2>`;
   if (P.service === 'loan') {
     out += `<p>Casey Benton looks up from a desk the size of a car. "Back so soon?"</p>
-    <p>You owe <b>${fmt(st.debt)}</b>.${st.debt > 0 ? ` <span class="note">${st.debtAge} ${plural(st.debtAge, 'day')} since your last real payment (a payment of at least 10% of the debt). Her goons come at ${CONFIG.goonDays}.</span>` : ''}</p>
+    <p>You owe <b>${fmt(st.debt)}</b>.${st.debt > 0 ? ` <span class="note">${st.debtAge} ${plural(st.debtAge, 'day')} since your last real payment (at least 10% of the debt). Her goons come after ${CONFIG.goonDays} days without one.</span>` : ''}</p>
+    ${quickPay(st)}
     ${st.debt > 0 ? moneyForm('repay', 'Repay', Math.min(st.cash, st.debt)) : ''}
     ${moneyForm('borrow', 'Borrow', Math.max(0, CONFIG.debtCap - st.debt), `She'll carry up to ${fmt(CONFIG.debtCap)}.`)}`;
   }
@@ -2313,7 +2347,8 @@ function encHTML() {
       body += `<div class="foes">${e.foes.map(f => `<div class="foe"><span>${esc(f.name)} <span class="dim">${Math.max(0, f.hp)} HP</span></span>${meter(f.hp, f.max, 'low')}</div>`).join('')}</div>`;
     }
     body += `<div class="foe"><span>You <span class="dim">${st.hp} HP</span></span>${meter(st.hp, CONFIG.maxHp, st.hp <= 30 ? 'low' : '')}</div>`;
-    if (!st.gear.weapon) body += '<p class="note">You have no weapon, so you can only run or give up. The outfitter at Market Plaza sells them.</p>';
+    // only where a fight would have been on offer: a deal has no Fight to miss
+    if (!st.gear.weapon && opts.includes('run')) body += '<p class="note">You have no weapon, so you can only run or give up. The outfitter at Market Plaza sells them.</p>';
   } else if (e.type === 'boss') {
     title = 'The Boss';
     body = e.ask === 'skooma'
@@ -2350,16 +2385,16 @@ function overHTML() {
   const o = st.over;
   const list = scores()[st.days] || [];
   const dead = o.reason === 'dead';
-  return `<div class="back"><div class="modal" role="alertdialog" aria-modal="true" aria-labelledby="pc-mt">
+  return `<div class="back"><div class="modal${dead ? ' dead' : ''}" role="alertdialog" aria-modal="true" aria-labelledby="pc-mt">
     <h1 id="pc-mt">${dead ? 'You died' : 'The run is over'}</h1>
-    ${dead ? `<p class="bad">${esc(o.why)}</p><p>Day ${o.day} of ${st.days}. A death scores nothing.</p>` : `
+    ${dead ? `<p class="bad">${esc(o.why)}</p><p>Day ${o.day} of ${st.days}. ${o.score < 0 ? `The debt outlives you: <b>${fmt(o.score)}</b>.` : 'Whatever you were worth dies with you: <b>$0</b>.'} A death ranks below every run played out.</p>` : `
     <p class="final${o.score < 0 ? ' neg' : ''}">${fmt(o.score)}</p>
     ${verdict(o.score, ui.rank)}
     <table><tr><td>Cash</td><td class="r">${fmt(st.cash)}</td></tr><tr><td>Bank</td><td class="r">${fmt(st.bank)}</td></tr>
     <tr><td>Still owed to The Boss</td><td class="r">${fmt(-st.debt)}</td></tr>
     ${o.unsold ? `<tr><td class="dim">Unsold goods (worth nothing)</td><td class="r dim">${o.unsold} ${plural(o.unsold, 'unit')}</td></tr>` : ''}
     </table>`}
-    <p class="note">Best net worth during the run: ${fmt(st.stats.peak)}. Fights won: ${st.stats.won}. Escapes: ${st.stats.fled}. Busts: ${st.stats.busted}.</p>
+    <p class="note">${st.stats.peak > 0 ? `Best net worth during the run: ${fmt(st.stats.peak)}. ` : ''}Fights won: ${st.stats.won}. Escapes: ${st.stats.fled}. Busts: ${st.stats.busted}.</p>
     <h2>High scores, ${st.days} days</h2>${scoreTable(list, ui.rank)}
     <div class="acts"><button class="primary" data-act="again"><kbd>N</kbd>New run</button><button data-act="title"><kbd>Esc</kbd>Title screen</button></div>
   </div></div>`;
@@ -2384,7 +2419,7 @@ function helpHTML(tab) {
     <dt>Trading</dt><dd>Each day you're somewhere new, and prices are new too. Buy cheap, carry it somewhere better, and sell. Your pouch holds ${CONFIG.baseCap} units until you buy a bigger one. The <i>vs usual</i> column says whether a price is a bargain, cheap, fair, steep or sky-high for that good, and the Held column shows what you paid and how today's price compares. A faint tick on the same line marks the last price you saw for it. A headline (shown above the market, and marked ! in it) sends one good's price wild.</dd>
     <dt>Travel</dt><dd>Each trip takes one day. Travel opens a map of PumaCity. Each district shows the chance the Watchers find you there tomorrow, and badges flag where the goons may be waiting (PVN Tower is always safe from them), where your Pawphone knows tomorrow's prices, and the vet when you're hurt. On your last day you can't travel; sell everything and cash out. Goods left in your pouch are worth nothing.</dd>
     <dt>Heat</dt><dd>Big sales and fights raise your heat: cool, warm, hot, then wanted. The hotter you are, the more often the Watchers come and the more of them there are. A heavy load draws them too, whatever your heat: the Pouch box shows its pull, and the buy box tells you before you add to it. It cools a little every day, faster at The Ranch, and The Boss will make it vanish for a price.</dd>
-    <dt>Encounters</dt><dd>Watchers and rival crews: run, fight (you need a weapon), or give up. Giving up to the Watchers costs your whole stash and a fine; a failed getaway spills part of your load. The more you carry, the more often they come. If your health hits zero, the run is over and scores nothing. Money in the bank is safe from muggers.</dd>
+    <dt>Encounters</dt><dd>Watchers and rival crews: run, fight (you need a weapon), or give up. Giving up to the Watchers costs your whole stash and a fine; a failed getaway spills part of your load. The more you carry, the more often they come. If your health hits zero, the run is over: you keep any debt on your score but none of your money, and a death ranks below every run played out. Money in the bank is safe from muggers.</dd>
   </dl>`;
   if (tab === 'places') body = `<dl class="help">${PLACES.map(P => `<dt>${P.name}</dt><dd>${P.blurb} ${P.special}</dd>`).join('')}</dl>`;
   if (tab === 'goods') body = `<table><tr><th>Good</th><th class="r">Usual price</th><th></th></tr>${GOODS.map(g => `<tr><td>${g.name}</td><td class="r">${fmt(g.lo)}–${fmt(g.hi)}</td><td class="note">${g.blurb}</td></tr>`).join('')}</table>`;
@@ -2654,6 +2689,7 @@ root.addEventListener('click', e => {
     case 'coachoff': prefs.coachDone = true; save(KEY_PREFS, prefs); render(); return;
     case 'finishcancel': ui.confirmCash = false; ui.panelOpener = null; render(); return;
     case 'sellall': act({ t: 'sellall' }); return;
+    case 'quickpay': act({ t: 'repay', amt: +v }); return;
     case 'mmax': { const inp = el.closest('form').querySelector('input'); inp.value = v; inp.focus(); return; }
     case 'travel': openTravel(); return;
     case 'go': act({ t: 'travel', to: v }); return;
