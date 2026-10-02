@@ -2005,45 +2005,44 @@ function cityMapSVG() {
   o += `<path class="hillside" d="M44 312 Q66 276 88 312"/><circle class="door" cx="66" cy="302" r="16"/><circle class="door-in" cx="66" cy="302" r="8"/>`;
   for (let i = 0; i < 10; i++) { const a = i / 10 * Math.PI * 2; o += `<path class="door-t" d="M${(66 + Math.cos(a) * 16).toFixed(1)} ${(302 + Math.sin(a) * 16).toFixed(1)} L${(66 + Math.cos(a) * 20).toFixed(1)} ${(302 + Math.sin(a) * 20).toFixed(1)}"/>`; }
   o += `<path class="path" d="M143 328 C126 334 118 318 104 324 S92 312 86 308"/>`;
-  // the Suburbs (east, middle): big arching streets, cul-de-sacs, houses
-  o += `<clipPath id="pc-sub"><rect x="300" y="200" width="300" height="200"/></clipPath><g clip-path="url(#pc-sub)">`;
+  // the Suburbs (east, middle): big arching streets, cul-de-sacs, houses.
+  // One street plan, drawn twice through two clips: the Suburbs square, and
+  // the strip of the Vault square that the outer street curves on into.
   const cx = 450, cy = 420;
-  for (const R of [80, 130, 180]) {
-    o += `<path class="st" d="M${cx - R} ${cy} A${R} ${R} 0 0 1 ${cx + R} ${cy}"/>`;
-    const n = Math.round(R / 7);
-    for (let k = 1; k < n; k++) {
-      const a = Math.PI + Math.PI * k / n;
-      for (const off of [-11, 11]) {
-        const hx = cx + Math.cos(a) * (R + off), hy = cy + Math.sin(a) * (R + off);
-        if (hy < 206 || hy > 392 || Math.abs(hx - 450) < 9) continue;  // keep the main road clear
-        o += `<rect class="house" x="${(hx - 3).toFixed(1)}" y="${(hy - 3).toFixed(1)}" width="6" height="6"/>`;
+  // cul-de-sacs: [angle in degrees, the street they branch off]; each turns
+  // round inside the block beyond its street, never at a square's edge
+  const SPOKES = [[235, 80], [305, 80], [214, 130], [326, 130], [245, 180], [295, 180], [200, 180]];
+  const spokeLen = R => (R === 180 ? 28 : 25);
+  const nearSpoke = (R, deg) => SPOKES.some(([d, r]) => r === R && Math.abs(deg - d) < 6);
+  const streets = () => {
+    let t = '';
+    for (const R of [80, 130, 180]) t += `<path class="st" d="M${cx - R} ${cy} A${R} ${R} 0 0 1 ${cx + R} ${cy}"/>`;
+    for (const [d, R] of SPOKES) {
+      const a = d * Math.PI / 180, R2 = R + spokeLen(R);
+      const x1 = cx + Math.cos(a) * R, y1 = cy + Math.sin(a) * R, x2 = cx + Math.cos(a) * R2, y2 = cy + Math.sin(a) * R2;
+      t += `<path class="st" d="M${x1.toFixed(1)} ${y1.toFixed(1)} L${x2.toFixed(1)} ${y2.toFixed(1)}"/><circle class="cul" cx="${x2.toFixed(1)}" cy="${y2.toFixed(1)}" r="6"/>`;
+    }
+    return t;
+  };
+  const houses = keep => {
+    let t = '';
+    for (const R of [80, 130, 180]) {
+      const n = Math.round(R / 7);
+      for (let k = 1; k < n; k++) {
+        const a = Math.PI + Math.PI * k / n, deg = a * 180 / Math.PI;
+        for (const off of [-11, 11]) {
+          if (off > 0 && nearSpoke(R, deg)) continue;  // keep the cul-de-sac stems clear
+          const hx = cx + Math.cos(a) * (R + off), hy = cy + Math.sin(a) * (R + off);
+          if (keep(hx, hy)) t += `<rect class="house" x="${(hx - 3).toFixed(1)}" y="${(hy - 3).toFixed(1)}" width="6" height="6"/>`;
+        }
       }
     }
-  }
-  for (const [a, R] of [[200, 130], [235, 80], [305, 80], [340, 130], [245, 180], [295, 180]]) {
-    const t = a * Math.PI / 180, x1 = cx + Math.cos(t) * R, y1 = cy + Math.sin(t) * R, x2 = cx + Math.cos(t) * (R + 30), y2 = cy + Math.sin(t) * (R + 30);
-    o += `<path class="st" d="M${x1.toFixed(1)} ${y1.toFixed(1)} L${x2.toFixed(1)} ${y2.toFixed(1)}"/><circle class="cul" cx="${x2.toFixed(1)}" cy="${y2.toFixed(1)}" r="6"/>`;
-  }
-  o += `</g>`;
-  // the Suburbs' outer arc carries on across the boundary into the Vault
-  // square, with houses either side and a cul-de-sac, so the street reads as one
+    return t;
+  };
+  o += `<clipPath id="pc-sub"><rect x="300" y="200" width="300" height="200"/></clipPath><g clip-path="url(#pc-sub)">`;
+  o += streets() + houses((x, y) => y >= 206 && y <= 392 && x >= 303 && x <= 597 && Math.abs(x - 450) >= 9) + `</g>`;
   o += `<clipPath id="pc-sub2"><rect x="236" y="280" width="64" height="120"/></clipPath><g clip-path="url(#pc-sub2)">`;
-  o += `<path class="st" d="M${cx - 180} ${cy} A180 180 0 0 1 ${cx + 180} ${cy}"/>`;
-  {
-    const R = 180, n = Math.round(R / 7);
-    for (let k = 1; k < n; k++) {
-      const a = Math.PI + Math.PI * k / n;
-      for (const off of [-11, 11]) {
-        const hx = cx + Math.cos(a) * (R + off), hy = cy + Math.sin(a) * (R + off);
-        if (hx >= 297 || hy > 394 || hy < 284) continue;
-        o += `<rect class="house" x="${(hx - 3).toFixed(1)}" y="${(hy - 3).toFixed(1)}" width="6" height="6"/>`;
-      }
-    }
-    const t = 200 * Math.PI / 180, x1 = cx + Math.cos(t) * R, y1 = cy + Math.sin(t) * R, x2 = cx + Math.cos(t) * (R + 28), y2 = cy + Math.sin(t) * (R + 28);
-    o += `<path class="st" d="M${x1.toFixed(1)} ${y1.toFixed(1)} L${x2.toFixed(1)} ${y2.toFixed(1)}"/><circle class="cul" cx="${x2.toFixed(1)}" cy="${y2.toFixed(1)}" r="6"/>`;
-    for (const [dx, dy] of [[-8, -12], [-16, 12], [-26, -8]]) o += `<rect class="house" x="${(x1 + dx - 3).toFixed(1)}" y="${(y1 + dy - 3).toFixed(1)}" width="6" height="6"/>`;
-  }
-  o += `</g>`;
+  o += streets() + houses((x, y) => x < 297 && y > 284 && y < 394) + `</g>`;
   // the Convention Center (west, north): sprawling halls, an arena, parking
   o += r(18, 28, 150, 82) + r(26, 116, 108, 34) + r(140, 116, 34, 30);
   for (let x = 38; x < 168; x += 22) o += `<path class="roof" d="M${x} 28 V110"/>`;
@@ -2070,6 +2069,8 @@ function cityMapSVG() {
   }
   // Downtown (east, south): the outer loop, two streets quartering it, the roundabout where they meet
   o += `<rect class="loop" x="318" y="414" width="264" height="172" rx="26"/>`;
+  // the Starport's cross streets run on into the loop around the city centre
+  o += `<path class="st" d="M296 446 H320 M296 556 H320"/>`;
   for (const [x, y, w, h] of [[336, 430, 22, 22], [336, 458, 22, 26], [416, 430, 20, 26], [470, 428, 26, 24], [504, 428, 26, 24], [540, 428, 26, 24], [470, 458, 40, 26], [520, 460, 46, 24],
     [334, 516, 30, 24], [372, 516, 30, 24], [410, 516, 24, 24], [334, 546, 46, 26], [388, 546, 46, 26]]) o += r(x, y, w, h);
   o += r(360, 426, 50, 50, 'tower') + `<rect class="pent" x="372" y="438" width="26" height="26"/><path class="marquee" d="M358 486 H412"/>`;
