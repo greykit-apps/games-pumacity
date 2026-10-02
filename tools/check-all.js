@@ -556,6 +556,33 @@ scenario('watchers: the load risk shown before a buy is the risk after it', () =
   assert.strictEqual(C.carryRisk(st), shown);
   assert.ok(shown > 0 && shown <= C.CONFIG.carryWatchMax);
 });
+scenario('map: the Watcher odds shown for a district are the odds rolled on arrival', () => {
+  const { C, st } = fresh();
+  st.heat = 47;
+  st.stash = { moonsugar: 6 };
+  st.cost = { moonsugar: 60000 };
+  for (const P of C.PLACES) {
+    if (P.id === st.loc) continue;
+    const shown = C.arrivalWatchOdds(st, P.id);
+    const arrived = travelQuiet(C, st, P.id);
+    assert.strictEqual(C.watchOdds(arrived, arrived.heat, P), shown, P.id);
+  }
+});
+scenario('map: goons are shown as due exactly when they can be waiting tomorrow', () => {
+  const { C, st } = fresh();
+  st.debtAge = C.CONFIG.goonDays - 2;
+  assert.ok(!C.goonsDue(st));
+  st.debtAge = C.CONFIG.goonDays - 1;
+  assert.ok(C.goonsDue(st));
+  let seen = 0;
+  for (let seed = 1; seed <= 80; seed++) {
+    const r = C.step(Object.assign(JSON.parse(JSON.stringify(st)), { rng: C.hash32(seed) | 0 }), { t: 'travel', to: 'ranch' }).state;
+    if (r.enc && r.enc.type === 'goons') seen++;
+  }
+  assert.ok(seen > 0, 'goons never came when shown as due');
+  st.debt = 0;
+  assert.ok(!C.goonsDue(st));
+});
 scenario('news: headlines move a price within the declared range', () => {
   const { C } = fresh();
   let seen = 0;
@@ -656,6 +683,15 @@ scenario('vet: heals what you can afford, only in the Suburbs', () => {
 });
 
 // ---- the screen's key tables (read from the page source)
+scenario('page: the whole page script compiles', () => {
+  // The other scenarios load only the rules core. This compiles everything in
+  // the page's <script>, so a syntax error in the screen code (a duplicate
+  // declaration, a stray brace) fails here instead of blanking the live page.
+  const html = require('fs').readFileSync(require('path').join(__dirname, '..', 'index.html'), 'utf8');
+  const scripts = [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(m => m[1]);
+  assert.ok(scripts.length >= 1 && scripts.join('').length > 10000, 'page script not found');
+  for (const src of scripts) new (require('vm').Script)(src, { filename: 'index.html' });
+});
 scenario('keys: encounter keys share no letter with market keys, and cover every choice', () => {
   const html = require('fs').readFileSync(require('path').join(__dirname, '..', 'index.html'), 'utf8');
   const mk = html.match(/const MARKET_KEYS = (\[[^\]]*\]);/);
