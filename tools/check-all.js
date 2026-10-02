@@ -361,6 +361,18 @@ scenario('goons: paying clears the clock; refusing costs health and cash', () =>
   const hurt = ok(C, st, { t: 'refuse' });
   assert.ok(hurt.hp < 100 && hurt.cash < 2000 && hurt.debt < 8000);
   assert.strictEqual(hurt.debtAge, C.RULES.goonDays - 4);
+  // short of the demand, they take what you have: no beating, no reset either
+  const broke = JSON.parse(JSON.stringify(st));
+  broke.cash = Math.floor(demand / 3);
+  assert.ok(C.encOptions(broke).includes('pay'), 'you can always hand over what you have');
+  const some = ok(C, broke, { t: 'pay' });
+  assert.strictEqual(some.cash, 0);
+  assert.strictEqual(some.debt, 8000 - Math.floor(demand / 3));
+  assert.strictEqual(some.hp, 100, 'handing it over spares you the beating');
+  assert.ok(some.debtAge > 0 && some.debtAge < C.RULES.goonDays, `the clock is not reset: ${some.debtAge}`);
+  assert.strictEqual(some.debtAge, hurt.debtAge, 'the goons come back as soon as after a refusal');
+  broke.cash = 0;
+  assert.deepStrictEqual(C.encOptions(broke), ['refuse'], 'with empty pockets there is nothing to hand over');
   // a short clock (Custom's 4 days) is never reset by a refusal: they come back
   for (const goonDays of [4, 5, 6]) {
     const s = JSON.parse(JSON.stringify(st));
@@ -375,12 +387,31 @@ scenario('goons: paying clears the clock; refusing costs health and cash', () =>
 scenario('end: travel is refused on the last day, and cashing out only then', () => {
   let { C, st } = fresh();
   refused(C, st, { t: 'finish' });
+  assert.ok(C.waiting(st).options.includes('leavetown'), 'leaving town is offered before the last day');
   st.day = 30;
   assert.ok(C.waiting(st).options.includes('finish'));
+  assert.ok(!C.waiting(st).options.includes('leavetown'), 'on the last day you cash out instead');
   refused(C, st, { t: 'travel', to: 'ranch' });
   st = ok(C, st, { t: 'finish' });
   assert.strictEqual(st.over.reason, 'days');
   assert.match(refused(C, st, { t: 'buy', good: 'nip', qty: 1 }), /over/);
+});
+scenario('end: leaving town early is scored like the last day, and marked', () => {
+  let { C, st } = fresh();
+  setPrices(C, st, 10);
+  st = ok(C, st, { t: 'buy', good: 'nip', qty: 7 });
+  st.day = 12; st.cash = 10000; st.bank = 3000; st.debt = 4000;
+  const before = JSON.parse(JSON.stringify(st));
+  st = ok(C, st, { t: 'leavetown' });
+  assert.strictEqual(st.over.reason, 'left');
+  assert.strictEqual(st.over.day, 12);
+  assert.strictEqual(st.over.score, 10000 + 3000 - 4000, 'cash plus bank minus debt, the pouch worth nothing');
+  assert.strictEqual(st.over.unsold, 7);
+  assert.strictEqual(st.debt, 0, 'The Boss collects');
+  assert.match(refused(C, st, { t: 'travel', to: 'ranch' }), /over/);
+  // the same position played to the last day scores the same number
+  const last = Object.assign(JSON.parse(JSON.stringify(before)), { day: 30 });
+  assert.strictEqual(ok(C, last, { t: 'finish' }).over.score, st.over.score);
 });
 scenario('end: the debt is paid from cash, then the bank; a shortfall scores negative', () => {
   let { C, st } = fresh();
@@ -514,15 +545,17 @@ scenario('death: health at zero ends the run, scores no more than nothing, and s
   assert.strictEqual(C.waiting(dead).kind, 'over');
   refused(C, dead, { t: 'run' });
 });
-scenario('scores: dying never ranks above playing a run out', () => {
+scenario('scores: leaving early ranks below playing a run out, and dying below both', () => {
   const { C } = fresh();
   const board = [
     { name: 'died rich', score: 0, dead: true },
+    { name: 'left rich', score: 500000, left: true },
     { name: 'finished deep in debt', score: -250000, dead: false },
+    { name: 'left in debt', score: -90000, left: true },
     { name: 'died in debt', score: -4000, dead: true },
     { name: 'finished well', score: 90000, dead: false },
   ].sort(C.scoreOrder).map(e => e.name);
-  assert.deepStrictEqual(board, ['finished well', 'finished deep in debt', 'died rich', 'died in debt']);
+  assert.deepStrictEqual(board, ['finished well', 'finished deep in debt', 'left rich', 'left in debt', 'died rich', 'died in debt']);
 });
 scenario('mugging: takes cash on you, never the bank', () => {
   let { C, st } = fresh();
@@ -936,7 +969,7 @@ scenario('step: every option waiting() offers is one the engine can act on', () 
       if (s.enc) tryAll(s, type);
     }
   }
-  for (const t of ['buy', 'sell', 'sellall', 'travel', 'finish', 'borrow', 'repay', 'deposit', 'withdraw', 'gear', 'heal',
+  for (const t of ['buy', 'sell', 'sellall', 'travel', 'finish', 'leavetown', 'borrow', 'repay', 'deposit', 'withdraw', 'gear', 'heal',
     'run', 'fight', 'surrender', 'deal', 'leave', 'pay', 'refuse', 'decline']) {
     assert.ok(tried.has(t), `never got to try ${t}`);
   }

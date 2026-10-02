@@ -988,7 +988,7 @@ function encOptions(st) {
       if (e.hostile) return ['run'].concat(armed ? ['fight'] : [], ['surrender']);
       return (dealQty(st, e.deal) > 0 ? ['deal'] : []).concat(['leave'], armed ? ['fight'] : []);
     case 'boss': return e.ask === 'skooma' ? ['sell', 'decline'] : (st.cash >= e.amount ? ['pay'] : []).concat(['refuse']);
-    case 'goons': return (st.cash >= e.demand ? ['pay'] : []).concat(['refuse']);
+    case 'goons': return (st.cash > 0 ? ['pay'] : []).concat(['refuse']);
     case 'stray': return (st.cash >= e.price && canUpgrade(st, e.item) ? ['buy'] : []).concat(['decline']);
   }
   return [];
@@ -1045,6 +1045,12 @@ function giveUpCost(st) {
   return { units: 0, cash: Math.round(st.cash * 0.3), all: false };
 }
 function goonTake(st) { return Math.min(st.debt, Math.round(st.cash * 0.2)); }
+/* What paying the goons hands over: what they ask, or everything on you. */
+function goonPay(st) { return Math.min(st.cash, st.enc.demand); }
+/* Where the clock stands after the goons leave unsatisfied: they're back in a
+ * few days (goonDays - 4), but never sooner than half way round, so a short
+ * clock (Custom's 4 days) is never simply reset. */
+function goonsBack(st) { return Math.max(Math.ceil(R(st).goonDays / 2), R(st).goonDays - 4); }
 
 const ENC = {
   run(st) {
@@ -1158,10 +1164,17 @@ const ENC = {
       st.heat = 0;
       addLog(st, `You hand over ${fmt(e.amount)}. "Pleasure." The Watchers lose interest in you.`, 'good');
     } else {
-      st.cash -= e.demand;
-      st.debt -= e.demand;
-      st.debtAge = 0;
-      addLog(st, `You pay the goons ${fmt(e.demand)} toward your debt. They drive off.`, 'warn');
+      const paid = goonPay(st);
+      st.cash -= paid;
+      st.debt -= paid;
+      if (paid >= e.demand) {
+        st.debtAge = 0;
+        addLog(st, `You pay the goons ${fmt(paid)} toward your debt. They drive off.`, 'warn');
+      } else {
+        // Less than they asked buys you out of the beating, not off the clock.
+        st.debtAge = goonsBack(st);
+        addLog(st, `You turn out your pockets: ${fmt(paid)} toward the debt. "That'll do for now. We'll be back."`, 'warn');
+      }
     }
     st.enc = null;
   },
@@ -1178,9 +1191,7 @@ const ENC = {
     st.hp = Math.max(0, st.hp - dmg);
     st.cash -= take;
     st.debt -= take;
-    // They're back in a few days: the clock goes to goonDays - 4, but never
-    // below half way, so a short clock (Custom's 4 days) isn't reset by a refusal.
-    st.debtAge = Math.max(Math.ceil(R(st).goonDays / 2), R(st).goonDays - 4);
+    st.debtAge = goonsBack(st);
     st.enc = null;
     addLog(st, `The goons rough you up (${dmg} HP)${take ? ` and take ${fmt(take)} toward the debt` : ''}. "We'll be back."`, 'bad');
     if (st.hp <= 0) die(st, "The Boss's goons go too far.");
@@ -1219,6 +1230,23 @@ function takeGoods(st, id, q) {
 // ---- market actions
 function sellableHere(st) { return GOODS.filter(g => (st.stash[g.id] || 0) > 0 && st.prices[g.id] != null); }
 function intAmt(v) { const n = Math.floor(Number(v)); return Number.isFinite(n) ? n : 0; }
+
+/* The end of a run, on the last day or by leaving early: The Boss collects
+ * what she can, the pouch counts for nothing, and the score is what's left. */
+function cashOut(st, reason) {
+  if (st.debt > 0) {
+    const fromCash = Math.min(st.cash, st.debt);
+    st.cash -= fromCash; st.debt -= fromCash;
+    const fromBank = Math.min(st.bank, st.debt);
+    st.bank -= fromBank; st.debt -= fromBank;
+    if (fromCash + fromBank > 0) addLog(st, `The Boss collects ${fmt(fromCash + fromBank)}.`, 'warn');
+  }
+  const unsold = used(st);
+  const score = st.cash + st.bank - st.debt;
+  st.over = { reason, score, unsold, day: st.day };
+  if (score < 0) addLog(st, `You still owe The Boss ${fmt(st.debt)}. ${reason === 'left' ? 'Best not to come back.' : 'Leaving town would be wise.'}`, 'bad');
+  addLog(st, reason === 'left' ? `You leave town on day ${st.day} with ${fmt(score)}.` : `You cash out with ${fmt(score)}.`, score > 0 ? 'good' : 'bad');
+}
 
 const MARKET = {
   buy(st, a) {
@@ -1276,20 +1304,11 @@ const MARKET = {
     rollEncounter(st);
     if (st.day === st.days && !st.over) addLog(st, 'Last day! Sell everything, then cash out. Unsold goods are worth nothing.', 'warn');
   },
-  finish(st) {
-    if (st.debt > 0) {
-      const fromCash = Math.min(st.cash, st.debt);
-      st.cash -= fromCash; st.debt -= fromCash;
-      const fromBank = Math.min(st.bank, st.debt);
-      st.bank -= fromBank; st.debt -= fromBank;
-      if (fromCash + fromBank > 0) addLog(st, `The Boss collects ${fmt(fromCash + fromBank)}.`, 'warn');
-    }
-    const unsold = used(st);
-    const score = st.cash + st.bank - st.debt;
-    st.over = { reason: 'days', score, unsold, day: st.day };
-    if (score < 0) addLog(st, `You still owe The Boss ${fmt(st.debt)}. Leaving town would be wise.`, 'bad');
-    addLog(st, `You cash out with ${fmt(score)}.`, score > 0 ? 'good' : 'bad');
-  },
+  finish(st) { cashOut(st, 'days'); },
+  /* Leaving before the last day: scored at once under the last day's rules,
+   * and ranked below every run played out (scoreOrder). It is the way out of
+   * a run the debt has already won, not a way to bank a good week. */
+  leavetown(st) { cashOut(st, 'left'); },
   borrow(st, a) {
     const amt = intAmt(a.amt);
     if (amt < 1) return 'Borrow at least $1.';
@@ -1355,6 +1374,7 @@ function waiting(st) {
   if (used(st) > 0) o.push('sell');
   if (sellableHere(st).length) o.push('sellall');
   o.push(st.day < st.days ? 'travel' : 'finish');
+  if (st.day < st.days) o.push('leavetown');
   if (P.service === 'loan') o.push('borrow', 'repay');
   if (P.service === 'bank') o.push('deposit', 'withdraw');
   if (P.service === 'vet') o.push('heal');
@@ -1480,8 +1500,11 @@ function botAct(st, style) {
   else if (st.cash > 60000 && st.loc !== 'vault') to = 'vault';
   return { t: 'travel', to };
 }
-/* High-score order: finished runs first, best score first; deaths after them all. */
-function scoreOrder(a, b) { return (!!a.dead - !!b.dead) || (b.score - a.score); }
+/* High-score order: runs played out first, then runs that left town early,
+ * then deaths; best score first within each. Leaving early is never a way to
+ * bank a good week, and dying is never a way out. */
+function scoreRank(e) { return e.dead ? 2 : e.left ? 1 : 0; }
+function scoreOrder(a, b) { return (scoreRank(a) - scoreRank(b)) || (b.score - a.score); }
 // ===== @core-end =====
 
 /* ---------------------------------------------------------------------------
@@ -1551,7 +1574,7 @@ function recordScore(st) {
   const all = scores();
   const key = boardKey(st.preset, st.days);
   const list = Array.isArray(all[key]) ? all[key] : [];
-  const entry = { rules: st.preset === 'custom' ? rulesChanges(R(st)).join(' · ') || 'Same as Regular' : undefined, name: st.name, score: st.over.score, cheat: !!st.stats.cheated, dead: st.over.reason === 'dead', day: st.over.day, at: new Date().toISOString().slice(0, 10), id: st.seed + ':' + st.logN };
+  const entry = { rules: st.preset === 'custom' ? rulesChanges(R(st)).join(' · ') || 'Same as Regular' : undefined, name: st.name, score: st.over.score, cheat: !!st.stats.cheated, dead: st.over.reason === 'dead', left: st.over.reason === 'left' || undefined, day: st.over.day, at: new Date().toISOString().slice(0, 10), id: st.seed + ':' + st.logN };
   list.push(entry);
   list.sort(scoreOrder);
   all[key] = list.slice(0, 10);
@@ -1605,8 +1628,8 @@ function act(a) {
     save(KEY_GAME, S);
   }
   if (a.t === 'travel') ui.arrived = true;
-  if (a.t === 'travel' || a.t === 'finish') ui.modal = S.over ? { kind: 'over' } : null;
-  if (['buy', 'sell', 'sellall', 'travel', 'finish'].includes(a.t)) { ui.trade = null; ui.side = null; ui.confirmCash = false; }
+  if (a.t === 'travel' || a.t === 'finish' || a.t === 'leavetown') ui.modal = S.over ? { kind: 'over' } : null;
+  if (['buy', 'sell', 'sellall', 'travel', 'finish', 'leavetown'].includes(a.t)) { ui.trade = null; ui.side = null; ui.confirmCash = false; }
   render();
 }
 
@@ -1957,7 +1980,7 @@ function setupHTML() {
 function scoreTable(list, hi) {
   if (!list.length) return '<p class="dim">No runs finished yet.</p>';
   return `<table class="scores"><tr><th>#</th><th>Name</th><th class="r">Score</th><th>Date</th></tr>${list.map((e, i) =>
-    `<tr${i === hi ? ' class="warn"' : ''}><td>${i + 1}</td><td>${esc(e.name)}${e.cheat ? ' <span class="cheat" title="The Konami code was used this run">cheat</span>' : ''}${e.dead ? ` <span class="rip">RIP, day ${e.day}</span>` : ''}${e.rules ? `<br><small class="dim">${esc(e.rules)}</small>` : ''}</td><td class="r">${fmt(e.score)}</td><td class="dim">${esc(e.at || '')}</td></tr>`).join('')}</table>`;
+    `<tr${i === hi ? ' class="warn"' : ''}><td>${i + 1}</td><td>${esc(e.name)}${e.cheat ? ' <span class="cheat" title="The Konami code was used this run">cheat</span>' : ''}${e.dead ? ` <span class="rip">RIP, day ${e.day}</span>` : e.left ? ` <span class="dim">left day ${e.day}</span>` : ''}${e.rules ? `<br><small class="dim">${esc(e.rules)}</small>` : ''}</td><td class="r">${fmt(e.score)}</td><td class="dim">${esc(e.at || '')}</td></tr>`).join('')}</table>`;
 }
 
 /* Where a price sits in its good's usual range. The word carries the meaning;
@@ -2180,6 +2203,9 @@ function modalHTML() {
     case 'help': body = helpHTML(m.tab || 'basics'); break;
     case 'menu': body = menuHTML(); break;
     case 'map': body = mapHTML(); break;
+    case 'confirmLeave': body = `<h1 id="pc-mt">Leave town?</h1><p>The Boss collects what you owe from your cash and bank${used(S) ? `, and the ${used(S)} ${plural(used(S), 'unit')} in your pouch ${used(S) === 1 ? 'is' : 'are'} worth nothing` : ''}. Your run is scored now.</p>
+      <p class="note">A run that leaves early ranks below every run played to the end, so this is a way out, not a way to bank a good week.</p>
+      <div class="acts"><button class="danger" data-act="leaveconfirm"><kbd>Y</kbd>Leave town</button><button data-act="close"><kbd>Esc</kbd>Keep playing</button></div>`; break;
     case 'confirmNew': body = `<h1 id="pc-mt">Abandon this run?</h1><p>Your current run will not be scored. You go back to the title screen, where you can change the difficulty and run length.</p>
       <div class="acts"><button class="danger" data-act="newconfirm"><kbd>Y</kbd>Abandon run</button><button data-act="close"><kbd>Esc</kbd>Keep playing</button></div>`; break;
   }
@@ -2502,7 +2528,11 @@ function choiceCost(st, o) {
     case 'leave': return 'Nothing happens.';
     case 'sell': return `+${fmt(e.qty * e.price)} for all ${e.qty} Skooma.`;
     case 'decline': return 'Nothing happens.';
-    case 'pay': return e.type === 'boss' ? `${fmt(e.amount)}. Your heat drops to 0.` : `${fmt(e.demand)} off your debt, and the goon clock resets.`;
+    case 'pay': {
+      if (e.type === 'boss') return `${fmt(e.amount)}. Your heat drops to 0.`;
+      const paid = goonPay(st);
+      return paid >= e.demand ? `${fmt(e.demand)} off your debt, and the goon clock resets.` : `${fmt(paid)}, everything on you, off your debt. No beating, but they're back in ${R(st).goonDays - goonsBack(st)} days.`;
+    }
     case 'refuse': return e.type === 'boss'
       ? `Your heat rises to ${Math.min(100, st.heat + 20)}.`
       : `They hit you for 12–28${collar} and take ${fmt(goonTake(st))} toward the debt.`;
@@ -2544,7 +2574,7 @@ function encHTML() {
       : `<p>Casey Benton suggests a <b>${fmt(e.amount)}</b> donation to make your heat go away. Refusing will make it worse.</p>${st.cash < e.amount ? '<p class="note">You don\'t have that much cash on you.</p>' : ''}`;
   } else if (e.type === 'goons') {
     title = "The Boss's goons";
-    body = `<p>They want <b>${fmt(e.demand)}</b> toward your debt, now. Refuse and they'll take it out of your hide and your pockets.</p>${st.cash < e.demand ? '<p class="note">You don\'t have that much cash on you.</p>' : ''}`;
+    body = `<p>They want <b>${fmt(e.demand)}</b> toward your debt, now. Refuse and they'll take it out of your hide and your pockets.</p>${st.cash < e.demand ? `<p class="note">${st.cash > 0 ? `You have ${fmt(st.cash)} on you. They'll take that, for now.` : 'Your pockets are empty, and they know it.'}</p>` : ''}`;
   } else if (e.type === 'stray') {
     const it = GEAR[e.item];
     title = 'A stray';
@@ -2561,8 +2591,9 @@ function encHTML() {
 }
 
 /* One line that tells you how the run went, celebrating a board place. */
-function verdict(score, rank) {
+function verdict(score, rank, left) {
   if (score < 0) return `<p class="verdict bad">You leave PumaCity still owing Casey Benton. She'll remember.</p>`;
+  if (left) return `<p class="verdict dim">Debt cleared. Scored, but below every run played to the end.</p>`;
   if (rank === 0) return `<p class="verdict best">A new best score for this difficulty and run length.</p>`;
   if (rank > 0) return `<p class="verdict good">Number ${rank + 1} on the board.</p>`;
   return `<p class="verdict dim">Debt cleared. Not a board score this time.</p>`;
@@ -2573,11 +2604,13 @@ function overHTML() {
   const o = st.over;
   const list = board(st.preset, st.days);
   const dead = o.reason === 'dead';
+  const left = o.reason === 'left';
   return `<div class="back"><div class="modal${dead ? ' dead' : ''}" role="alertdialog" aria-modal="true" aria-labelledby="pc-mt">
-    <h1 id="pc-mt">${dead ? 'You died' : 'The run is over'}</h1>
+    <h1 id="pc-mt">${dead ? 'You died' : left ? 'You leave town' : 'The run is over'}</h1>
+    ${left ? `<p class="note">Day ${o.day} of ${st.days}. A run that leaves early ranks below every run played to the end.</p>` : ''}
     ${dead ? `<p class="bad">${esc(o.why)}</p><p>Day ${o.day} of ${st.days}. ${o.score < 0 ? `The debt outlives you: <b>${fmt(o.score)}</b>.` : 'Whatever you were worth dies with you: <b>$0</b>.'} A death ranks below every run played out.</p>` : `
     <p class="final${o.score < 0 ? ' neg' : ''}">${fmt(o.score)}</p>
-    ${verdict(o.score, ui.rank)}
+    ${verdict(o.score, ui.rank, left)}
     <table><tr><td>Cash</td><td class="r">${fmt(st.cash)}</td></tr><tr><td>Bank</td><td class="r">${fmt(st.bank)}</td></tr>
     <tr><td>Still owed to The Boss</td><td class="r">${fmt(-st.debt)}</td></tr>
     ${o.unsold ? `<tr><td class="dim">Unsold goods (worth nothing)</td><td class="r dim">${o.unsold} ${plural(o.unsold, 'unit')}</td></tr>` : ''}
@@ -2594,7 +2627,8 @@ function menuHTML() {
     <button data-act="close"><kbd>Esc</kbd>Back to the game</button>
     <button data-act="help"><kbd>?</kbd>How to play</button>
     <button data-act="title"><kbd>Q</kbd>Title screen (your run is saved)</button>
-    <button class="danger" data-act="newrun"><kbd>N</kbd>Abandon run</button>
+    ${S.day < S.days ? '<button data-act="leavetown"><kbd>L</kbd>Leave town (cash out now, scored)</button>' : ''}
+    <button class="danger" data-act="newrun"><kbd>N</kbd>Abandon run (not scored)</button>
   </div>`;
 }
 
@@ -2611,9 +2645,9 @@ function helpHTML(tab) {
   let body = '';
   if (tab === 'basics') body = `<dl class="help">
     <dt>The goal</dt><dd>Finish the run with as much money as you can. Your score is your cash plus your bank balance, minus whatever you still owe The Boss.</dd>
-    <dt>The debt</dt><dd>You start owing Casey Benton, The Boss, ${fmt(r.startDebt)}. It grows ${pctText(r.debtRate)} every day. Pay it down at PVN Tower. Go ${r.goonDays} days without a real payment (at least ${pctText(r.repayReset)} of the debt) and her goons come to collect; the Debt box counts down to them.</dd>
+    <dt>The debt</dt><dd>You start owing Casey Benton, The Boss, ${fmt(r.startDebt)}. It grows ${pctText(r.debtRate)} every day. Pay it down at PVN Tower. Go ${r.goonDays} days without a real payment (at least ${pctText(r.repayReset)} of the debt) and her goons come to collect; the Debt box counts down to them. Pay what they ask and the clock resets; hand over what you have and they come back in a few days; refuse and they take it out of your hide.</dd>
     <dt>Trading</dt><dd>Each day you're somewhere new, and prices are new too. Buy cheap, carry it somewhere better, and sell. Your pouch holds ${r.baseCap} units until you buy a bigger one. The <i>vs usual</i> column says whether a price is a bargain, cheap, fair, steep or sky-high for that good, and the Held column shows what you paid and how today's price compares. A faint tick on the same line marks the last price you saw for it. A headline (shown above the market, and marked ! in it) sends one good's price wild.</dd>
-    <dt>Travel</dt><dd>Each trip takes one day. Travel opens a map of PumaCity. Each district shows the chance the Watchers find you there tomorrow, and badges flag where the goons may be waiting (PVN Tower is always safe from them), where your Pawphone knows tomorrow's prices, and the vet when you're hurt. On your last day you can't travel; sell everything and cash out. Goods left in your pouch are worth nothing.</dd>
+    <dt>Travel</dt><dd>Each trip takes one day. Travel opens a map of PumaCity. Each district shows the chance the Watchers find you there tomorrow, and badges flag where the goons may be waiting (PVN Tower is always safe from them), where your Pawphone knows tomorrow's prices, and the vet when you're hurt. On your last day you can't travel; sell everything and cash out. Goods left in your pouch are worth nothing. You can also leave town early, from the menu: the run is scored at once under the same rules, but ranks below every run played to the end.</dd>
     <dt>Heat</dt><dd>Big sales and fights raise your heat: cool, warm, hot, then wanted. The hotter you are, the more often the Watchers come and the more of them there are. A heavy load draws them too, whatever your heat: the Pouch box shows its pull, and the buy box tells you before you add to it. It cools a little every day, faster at The Ranch, and The Boss will make it vanish for a price.</dd>
     <dt>Encounters</dt><dd>Watchers and rival crews: run, fight (you need a weapon), or give up. Giving up to the Watchers costs your whole stash and a fine; a failed getaway spills part of your load. The more you carry, the more often they come. If your health hits zero, the run is over: you keep any debt on your score but none of your money, and a death ranks below every run played out. Money in the bank is safe from muggers.</dd>
   </dl>`;
@@ -2911,6 +2945,8 @@ root.addEventListener('click', e => {
     case 'heal': act({ t: 'heal' }); return;
     case 'menu': ui.modal = { kind: 'menu' }; render(); return;
     case 'newrun': ui.modal = { kind: 'confirmNew' }; render(); return;
+    case 'leavetown': ui.modal = { kind: 'confirmLeave' }; render(); return;
+    case 'leaveconfirm': act({ t: 'leavetown' }); return;
     case 'newconfirm': save(KEY_GAME, null); quitToTitle(); return;
     case 'enc': if (!encLocked()) act({ t: v }); return;
     case 'again': S = null; startRun(); return;
@@ -3042,7 +3078,8 @@ document.addEventListener('keydown', e => {
       return;
     }
     if (m.kind === 'confirmNew' && k === 'y') { save(KEY_GAME, null); quitToTitle(); return; }
-    if (m.kind === 'menu') { if (k === '?' || k === '/') { ui.modal = { kind: 'help', tab: 'basics' }; render(); } else if (k === 'q') quitToTitle(); else if (k === 'n') { ui.modal = { kind: 'confirmNew' }; render(); } }
+    if (m.kind === 'confirmLeave' && k === 'y') { act({ t: 'leavetown' }); return; }
+    if (m.kind === 'menu') { if (k === '?' || k === '/') { ui.modal = { kind: 'help', tab: 'basics' }; render(); } else if (k === 'q') quitToTitle(); else if (k === 'n') { ui.modal = { kind: 'confirmNew' }; render(); } else if (k === 'l' && S.day < S.days) { ui.modal = { kind: 'confirmLeave' }; render(); } }
     if (m.kind === 'help') helpKey(k);
     return;
   }
