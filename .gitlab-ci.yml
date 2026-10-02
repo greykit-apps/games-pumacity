@@ -17,6 +17,7 @@ validate:
     - test -s index.html
     - grep -q 'data-pumacity-game' index.html
     - node tools/check-all.js
+    - node tools/replay.js
     - node tools/sim.js 20
 
 deploy:

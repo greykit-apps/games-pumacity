@@ -42,7 +42,7 @@ function checkInvariants(st, where) {
   if (!(st.bank >= 0)) bad.push(`bank ${st.bank}`);
   if (!(st.debt >= 0)) bad.push(`debt ${st.debt}`);
   if (C.used(st) > C.capacity(st)) bad.push(`pouch ${C.used(st)}/${C.capacity(st)}`);
-  if (!(st.hp >= 0 && st.hp <= C.CONFIG.maxHp)) bad.push(`hp ${st.hp}`);
+  if (!(st.hp >= 0 && st.hp <= C.R(st).maxHp)) bad.push(`hp ${st.hp}`);
   if (!(st.heat >= 0 && st.heat <= 100)) bad.push(`heat ${st.heat}`);
   if (!(st.day >= 1 && st.day <= st.days)) bad.push(`day ${st.day}`);
   for (const g of C.GOODS) {
