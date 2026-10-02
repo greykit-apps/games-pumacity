@@ -127,6 +127,9 @@ p{margin:0 0 var(--s2)}
 .stat.bad span,.stat.bad em{color:var(--danger)}
 .stat.warn span{color:var(--warn)}
 .stat.cash{position:relative}
+.stat.cash .undo{position:absolute;right:var(--s3);bottom:var(--s2);min-height:0;padding:1px 8px;font-size:12px;
+  background:var(--panel2);border-color:var(--lit);color:var(--text);animation:popIn .14s cubic-bezier(.22,1,.36,1)}
+.stat.cash .undo kbd{margin:0 0 0 6px}
 .delta{position:absolute;right:var(--s4);top:var(--s2);font-size:13px;font-weight:600;pointer-events:none;
   animation:deltaUp 1s cubic-bezier(.22,1,.36,1) forwards}
 .delta.up{color:var(--good)}.delta.down{color:var(--steel)}
@@ -281,6 +284,7 @@ button.link:hover{color:var(--text)}
 .bd.high,.bd.goons,.bd.vet{color:var(--danger);border-color:#5a1f2a}
 .bd.safe{color:var(--good);border-color:#1d4a2a}
 .bd.tip,.bd.here{color:var(--accent);border-color:#17485a}
+.legend .li{display:inline-flex;gap:6px;align-items:center;margin-right:var(--s3)}
 .legend{display:flex;flex-wrap:wrap;gap:4px var(--s2);align-items:center;margin:var(--s3) 0 0;font-size:12px;color:var(--dim)}
 .flash{margin-top:var(--s2);color:var(--danger)}
 .flash:empty{display:none}
@@ -301,11 +305,19 @@ button.link:hover{color:var(--text)}
 .log{position:absolute;inset:0;overflow:auto;padding:var(--s3) var(--s5)}
 .log p{margin:0 0 3px}
 .log .day{color:var(--accent);margin-top:var(--s3)}
+.logday{margin:0 0 2px}
+.logday summary{cursor:pointer;color:var(--steel);list-style:none}
+.logday summary::-webkit-details-marker{display:none}
+.logday summary::before{content:'▸ ';color:var(--dim)}
+.logday[open] summary::before{content:'▾ '}
+.logday[open]{margin-bottom:var(--s2)}
+.logday p{padding-left:1.2em}
 .log p:first-child{margin-top:0}
 .news{color:var(--warn)}.bad{color:var(--danger)}.good{color:var(--good)}.enc{color:var(--violet)}
 .trade{color:var(--steel)}.dim{color:var(--dim)}.warn{color:var(--warn)}
 .bar{display:flex;gap:var(--s2);flex-wrap:wrap;padding:var(--s2);border:1px solid var(--line);border-radius:3px;background:var(--panel)}
 .bar .grow{flex:1}
+.bar .sm{display:none}
 
 .back{position:fixed;inset:0;background:rgba(2,4,10,.8);display:flex;align-items:center;justify-content:center;padding:var(--s4);z-index:var(--z-modal)}
 .modal{background:var(--panel);border:1px solid var(--lit);border-radius:4px;max-width:540px;width:100%;
@@ -429,8 +441,12 @@ button.link:hover{color:var(--text)}
   .bd svg{width:9px;height:9px}
   .spot-starport{padding-left:calc(14% + 3px)}
   .legend{font-size:11px}
-  .bar{position:sticky;bottom:6px;z-index:var(--z-sticky)}
-  .bar button{flex:1 1 auto}
+  .bar{position:sticky;bottom:6px;z-index:var(--z-sticky);flex-wrap:nowrap;gap:6px}
+  .bar .grow,.bar [data-act=help]{display:none}
+  .bar button{flex:1 1 0;min-width:0;padding:0 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .bar .lg{display:none}
+  .bar .sm{display:inline}
+  .stat.cash .undo{min-height:32px;padding:0 10px}
   kbd{display:none}
   .modal{padding:14px}
   .choices{grid-template-columns:minmax(0,1fr)}
@@ -492,15 +508,15 @@ const GOOD = Object.fromEntries(GOODS.map(g => [g.id, g]));
 /* mods multiply a good's price here; `all` multiplies every good. watch, mug
  * and boss scale those encounters; cool is extra heat shed per day here. */
 const PLACES = [
-  { id: 'plaza', name: 'Market Plaza', tag: "outfitter · tourists pay more", service: null, serviceName: 'Outfitter', shop: ['fanny', 'saddle', 'spray', 'laser', 'claws', 'collar', 'mittens', 'shades'],
+  { id: 'plaza', name: 'Market Plaza', tag: "outfitter · tourists pay more", service: null, serviceShort: 'Outfitter', serviceName: 'Outfitter', shop: ['fanny', 'saddle', 'spray', 'laser', 'claws', 'collar', 'mittens', 'shades'],
     mods: { psychos: 1.1, reddot: 1.15, moonsugar: 1.15, skooma: 1.15 }, watch: 1, mug: 1.5,
     blurb: "Downtown: an open-air mall of stucco arcades, palms and fountains, full of tourists with money to spend.",
     special: 'Tourists pay a premium for luxury goods. The outfitter sells pouches, weapons and accessories.' },
-  { id: 'pvn', name: 'PVN Tower', tag: "The Boss's loans · Skooma sells high", service: 'loan', serviceName: "The Boss's office", shop: [],
+  { id: 'pvn', name: 'PVN Tower', tag: "The Boss's loans · Skooma sells high", service: 'loan', serviceShort: 'Office', serviceName: "The Boss's office", shop: [],
     mods: { skooma: 1.25 }, watch: 1, boss: 3,
     blurb: "Casey Benton's office tower: a theater at ground level, a nightclub above it, and her office in the penthouse.",
     special: 'The Boss lends money from the penthouse. Skooma sells high at the club.' },
-  { id: 'vault', name: 'The Vault', tag: "the bank", service: 'bank', serviceName: "Overseer's terminal", shop: [],
+  { id: 'vault', name: 'The Vault', tag: "the bank", service: 'bank', serviceShort: 'Bank', serviceName: "Overseer's terminal", shop: [],
     mods: {}, watch: 0.8, mug: 0.3,
     blurb: "A fully stocked vault under the city, waiting for PumaCity's leadership in case of war. Until then, the Overseer runs it as a bank.",
     special: 'Money in the Vault is safe from muggers and the Watchers.' },
@@ -508,15 +524,15 @@ const PLACES = [
     mods: { nip: 0.45 }, watch: 0.5, cool: 6,
     blurb: "An old horse ranch on the edge of town, its paddocks turned over to grow fields.",
     special: "Catnip is cheap, and the Watchers rarely come out this far." },
-  { id: 'starport', name: 'Starport', tag: "cheap Moonsugar & Skooma · Bay 9", service: null, serviceName: 'Bay 9 outfitter', shop: ['hovercrate', 'mech'],
+  { id: 'starport', name: 'Starport', tag: "cheap Moonsugar & Skooma · Bay 9", service: null, serviceShort: 'Bay 9', serviceName: 'Bay 9 outfitter', shop: ['hovercrate', 'mech'],
     mods: { moonsugar: 0.8, skooma: 0.8 }, watch: 1.3,
     blurb: "Where the ship lands, trading PumaCity's goods with other ports.",
     special: "Moonsugar and Skooma come in cheap off the ship. The outfitter in Bay 9 sells gear you can't get in town." },
-  { id: 'convention', name: 'The Convention Center', tag: "everything sells high · pickpockets", service: null, serviceName: 'Tech expo', shop: ['pawphone'],
+  { id: 'convention', name: 'The Convention Center', tag: "everything sells high · pickpockets", service: null, serviceShort: 'Expo', serviceName: 'Tech expo', shop: ['pawphone'],
     all: 1.2, mods: {}, watch: 1.1, mug: 3,
     blurb: 'The convention center by the starport, with a different event every week.',
     special: 'Crowds pay over the odds for everything. Pickpockets work the crowd.' },
-  { id: 'suburbs', name: 'Suburbs', tag: "the vet", service: 'vet', serviceName: 'Vet', shop: [],
+  { id: 'suburbs', name: 'Suburbs', tag: "the vet", service: 'vet', serviceShort: 'Vet', serviceName: 'Vet', shop: [],
     mods: {}, watch: 0.9,
     blurb: 'Single-family homes on quiet cul-de-sacs, every one of them rented from Casey Benton.',
     special: 'The vet patches you up.' },
@@ -1202,6 +1218,25 @@ function step(st0, a) {
 }
 
 /* For the debug hook and the tests: the same state with a given encounter started. */
+/* Undo the trade that turned `before` into `after`: back to exactly before,
+ * the heat a big sale added included. Refused (null) unless the only things
+ * that changed are the ones a market trade touches, so it can never rewind a
+ * trip, a roll of the dice, a debt payment or an encounter. */
+const TRADE_FIELDS = ['cash', 'stash', 'cost', 'heat', 'stats', 'log', 'logN'];
+function undoTrade(before, after) {
+  if (!before || !after || before.over || after.over || before.enc || after.enc) return null;
+  for (const k of Object.keys(after)) {
+    if (TRADE_FIELDS.includes(k)) continue;
+    if (JSON.stringify(after[k]) !== JSON.stringify(before[k])) return null;
+  }
+  if (!(after.logN > before.logN)) return null;
+  const st = JSON.parse(JSON.stringify(before));
+  st.logN = after.logN;
+  st.log = JSON.parse(JSON.stringify(after.log));
+  addLog(st, 'You think better of it. Trade undone.', 'dim');
+  return st;
+}
+
 /* The Konami code: $25,000 and a clean slate with the Watchers. The run is
  * marked as cheated, and its high-score entry says so. */
 const CHEAT_CASH = 25000;
@@ -1355,6 +1390,7 @@ function coachStep(a) {
 
 // ---- actions
 const TRADES = ['buy', 'sell', 'sellall', 'deal'];
+const UNDO_MS = 6000;
 function act(a) {
   if (!S) return;
   const before = S;
@@ -1365,6 +1401,14 @@ function act(a) {
   announce(r.events.map(l => l.text));
   // A trade gets a beat: the cash moves, and the rows that changed light up.
   coachStep(a);
+  // Any action ends the chance to undo the previous trade; a market trade
+  // opens a new one for a few seconds.
+  ui.undo = null;
+  if (a && ['buy', 'sell', 'sellall'].includes(a.t) && !before.enc) {
+    const u = { before, after: S };
+    ui.undo = u;
+    setTimeout(() => { if (ui.undo === u) { ui.undo = null; if (S === u.after) render(); } }, UNDO_MS);
+  }
   if (a && TRADES.includes(a.t) && S.cash !== before.cash) {
     ui.fx = { from: before.cash, to: S.cash, rows: GOODS.map((g, i) => (S.stash[g.id] || 0) !== (before.stash[g.id] || 0) ? i : -1).filter(i => i >= 0) };
   }
@@ -1378,6 +1422,21 @@ function act(a) {
   if (a.t === 'travel') ui.arrived = true;
   if (a.t === 'travel' || a.t === 'finish') ui.modal = S.over ? { kind: 'over' } : null;
   if (['buy', 'sell', 'sellall', 'travel', 'finish'].includes(a.t)) { ui.trade = null; ui.side = null; ui.confirmCash = false; }
+  render();
+}
+
+function undoLast() {
+  const u = ui.undo;
+  if (!u || S !== u.after) return;
+  const back = undoTrade(u.before, u.after);
+  ui.undo = null;
+  if (!back) return;
+  const from = S.cash;
+  S = back;
+  save(KEY_GAME, S);
+  ui.trade = null;
+  ui.fx = { from, to: S.cash, rows: GOODS.map((g, i) => (S.stash[g.id] || 0) !== (u.after.stash[g.id] || 0) ? i : -1).filter(i => i >= 0) };
+  announce([S.log[S.log.length - 1].text]);
   render();
 }
 
@@ -1748,6 +1807,26 @@ function debtNote(st) {
   return n <= 0 ? 'goons: any day now' : `goons in ${n} ${plural(n, 'day')}`;
 }
 
+/* The log, grouped by day. Today and yesterday read in full; older days fold
+ * to one line each ('Day 18 · Starport · 4 entries') that opens on a click.
+ * Which ones are open survives re-renders. */
+function logHTML(st) {
+  const days = [];
+  for (const l of st.log) {
+    if (!days.length || days[days.length - 1].d !== l.d) days.push({ d: l.d, lines: [] });
+    days[days.length - 1].lines.push(l);
+  }
+  const line = l => `<p class="${l.cls}">${esc(l.text)}</p>`;
+  return days.map(g => {
+    if (g.d >= st.day - 1) return g.lines.map(line).join('');
+    const head = g.lines.find(l => l.cls === 'day');
+    const where = head ? head.text.replace(/^Day \d+: /, '').replace(/\.$/, '') : '';
+    const rest = g.lines.filter(l => l !== head);
+    const open = ui.openDays && ui.openDays.has(g.d);
+    return `<details class="logday" data-day="${g.d}"${open ? ' open' : ''}><summary>Day ${g.d}${where ? ' · ' + esc(where) : ''} <span class="dim">· ${rest.length} ${plural(rest.length, 'entry', 'entries')}</span></summary>${rest.map(line).join('')}</details>`;
+  }).join('');
+}
+
 function gameHTML() {
   const st = S;
   const P = here(st);
@@ -1783,7 +1862,7 @@ function gameHTML() {
   const svc = P.service || P.shop.length;
   const tip = st.tip ? `<div class="tip"><b>Pawphone</b>: tomorrow at ${PLACE[st.tip.loc].name}<br>${GOODS.map(g =>
     `${g.name} ${st.tip.prices[g.id] == null ? '—' : fmt(st.tip.prices[g.id])}`).join(' · ')}</div>` : '';
-  const log = st.log.map(l => `<p class="${l.cls}">${esc(l.text)}</p>`).join('');
+  const log = logHTML(st);
   const left = st.days - st.day;
   const sellable = sellableHere(st).length > 0;
   return `<div class="pc">
@@ -1794,7 +1873,7 @@ function gameHTML() {
   </header>
   <div class="dayline${last ? ' last' : ''}"><i style="width:${Math.round(st.day / st.days * 100)}%"></i></div>
   <div class="status">
-    <div class="stat lead cash"><small>Cash</small><span>${fmt(st.cash)}</span></div>
+    <div class="stat lead cash"><small>Cash</small><span>${fmt(st.cash)}</span>${ui.undo && ui.undo.after === st ? '<button class="undo" data-act="undo" title="Undo that trade (Z)">Undo<kbd>Z</kbd></button>' : ''}</div>
     <div class="stat lead${st.debt > 0 ? (st.debtAge >= CONFIG.goonDays - 2 ? ' bad' : ' warn') : ''}"><small>Debt</small><span>${fmt(st.debt)}</span><em>${debtNote(st)}</em></div>
     <div class="stat"><small>Bank</small><span>${fmt(st.bank)}</span></div>
     <div class="stat${st.hp <= 30 ? ' bad' : ''}"><small>Health</small><span>${st.hp} / ${CONFIG.maxHp}</span>${meter(st.hp, CONFIG.maxHp, st.hp <= 30 ? 'low' : '')}</div>
@@ -1815,10 +1894,10 @@ function gameHTML() {
           : last ? '<button class="primary" data-act="finish"><kbd>E</kbd>Cash out</button>'
           : `<button class="primary" data-act="travel" aria-pressed="${!!(ui.modal && ui.modal.kind === 'map')}"><kbd>T</kbd>Travel</button>`}
         ${!last && u > 0 ? `<button data-act="sellall" ${sellable ? '' : 'disabled'} title="Sell everything you carry that someone here is buying"><kbd>A</kbd>Sell all</button>` : ''}
-        ${svc && !last ? `<button data-act="service"><kbd>V</kbd>${esc(P.serviceName)}</button>` : ''}
+        ${svc && !last ? `<button data-act="service" title="${esc(P.serviceName)}"><kbd>V</kbd><span class="lg">${esc(P.serviceName)}</span><span class="sm">${esc(P.serviceShort || P.serviceName)}</span></button>` : ''}
         <span class="grow"></span>
         <button data-act="help" aria-label="Help" title="How to play (?)">?</button>
-        ${ui.confirmCash ? '' : '<button data-act="menu"><kbd>Esc</kbd>Menu</button>'}
+        ${ui.confirmCash ? '' : '<button data-act="menu" class="menu-btn"><kbd>Esc</kbd><span class="lg">Menu</span><span class="sm">More</span></button>'}
       </nav>
     </section>
     <aside class="side">
@@ -2002,6 +2081,7 @@ function watchLevel(r) { return r >= 0.25 ? 'high' : r >= 0.12 ? 'mid' : 'low'; 
 function mapHTML() {
   const due = goonsDue(S);
   const hurt = S.hp < 60;
+  const shown = new Set(['eye']);  // the legend lists only what's on the map
   const spot = id => {
     const i = PLACES.findIndex(P => P.id === id);
     const P = PLACES[i];
@@ -2014,21 +2094,27 @@ function mapHTML() {
       badges.push(`<span class="bd ${watchLevel(r)}" title="Chance the Watchers find you on arrival">${ICON.eye}${Math.round(r * 100)}%</span>`);
       said.push(`Watchers about ${Math.round(r * 100)}% on arrival`);
     }
-    if (S.tip && S.tip.loc === P.id) { badges.push(`<span class="bd tip" title="Your Pawphone shows tomorrow's prices here">${ICON.phone}prices</span>`); said.push("your Pawphone knows tomorrow's prices"); }
-    if (due && P.id === 'pvn') { badges.push(`<span class="bd safe" title="Her goons won't come for you here">${ICON.safe}safe</span>`); said.push('safe from her goons'); }
-    else if (due && !here) { badges.push(`<span class="bd goons" title="Her goons may be waiting">${ICON.goons}goons</span>`); said.push('her goons may be waiting'); }
-    if (hurt && P.service === 'vet') { badges.push(`<span class="bd vet" title="The vet can patch you up">${ICON.vet}vet</span>`); said.push('the vet'); }
+    if (S.tip && S.tip.loc === P.id) { shown.add('tip'); badges.push(`<span class="bd tip" title="Your Pawphone shows tomorrow's prices here">${ICON.phone}prices</span>`); said.push("your Pawphone knows tomorrow's prices"); }
+    if (due && P.id === 'pvn') { shown.add('safe'); badges.push(`<span class="bd safe" title="Her goons won't come for you here">${ICON.safe}safe</span>`); said.push('safe from her goons'); }
+    else if (due && !here) { shown.add('goons'); badges.push(`<span class="bd goons" title="Her goons may be waiting">${ICON.goons}goons</span>`); said.push('her goons may be waiting'); }
+    if (hurt && P.service === 'vet') { shown.add('vet'); badges.push(`<span class="bd vet" title="The vet can patch you up">${ICON.vet}vet</span>`); said.push('the vet'); }
     const [x, y, w, h] = SPOT[id];
     const label = P.name.replace(/^The Convention Center$/, 'Convention Center');
     return `<button class="spot spot-${id}${here ? ' here' : ''}" style="left:${x}%;top:${y}%;width:${w}%;height:${h}%" data-act="go" data-v="${P.id}" ${here ? 'disabled aria-current="location"' : ''} aria-label="${P.name}. ${said.join('. ')}.">
       <span class="tag"><span class="lab"><kbd>${i + 1}</kbd><b>${label}</b></span><span class="badges">${badges.join('')}</span></span></button>`;
   };
+  const spots = PLACES.map(P => spot(P.id)).join('');
+  const key = {
+    eye: `<span class="bd low">${ICON.eye}%</span> Watcher odds when you arrive`,
+    tip: `<span class="bd tip">${ICON.phone}prices</span> Pawphone tip`,
+    goons: `<span class="bd goons">${ICON.goons}goons</span> goons may be waiting`,
+    safe: `<span class="bd safe">${ICON.safe}safe</span> safe from goons`,
+    vet: `<span class="bd vet">${ICON.vet}vet</span> the vet`,
+  };
   return `<h1 id="pc-mt">Where to?</h1>
   <p class="note">Every trip takes a day, and the debt grows 10% overnight.</p>
-  <div class="city" role="group" aria-label="Map of PumaCity">${cityMapSVG()}${PLACES.map(P => spot(P.id)).join('')}</div>
-  <p class="legend"><span class="bd low">${ICON.eye}%</span> Watcher odds when you arrive
-    <span class="bd tip">${ICON.phone}prices</span> Pawphone tip
-    <span class="bd goons">${ICON.goons}goons</span> goons due <span class="bd safe">${ICON.safe}safe</span> safe from them</p>
+  <div class="city" role="group" aria-label="Map of PumaCity">${cityMapSVG()}${spots}</div>
+  <p class="legend">${['eye', 'tip', 'goons', 'safe', 'vet'].filter(k => shown.has(k)).map(k => `<span class="li">${key[k]}</span>`).join('')}</p>
   <div class="acts"><button data-act="close"><kbd>Esc</kbd>Stay here</button></div>`;
 }
 
@@ -2203,8 +2289,8 @@ function helpHTML(tab) {
     <dt>The goal</dt><dd>Finish the run with as much money as you can. Your score is your cash plus your bank balance, minus whatever you still owe The Boss.</dd>
     <dt>The debt</dt><dd>You start owing Casey Benton, The Boss, ${fmt(CONFIG.startDebt)}. It grows 10% every day. Pay it down at PVN Tower. Go ${CONFIG.goonDays} days without a real payment (at least 10% of the debt) and her goons come to collect; the Debt box counts down to them.</dd>
     <dt>Trading</dt><dd>Each day you're somewhere new, and prices are new too. Buy cheap, carry it somewhere better, and sell. Your pouch holds ${CONFIG.baseCap} units until you buy a bigger one. The <i>vs usual</i> column says whether a price is a bargain, cheap, fair, steep or sky-high for that good, and the Held column shows what you paid and how today's price compares. A ▲ or ▼ compares a price with the last one you saw. A headline (shown above the market, and marked ! in it) sends one good's price wild.</dd>
-    <dt>Travel</dt><dd>Each trip takes one day. On your last day you can't travel; sell everything and cash out. Goods left in your pouch are worth nothing.</dd>
-    <dt>Heat</dt><dd>Big sales and fights raise your heat: cool, warm, hot, then wanted. The hotter you are, the more often the Watchers come and the more of them there are. It cools a little every day, faster at The Ranch, and The Boss will make it vanish for a price.</dd>
+    <dt>Travel</dt><dd>Each trip takes one day. Travel opens a map of PumaCity. Each district shows the chance the Watchers find you there tomorrow, and badges flag where the goons may be waiting (PVN Tower is always safe from them), where your Pawphone knows tomorrow's prices, and the vet when you're hurt. On your last day you can't travel; sell everything and cash out. Goods left in your pouch are worth nothing.</dd>
+    <dt>Heat</dt><dd>Big sales and fights raise your heat: cool, warm, hot, then wanted. The hotter you are, the more often the Watchers come and the more of them there are. A heavy load draws them too, whatever your heat: the Pouch box shows its pull, and the buy box tells you before you add to it. It cools a little every day, faster at The Ranch, and The Boss will make it vanish for a price.</dd>
     <dt>Encounters</dt><dd>Watchers and rival crews: run, fight (you need a weapon), or give up. Giving up to the Watchers costs your whole stash and a fine; a failed getaway spills part of your load. The more you carry, the more often they come. If your health hits zero, the run is over and scores nothing. Money in the bank is safe from muggers.</dd>
   </dl>`;
   if (tab === 'places') body = `<dl class="help">${PLACES.map(P => `<dt>${P.name}</dt><dd>${P.blurb} ${P.special}</dd>`).join('')}</dl>`;
@@ -2218,6 +2304,8 @@ function helpHTML(tab) {
     <tr><td><kbd>B</kbd> / <kbd>S</kbd></td><td>Buy or sell the selected good; <kbd>Enter</kbd> then trades the most you can, or type an amount first</td></tr>
     <tr><td><kbd>M</kbd> <kbd>↑</kbd> <kbd>↓</kbd></td><td>In the quantity box: the most you can, one more, one fewer</td></tr>
     <tr><td><kbd>A</kbd></td><td>Sell all: everything you carry that someone here is buying</td></tr>
+    <tr><td>Double-click</td><td>Buy or Sell with the mouse: trades the most you can</td></tr>
+    <tr><td><kbd>Z</kbd></td><td>Undo your last trade (for a few seconds after it)</td></tr>
     <tr><td><kbd>T</kbd></td><td>Travel: a map of PumaCity opens; <kbd>1</kbd>–<kbd>7</kbd> picks a district</td></tr>
     <tr><td><kbd>E</kbd></td><td>Cash out on the last day; <kbd>E</kbd> again confirms</td></tr>
     <tr><td><kbd>V</kbd></td><td>Visit this place's shop or office</td></tr>
@@ -2465,6 +2553,7 @@ root.addEventListener('click', e => {
     case 'qmax': setQty(qtyMax(ui.trade)); return;
     case 'qmaxgo': { const t = ui.trade; act({ t: t.side, good: GOODS[t.good].id, qty: qtyMax(t) }); return; }
     case 'stay': closePanels(); return;
+    case 'undo': undoLast(); return;
     case 'coachoff': prefs.coachDone = true; save(KEY_PREFS, prefs); render(); return;
     case 'finishcancel': ui.confirmCash = false; ui.panelOpener = null; render(); return;
     case 'sellall': act({ t: 'sellall' }); return;
@@ -2484,6 +2573,14 @@ root.addEventListener('click', e => {
     case 'title': quitToTitle(); return;
   }
 });
+
+root.addEventListener('toggle', e => {
+  const d = e.target.closest && e.target.closest('details.logday');
+  if (!d) return;
+  if (!ui.openDays) ui.openDays = new Set();
+  const day = Number(d.dataset.day);
+  if (d.open) ui.openDays.add(day); else ui.openDays.delete(day);
+}, true);
 
 root.addEventListener('submit', e => {
   e.preventDefault();
@@ -2505,7 +2602,7 @@ root.addEventListener('input', e => { if (e.target.id === 'pc-qty') updateTotal(
  * for a market key. So the two key sets share no letters (tools/check-all.js
  * holds them apart), and an encounter ignores input for a moment after it
  * appears, so a key already in flight can't answer it. */
-const MARKET_KEYS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'b', 's', 'a', 't', 'e', 'v', 'h', '?', '/'];
+const MARKET_KEYS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'b', 's', 'a', 't', 'e', 'v', 'h', 'z', '?', '/'];
 const ENC_KEYS = { r: ['run'], f: ['fight'], u: ['surrender'], d: ['deal'], l: ['leave'], p: ['pay'], y: ['sell', 'buy'], n: ['refuse', 'decline'] };
 const ENC_LOCK_MS = 400;
 function encLocked() { return S && S.enc && performance.now() < (ui.encUntil || 0); }
@@ -2605,6 +2702,7 @@ document.addEventListener('keydown', e => {
   if (inInput) return;
   if (/^[1-9]$/.test(k)) { ui.sel = Number(k) - 1; ui.trade = null; ui.flash = ''; render(); return; }
   if (k === 'a') { act({ t: 'sellall' }); return; }
+  if (k === 'z') { undoLast(); return; }
   if (k === 'ArrowDown') { e.preventDefault(); ui.sel = (ui.sel + 1) % GOODS.length; render(); return; }
   if (k === 'ArrowUp') { e.preventDefault(); ui.sel = (ui.sel + GOODS.length - 1) % GOODS.length; render(); return; }
   if (k === 'b') { openQty(ui.sel, 'buy'); return; }
