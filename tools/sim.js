@@ -37,7 +37,7 @@ const PROFIT_BAND = {
 /* Presets where some reckless run must die: combat has to be able to kill. */
 const MUST_DIE = ['regular', 'wanted'];
 const only = (args.find(a => a.startsWith('--preset=')) || '').slice(9);
-const PRESETS = only ? [only] : C.PRESET_IDS;
+const PRESETS = only === 'custom' ? [] : only ? [only] : C.PRESET_IDS;
 if (PRESETS.some(p => !PROFIT_BAND[p])) { console.error(`sim: no profit band for ${PRESETS.find(p => !PROFIT_BAND[p])}`); process.exit(1); }
 const MAX_ACTIONS = 6000;
 
@@ -66,9 +66,10 @@ function checkInvariants(st, where) {
   return !bad.length;
 }
 
-function playRun(seed, days, style, preset) {
-  let st = C.newGame({ seed, days, name: 'Bot', preset });
-  const where = `${preset}, seed ${seed}, ${days} days, ${style}`;
+function playRun(seed, days, style, preset) { return playRunWith(seed, days, style, { preset }, preset); }
+function playRunWith(seed, days, style, opts, label) {
+  let st = C.newGame(Object.assign({ seed, days, name: 'Bot' }, opts));
+  const where = `${label}, seed ${seed}, ${days} days, ${style}`;
   checkInvariants(st, where);
   for (let i = 0; i < MAX_ACTIONS; i++) {
     if (st.over) return st;
@@ -116,8 +117,28 @@ for (const days of C.CONFIG.lengths) {
 if (MUST_DIE.includes(preset) && reckDeaths === 0) fail(`${preset}: no reckless run ever died: combat cannot kill you, or the bots never fight`);
 }
 
+/* Custom rules have no balance to hold, but every combination of knobs must
+ * still play out: no crash, no broken invariant, every run ends. Each run
+ * draws its own random step for every knob (from a hash, so it's repeatable). */
+if (!only || only === 'custom') {
+  let n = 0;
+  for (let i = 0; i < N; i++) {
+    for (const days of C.CONFIG.lengths) for (const style of ['careful', 'reckless']) {
+      const seed = C.hash32(i * 2654435761 + days * 97 + (style === 'reckless' ? 1 : 0)) | 0;
+      const custom = Object.fromEntries(C.KNOBS.map((k, j) => [k.id, C.hash32(seed + j * 40503) % k.steps.length]));
+      let st;
+      try {
+        st = playRunWith(seed, days, style, { preset: 'custom', custom }, `custom ${JSON.stringify(custom)}`);
+      } catch (e) { fail(`custom ${JSON.stringify(custom)}, seed ${seed}, ${days} days, ${style}: crash: ${e.stack}`); }
+      if (st) n++;
+    }
+  }
+  rows.push({ preset: 'custom', days: '*', style: 'random', runs: n, profit: '-', deaths: '-', median: 0, best: 0 });
+}
+
 console.log('preset   days  bot        runs  profit  deaths  median score   best score');
 for (const r of rows) {
+  if (r.preset === 'custom') { console.log(`custom   any   random     ${String(r.runs).padStart(4)}  (safety only: every knob combination plays out)`); continue; }
   console.log(`${r.preset.padEnd(7)}  ${String(r.days).padStart(4)}  ${r.style.padEnd(9)}  ${String(r.runs).padStart(4)}  ${String(r.profit).padStart(6)}  ${String(r.deaths).padStart(6)}  ${C.fmt(r.median).padStart(12)}  ${C.fmt(r.best).padStart(11)}`);
 }
 if (failures.length) {

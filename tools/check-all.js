@@ -53,6 +53,26 @@ function travelQuiet(C, st, to) {
 }
 
 // ---- data
+scenario('custom: every knob reaches Regular, and every preset is reachable on the knobs', () => {
+  const { C } = fresh();
+  for (const k of C.KNOBS) assert.ok(C.stepOf(k, C.RULES) >= 0, `${k.id} has no step matching Regular`);
+  for (const id of C.PRESET_IDS) assert.deepStrictEqual(C.customRules(C.choicesFor(C.presetRules(id))), C.presetRules(id), `${id} cannot be rebuilt on the knobs`);
+  assert.deepStrictEqual(C.customRules({}), C.RULES, 'no choices means Regular');
+  assert.deepStrictEqual(C.rulesChanges(C.RULES), [], 'Regular changes nothing');
+});
+scenario('custom: the engine applies only listed steps; anything else falls back to Regular', () => {
+  const { C } = fresh();
+  const junk = { startCash: 99, debtRate: -1, goonDays: 2.5, maxHp: '0', eventSize: null, nonsense: 3, finds: 1e9 };
+  assert.deepStrictEqual(C.customRules(junk), C.RULES, 'out-of-range, fractional, string and unknown choices are all ignored');
+  const rich = C.KNOBS.find(k => k.id === 'startCash');
+  const i = rich.steps.indexOf(10000);
+  const st = C.newGame({ seed: 3, days: 30, preset: 'custom', custom: { startCash: i } });
+  assert.strictEqual(st.preset, 'custom');
+  assert.strictEqual(st.cash, 10000);
+  assert.strictEqual(st.rules.debtRate, C.RULES.debtRate, 'knobs not chosen stay Regular');
+  const wild = C.customRules({ eventSize: 2 });
+  assert.deepStrictEqual([wild.eventUp, wild.eventDown], [[4, 8], [0.1, 0.25]], 'a step can set several rules together');
+});
 scenario('presets: Regular is the defaults; the others start and charge on their own rules', () => {
   const { C } = fresh();
   assert.deepStrictEqual(C.PRESET_IDS, ['tourist', 'regular', 'wanted']);

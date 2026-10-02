@@ -30,8 +30,12 @@ Saves stay in your browser's `localStorage`.
     after 8 days.
   - *Wanted*: $800 against $12,000 at 12%, goons after 6 days, Watchers who
     come more often and forget you more slowly, and fewer headlines.
+  - *Custom*: set 18 settings yourself, in five groups (Money, The Boss, The
+    Watchers, Luck, Your cat), starting from any of the three above. Each
+    setting moves in fixed steps, and the title screen lists what yours change.
 
-  Each difficulty keeps its own high scores.
+  Each difficulty keeps its own high scores. A Custom score carries the rules
+  it was played under.
 - **Every trip takes a day.** Each district has its own scenery behind the
   terminal. Prices roll fresh at each stop, one or two goods are out of
   stock, and a headline sometimes sends one good's price wild.
@@ -118,6 +122,11 @@ The rules are data plus a DOM-free engine, which sit between the
   odds. `newGame` copies them into `st.rules`, and the engine reads them
   through `R(st)`, never the defaults. A save keeps the rules it started
   with; a save from before this gets the defaults.
+- **Difficulties are rules too.** A preset is a short list of changes to the
+  defaults. Custom rules are 18 knobs, each a fixed list of steps; a choice is
+  an index into that list, so the engine can only ever apply a listed step
+  (anything else falls back to Regular's). Every preset is reachable on the
+  knobs, which is what makes *start from Wanted* exact.
 - **Bots play through the same door.** They read the state and never advance
   the RNG.
 
@@ -125,7 +134,7 @@ The rules are data plus a DOM-free engine, which sit between the
 
 ```
 node tools/check-assets.js   # every file index.html references exists
-node tools/check-all.js      # 64 named rule scenarios
+node tools/check-all.js      # 66 named rule scenarios
 node tools/replay.js         # fixed seeds replay exactly as recorded
 node tools/sim.js 20         # bots play whole runs; invariants after every step
 ```
@@ -155,8 +164,11 @@ commit, with the reason in its message.
     exists because the first economy let every run win.
   - Wanted: 25–60% at 30 days, 25–70% at 60 and 90.
 - no reckless run ever dies on Regular or Wanted
+- a Custom run, with a random step on every knob, crashes, breaks an
+  invariant or never ends (these runs hold no profit band: Custom can be as
+  easy or as hard as you set it)
 
-`--preset=wanted` plays one difficulty. Figures for 20 runs per cell:
+`--preset=wanted` plays one difficulty; `--preset=custom` plays only the random Custom runs. Figures for 20 runs per cell:
 
 | Difficulty | Days | Bot | Profit | Deaths | Median score |
 |---|---|---|---|---|---|

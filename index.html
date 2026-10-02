@@ -112,7 +112,7 @@ p{margin:0 0 var(--s2)}
 .top .day b{color:var(--text);font-weight:600}
 .top .day.last b,.top .day.last{color:var(--warn)}
 .top .mode{font-size:11px;letter-spacing:.12em;text-transform:uppercase;padding:1px 6px;border:1px solid currentColor;border-radius:3px;white-space:nowrap}
-.top .m-tourist{color:var(--good)}.top .m-wanted{color:var(--danger)}
+.top .m-tourist{color:var(--good)}.top .m-wanted{color:var(--danger)}.top .m-custom{color:var(--violet)}
 .top .grow{flex:1}
 .top .brand{font-size:12px;letter-spacing:.3em;text-transform:uppercase;color:var(--accent);font-weight:600}
 .dayline{height:2px;background:var(--line)}
@@ -337,6 +337,16 @@ button.link:hover{color:var(--text)}
 .modal .row{display:flex;gap:var(--s2);align-items:center;flex-wrap:wrap;margin:var(--s2) 0}
 .modal .row input{width:9em}
 .modal .acts{display:flex;gap:var(--s2);flex-wrap:wrap;margin-top:var(--s4)}
+.modal.rules{max-width:620px}
+.modal.rules h2{margin:var(--s4) 0 var(--s2)}
+.modal.rules .from{display:inline-flex;gap:var(--s1);flex-wrap:wrap;vertical-align:middle;margin-left:var(--s1)}
+.knobs{display:grid;gap:var(--s1)}
+.knob{display:flex;align-items:center;justify-content:space-between;gap:var(--s3);padding:2px 0;border-bottom:1px solid var(--row)}
+.knob span{color:var(--steel)}
+.knob select{flex-shrink:0}
+select{font:inherit;color:var(--text);background:var(--panel2);border:1px solid var(--line);border-radius:3px;padding:4px 6px;min-height:32px;min-width:11em}
+select:hover{border-color:var(--lit)}
+select:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
 .modal .note{color:var(--dim);font-size:12px}
 .modal table{width:100%;border-collapse:collapse}
 .modal td,.modal th{padding:var(--s1) 6px;text-align:left;border-bottom:1px solid var(--row);vertical-align:top}
@@ -428,6 +438,8 @@ button.link:hover{color:var(--text)}
 @media (max-width:700px){
   .setup .row label{width:100%}
   .setup .preset-note{margin-left:0}
+  .knob{flex-wrap:wrap;gap:var(--s1)}
+  .knob select{width:100%;min-height:44px}
   body{font-size:13px}
   .scene{height:92px}
   button{min-height:44px}
@@ -540,6 +552,77 @@ const PRESETS = {
     rules: { startCash: 800, startDebt: 12000, debtRate: 0.12, goonDays: 6, watchBase: 0.08, heatDecay: 3, eventChance: 0.08 } },
 };
 const PRESET_IDS = Object.keys(PRESETS);
+
+/* Custom rules: every knob is a short list of steps, and a choice is an index
+ * into that list, so the engine can only ever apply a step that's listed here
+ * (customRules) -- a hand-edited choice falls back to Regular's. A step sets
+ * one rule, or several that belong together (how big a headline swings).
+ * Every preset is reachable on these steps, so 'start from' is exact. */
+const showMoney = n => fmt(n), showPct = x => pctText(x);
+const KNOB_GROUPS = [
+  { name: 'Money', knobs: [
+    { id: 'startCash', short: 'cash', label: 'Starting cash', steps: [500, 800, 1500, 3000, 5000, 10000], show: showMoney },
+    { id: 'startDebt', short: 'debt', label: 'Starting debt', steps: [0, 2000, 5000, 8000, 12000, 20000], show: showMoney },
+    { id: 'debtRate', short: 'interest', label: 'Interest on the debt, a day', steps: [0.03, 0.05, 0.08, 0.10, 0.12, 0.15, 0.20], show: showPct },
+    { id: 'bankRate', short: 'Vault pays', label: 'Vault interest, a day', steps: [0, 0.005, 0.01, 0.02, 0.03], show: showPct },
+  ] },
+  { name: 'The Boss', knobs: [
+    { id: 'goonDays', short: 'goons after', label: 'Days without a payment before her goons come', steps: [4, 5, 6, 8, 10, 12, 15], show: n => `${n} days` },
+    { id: 'debtCap', short: 'loans up to', label: 'The most she will lend', steps: [20000, 50000, 100000, 250000], show: showMoney },
+  ] },
+  { name: 'The Watchers', knobs: [
+    { id: 'watchBase', short: 'Watchers', label: 'How often they find you, before heat', steps: [0.02, 0.03, 0.05, 0.08, 0.12], show: x => `${pctText(x)} a day` },
+    { id: 'heatDecay', short: 'heat cools', label: 'How fast your heat cools', steps: [2, 3, 4, 6, 8], show: n => `${n} a day` },
+    { id: 'carryWatchMax', short: 'load draws', label: 'How hard a heavy load draws them, at most', steps: [0, 0.15, 0.35, 0.5], show: x => (x ? `+${pctText(x)} a day` : 'not at all') },
+  ] },
+  { name: 'Luck', knobs: [
+    { id: 'eventChance', short: 'headlines', label: 'Headlines that move a price', steps: [0.04, 0.08, 0.12, 0.18, 0.25], show: x => `${pctText(x)} of days` },
+    { id: 'eventSize', short: 'headlines move prices', label: 'How far a headline moves it', steps: [
+      { show: 'a little', set: { eventUp: [2, 3], eventDown: [0.4, 0.6] } },
+      { show: 'a lot', set: { eventUp: [3, 5], eventDown: [0.2, 0.4] } },
+      { show: 'wildly', set: { eventUp: [4, 8], eventDown: [0.1, 0.25] } },
+    ] },
+    { id: 'finds', short: 'lucky finds', label: 'Lucky finds (stashes, strays selling gear)', steps: [
+      { show: 'rare', set: { stashRate: 0.02, strayRate: 0.02 } },
+      { show: 'now and then', set: { stashRate: 0.04, strayRate: 0.04 } },
+      { show: 'often', set: { stashRate: 0.07, strayRate: 0.07 } },
+    ] },
+    { id: 'mugRate', short: 'muggers', label: 'Muggers', steps: [0.02, 0.04, 0.07], show: x => ({ 0.02: 'rare', 0.04: 'now and then', 0.07: 'often' })[x] },
+    { id: 'hostile', short: 'hostile rivals', label: 'Rival dealers who jump you instead of dealing', steps: [0.25, 0.45, 0.65], show: showPct },
+    { id: 'runBase', short: 'getaways', label: 'Getaway odds, before mittens', steps: [0.4, 0.55, 0.7], show: showPct },
+  ] },
+  { name: 'Your cat', knobs: [
+    { id: 'maxHp', short: 'health', label: 'Health', steps: [60, 100, 150], show: n => `${n} HP` },
+    { id: 'vetPerHp', short: 'vet', label: 'The vet charges', steps: [5, 15, 30], show: n => `${fmt(n)} per HP` },
+    { id: 'baseCap', short: 'pouch', label: 'Pouch before upgrades', steps: [60, 100, 150], show: n => `${n} units` },
+  ] },
+];
+const KNOBS = KNOB_GROUPS.flatMap(g => g.knobs);
+/* A step as rules: a plain number sets the knob's own rule. */
+function stepSet(k, i) { const st = k.steps[i]; return st && typeof st === 'object' ? st.set : { [k.id]: st }; }
+function stepShow(k, i) { const st = k.steps[i]; return st && typeof st === 'object' ? st.show : k.show(st); }
+/* The step whose rules all match `rules`, or -1. */
+function stepOf(k, rules) {
+  return k.steps.findIndex((_, i) => Object.entries(stepSet(k, i)).every(([key, v]) => JSON.stringify(rules[key]) === JSON.stringify(v)));
+}
+/* Choices ({knob id: step index}) as rules. Anything missing or out of range
+ * takes Regular's step. */
+function customRules(choices) {
+  const rules = JSON.parse(JSON.stringify(RULES));
+  for (const k of KNOBS) {
+    const c = choices && choices[k.id];
+    const i = Number.isInteger(c) && c >= 0 && c < k.steps.length ? c : stepOf(k, RULES);
+    Object.assign(rules, JSON.parse(JSON.stringify(stepSet(k, i))));
+  }
+  return rules;
+}
+/* The choices that reproduce a full rules set (a preset, to start from). */
+function choicesFor(rules) { return Object.fromEntries(KNOBS.map(k => [k.id, Math.max(0, stepOf(k, rules))])); }
+/* What a rules set changes from Regular, as a reader would say it. */
+function rulesChanges(rules) {
+  return KNOBS.map(k => ({ k, i: stepOf(k, rules), r: stepOf(k, RULES) })).filter(x => x.i !== x.r)
+    .map(x => `${x.k.short} ${x.i < 0 ? '?' : stepShow(x.k, x.i)}`);
+}
 /* A preset's full rules: the defaults with its changes laid over them. */
 function presetRules(id) {
   return Object.assign(JSON.parse(JSON.stringify(RULES)), JSON.parse(JSON.stringify(PRESETS[id].rules)));
@@ -687,8 +770,8 @@ function newGame(opts) {
   const seed = (opts.seed == null ? 1 : opts.seed) | 0;
   // Count characters, not UTF-16 units, so a cut never splits an emoji in half.
   const name = Array.from(String(opts.name || '').trim()).slice(0, 16).join('') || 'Stray';
-  const preset = PRESETS[opts.preset] ? opts.preset : 'regular';
-  const rules = presetRules(preset);
+  const preset = opts.preset === 'custom' || PRESETS[opts.preset] ? opts.preset : 'regular';
+  const rules = preset === 'custom' ? customRules(opts.custom) : presetRules(preset);
   const st = {
     v: 1, version: VERSION, seed, rng: seed, name, days, day: 1, loc: CONFIG.startLoc, preset, rules,
     cash: rules.startCash, bank: 0, debt: rules.startDebt, debtAge: 0,
@@ -1411,8 +1494,12 @@ function esc(s) {
 const root = document.querySelector('[data-pumacity-game]');
 let S = null;            // the game state, or null on the title screen
 let ui = { sel: 0, modal: null, flash: '' };
-let prefs = Object.assign({ name: '', days: 30, preset: 'regular' }, load(KEY_PREFS, {}));
-if (!PRESETS[prefs.preset]) prefs.preset = 'regular';
+let prefs = Object.assign({ name: '', days: 30, preset: 'regular', custom: {} }, load(KEY_PREFS, {}));
+if (prefs.preset !== 'custom' && !PRESETS[prefs.preset]) prefs.preset = 'regular';
+if (!prefs.custom || typeof prefs.custom !== 'object') prefs.custom = {};
+function presetName(id) { return id === 'custom' ? 'Custom' : PRESETS[id].name; }
+/* The rules the title screen's choice would start a run on. */
+function chosenRules() { return prefs.preset === 'custom' ? customRules(prefs.custom) : presetRules(prefs.preset); }
 let scoreTab = prefs.days;
 
 /* A save from an older build, or one edited by hand, must not crash the screen:
@@ -1430,7 +1517,7 @@ function loadGame() {
   // Saves from before runs carried their rules were all played under the
   // defaults; a save missing a rule (one added later) gets its default too.
   st.rules = Object.assign(JSON.parse(JSON.stringify(RULES)), st.rules || {});
-  if (!PRESETS[st.preset]) st.preset = 'regular';
+  if (st.preset !== 'custom' && !PRESETS[st.preset]) st.preset = 'regular';
   return st;
 }
 
@@ -1453,7 +1540,7 @@ function recordScore(st) {
   const all = scores();
   const key = boardKey(st.preset, st.days);
   const list = Array.isArray(all[key]) ? all[key] : [];
-  const entry = { name: st.name, score: st.over.score, cheat: !!st.stats.cheated, dead: st.over.reason === 'dead', day: st.over.day, at: new Date().toISOString().slice(0, 10), id: st.seed + ':' + st.logN };
+  const entry = { rules: st.preset === 'custom' ? rulesChanges(R(st)).join(' · ') || 'Same as Regular' : undefined, name: st.name, score: st.over.score, cheat: !!st.stats.cheated, dead: st.over.reason === 'dead', day: st.over.day, at: new Date().toISOString().slice(0, 10), id: st.seed + ':' + st.logN };
   list.push(entry);
   list.sort(scoreOrder);
   all[key] = list.slice(0, 10);
@@ -1532,7 +1619,7 @@ function startRun() {
   if (nameEl) prefs.name = Array.from(nameEl.value.trim()).slice(0, 16).join('');
   save(KEY_PREFS, prefs);
   const seed = (Date.now() ^ Math.floor(Math.random() * 0x7fffffff)) | 0;
-  S = newGame({ seed, days: prefs.days, name: prefs.name, preset: prefs.preset });
+  S = newGame({ seed, days: prefs.days, name: prefs.name, preset: prefs.preset, custom: prefs.custom });
   ui = { sel: 0, modal: null, flash: '' };
   save(KEY_GAME, S);
   render();
@@ -1807,11 +1894,30 @@ function setScene(id) {
   }));
 }
 
+/* Under the Difficulty row: a preset's blurb, or what Custom changes. */
+function presetNote() {
+  if (prefs.preset !== 'custom') return `<p class="note preset-note">${esc(PRESETS[prefs.preset].blurb)}</p>`;
+  const ch = rulesChanges(chosenRules());
+  return `<p class="note preset-note">${ch.length ? esc(ch.join(' · ')) : 'Same as Regular so far.'} <button class="link" data-act="rules">Edit rules</button></p>`;
+}
+/* The Custom rules panel: start from a preset, then step any knob. Every
+ * change saves at once; the title screen behind it follows. */
+function rulesHTML() {
+  const r = chosenRules();
+  const row = k => {
+    const at = stepOf(k, r), reg = stepOf(k, RULES);
+    return `<label class="knob" for="pc-k-${k.id}"><span>${esc(k.label)}</span><select id="pc-k-${k.id}" data-knob="${k.id}">${k.steps.map((_, i) =>
+      `<option value="${i}"${i === at ? ' selected' : ''}>${esc(stepShow(k, i))}${i === reg ? ' (Regular)' : ''}</option>`).join('')}</select></label>`;
+  };
+  return `<h1 id="pc-mt">Custom rules</h1>
+  <p class="note">Custom runs keep their own high scores. Start from <span class="from">${PRESET_IDS.map(id => `<button data-act="rulesfrom" data-v="${id}">${PRESETS[id].name}</button>`).join('')}</span></p>
+  ${KNOB_GROUPS.map(g => `<h2>${g.name}</h2><div class="knobs">${g.knobs.map(row).join('')}</div>`).join('')}
+  <div class="acts"><button class="primary" data-act="close"><kbd>Esc</kbd>Done</button></div>`;
+}
 function setupHTML() {
   const saved = loadGame();
   const all = scores();
   const list = board(prefs.preset, scoreTab);
-  const pre = PRESETS[prefs.preset];
   return `<div class="pc setup">
   ${skyline()}
   <h1 class="title">PumaCity: Nip Wars</h1>
@@ -1819,17 +1925,17 @@ function setupHTML() {
   <ol class="primer">
     <li>Buy where a good is <span class="rw cheap">cheap</span>.</li>
     <li>Travel across town. Every trip takes a day.</li>
-    <li>Sell where it's <span class="rw steep">steep</span>, and pay Casey Benton back before her ${pctText(presetRules(prefs.preset).debtRate)} a day eats you.</li>
+    <li>Sell where it's <span class="rw steep">steep</span>, and pay Casey Benton back before her ${pctText(chosenRules().debtRate)} a day eats you.</li>
   </ol>
   <div class="row"><label for="pc-name">Name</label><input id="pc-name" maxlength="16" autocomplete="off" placeholder="Stray" value="${esc(prefs.name)}"></div>
-  <div class="row"><label>Difficulty</label>${PRESET_IDS.map(id => `<button data-act="preset" data-v="${id}" aria-pressed="${prefs.preset === id}">${PRESETS[id].name}</button>`).join('')}<p class="note preset-note">${esc(pre.blurb)}</p></div>
+  <div class="row"><label>Difficulty</label>${PRESET_IDS.concat('custom').map(id => `<button data-act="preset" data-v="${id}" aria-pressed="${prefs.preset === id}">${presetName(id)}</button>`).join('')}${presetNote()}</div>
   <div class="row"><label>Run length</label>${CONFIG.lengths.map(d => `<button data-act="days" data-v="${d}" aria-pressed="${prefs.days === d}">${d} days</button>`).join('')}</div>
   <div class="acts">
     ${saved ? `<button class="primary" data-act="resume"><kbd>R</kbd>${saved.name === 'Stray' ? `Resume day ${saved.day} of ${saved.days}` : `Resume: ${esc(saved.name)}, day ${saved.day} of ${saved.days}`}</button>` : ''}
     <button${saved ? '' : ' class="primary"'} data-act="start"><kbd>N</kbd>New run</button>
     <button data-act="help"><kbd>?</kbd>How to play</button>
   </div>
-  <h2>High scores · ${pre.name}</h2>
+  <h2>High scores · ${presetName(prefs.preset)}</h2>
   <div class="tabs">${CONFIG.lengths.map(d => `<button data-act="scoretab" data-v="${d}" aria-pressed="${scoreTab === d}">${d} days</button>`).join('')}</div>
   ${scoreTable(list, -1)}
   <p class="foot">Inspired by <i>Dope Wars</i> (John E. Dell, 1984). v${VERSION} · <a href="https://greykit.com/games/">More games</a></p>
@@ -1839,7 +1945,7 @@ function setupHTML() {
 function scoreTable(list, hi) {
   if (!list.length) return '<p class="dim">No runs finished yet.</p>';
   return `<table class="scores"><tr><th>#</th><th>Name</th><th class="r">Score</th><th>Date</th></tr>${list.map((e, i) =>
-    `<tr${i === hi ? ' class="warn"' : ''}><td>${i + 1}</td><td>${esc(e.name)}${e.cheat ? ' <span class="cheat" title="The Konami code was used this run">cheat</span>' : ''}${e.dead ? ` <span class="rip">RIP, day ${e.day}</span>` : ''}</td><td class="r">${fmt(e.score)}</td><td class="dim">${esc(e.at || '')}</td></tr>`).join('')}</table>`;
+    `<tr${i === hi ? ' class="warn"' : ''}><td>${i + 1}</td><td>${esc(e.name)}${e.cheat ? ' <span class="cheat" title="The Konami code was used this run">cheat</span>' : ''}${e.dead ? ` <span class="rip">RIP, day ${e.day}</span>` : ''}${e.rules ? `<br><small class="dim">${esc(e.rules)}</small>` : ''}</td><td class="r">${fmt(e.score)}</td><td class="dim">${esc(e.at || '')}</td></tr>`).join('')}</table>`;
 }
 
 /* Where a price sits in its good's usual range. The word carries the meaning;
@@ -2006,7 +2112,7 @@ function gameHTML() {
   return `<div class="pc">
   <header class="top">
     <h1 class="place-name">${P.name}</h1>
-    <span class="day${last ? ' last' : ''}">${last ? 'Last day' : `Day <b>${st.day}</b> of ${st.days} · ${left} left`}</span>${st.preset !== 'regular' ? `<span class="mode m-${st.preset}">${PRESETS[st.preset].name}</span>` : ''}
+    <span class="day${last ? ' last' : ''}">${last ? 'Last day' : `Day <b>${st.day}</b> of ${st.days} · ${left} left`}</span>${st.preset !== 'regular' ? `<span class="mode m-${st.preset}"${st.preset === 'custom' ? ` title="${esc(rulesChanges(R(st)).join(' · ') || 'Same as Regular')}"` : ''}>${presetName(st.preset)}</span>` : ''}
     <span class="grow"></span><span class="brand">PumaCity</span>
   </header>
   <div class="dayline${last ? ' last' : ''}"><i style="width:${Math.round(st.day / st.days * 100)}%"></i></div>
@@ -2465,7 +2571,7 @@ function overHTML() {
     ${o.unsold ? `<tr><td class="dim">Unsold goods (worth nothing)</td><td class="r dim">${o.unsold} ${plural(o.unsold, 'unit')}</td></tr>` : ''}
     </table>`}
     <p class="note">${st.stats.peak > 0 ? `Best net worth during the run: ${fmt(st.stats.peak)}. ` : ''}Fights won: ${st.stats.won}. Escapes: ${st.stats.fled}. Busts: ${st.stats.busted}.</p>
-    <h2>High scores · ${PRESETS[st.preset].name}, ${st.days} days</h2>${scoreTable(list, ui.rank)}
+    <h2>High scores · ${presetName(st.preset)}, ${st.days} days</h2>${scoreTable(list, ui.rank)}
     <div class="acts"><button class="primary" data-act="again"><kbd>N</kbd>New run</button><button data-act="title"><kbd>Esc</kbd>Title screen</button></div>
   </div></div>`;
 }
@@ -2534,7 +2640,7 @@ function findFocus(k, within) {
   const el = (within || root).querySelector(sel);
   return el && !el.disabled ? el : null;
 }
-const FOCUSABLE = 'button:not(:disabled),input,[tabindex="0"],a[href]';
+const FOCUSABLE = 'button:not(:disabled),input,select,[tabindex="0"],a[href]';
 function announce(lines) {
   const live = document.getElementById('pc-live');
   if (!live || !lines.length) return;
@@ -2617,8 +2723,9 @@ function render() {
   lastScreen = screen;
   const before = focusKey(document.activeElement);
   const hadModal = !!root.querySelector('.back');
-  const modal = S ? modalHTML() : (ui.modal && ui.modal.kind === 'help'
-    ? `<div class="back" data-act="backdrop"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="pc-mt">${helpHTML(ui.modal.tab || 'basics')}</div></div>` : '');
+  const titleModal = !S && ui.modal && (ui.modal.kind === 'help' ? helpHTML(ui.modal.tab || 'basics') : ui.modal.kind === 'rules' ? rulesHTML() : '');
+  const modal = S ? modalHTML() : (titleModal
+    ? `<div class="back" data-act="backdrop"><div class="modal${ui.modal.kind === 'rules' ? ' rules' : ''}" role="dialog" aria-modal="true" aria-labelledby="pc-mt">${titleModal}</div></div>` : '');
   setScene(S ? S.loc : 'pvn');
   if (S && S.enc && ui.encSeen !== S.enc.from + ':' + S.day) {
     ui.encSeen = S.enc.from + ':' + S.day;
@@ -2744,7 +2851,12 @@ root.addEventListener('click', e => {
     case 'backdrop': if (e.target === el) closeModal(); return;
     case 'days': prefs.days = Number(v); scoreTab = prefs.days; save(KEY_PREFS, prefs); render(); return;
     case 'scoretab': scoreTab = Number(v); render(); return;
-    case 'preset': prefs.preset = PRESETS[v] ? v : 'regular'; save(KEY_PREFS, prefs); render(); return;
+    case 'preset':
+      prefs.preset = v === 'custom' || PRESETS[v] ? v : 'regular'; save(KEY_PREFS, prefs);
+      if (v === 'custom') ui.modal = { kind: 'rules' };  // choosing Custom opens its rules
+      render(); return;
+    case 'rules': ui.modal = { kind: 'rules' }; render(); return;
+    case 'rulesfrom': prefs.custom = choicesFor(presetRules(v)); save(KEY_PREFS, prefs); render(); return;
     case 'start': startRun(); return;
     case 'resume': resume(); return;
     case 'help': ui.modal = { kind: 'help', tab: 'basics' }; render(); return;
@@ -2802,6 +2914,13 @@ root.addEventListener('submit', e => {
 });
 
 root.addEventListener('input', e => { if (e.target.id === 'pc-qty') updateTotal(); });
+root.addEventListener('change', e => {
+  const id = e.target.dataset && e.target.dataset.knob;
+  if (!id) return;
+  prefs.custom = Object.assign({}, prefs.custom, { [id]: Number(e.target.value) });
+  save(KEY_PREFS, prefs);
+  render();
+});
 
 /* Encounters interrupt the market on arrival, exactly when a hand is reaching
  * for a market key. So the two key sets share no letters (tools/check-all.js
@@ -2865,6 +2984,8 @@ document.addEventListener('keydown', e => {
 
   if (!S) {
     if (m && m.kind === 'help') { if (k === 'Escape') closeModal(); else helpKey(k); return; }
+    // the rules panel's selects take letters and arrows themselves
+    if (m && m.kind === 'rules') { if (k === 'Escape') { e.preventDefault(); closeModal(); } return; }
     if (inInput) { if (k === 'Enter') { e.preventDefault(); startRun(); } return; }
     if (k === 'n' || k === 'Enter') { e.preventDefault(); startRun(); }
     else if (k === 'r' && loadGame()) resume();
