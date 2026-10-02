@@ -413,7 +413,7 @@ scenario('combat: the Kevlar Collar takes damage off', () => {
   const guarded = total(true);
   assert.ok(guarded < bare * 0.75, `collar ${guarded} vs bare ${bare}`);
 });
-scenario('death: health at zero ends the run, scores nothing, and stops play', () => {
+scenario('death: health at zero ends the run, scores no more than nothing, and stops play', () => {
   const { C, st } = fresh();
   let dead = null;
   for (let seed = 1; seed < 500 && !dead; seed++) {
@@ -423,10 +423,21 @@ scenario('death: health at zero ends the run, scores nothing, and stops play', (
   }
   assert.ok(dead, 'nobody ever died at 3 HP against five Watchers');
   assert.strictEqual(dead.over.reason, 'dead');
-  assert.strictEqual(dead.over.score, 0);
+  assert.strictEqual(dead.over.score, Math.min(C.netWorth(dead), 0));
+  assert.ok(dead.over.score < 0, 'a death in debt keeps the debt on its score');
   assert.strictEqual(dead.hp, 0);
   assert.strictEqual(C.waiting(dead).kind, 'over');
   refused(C, dead, { t: 'run' });
+});
+scenario('scores: dying never ranks above playing a run out', () => {
+  const { C } = fresh();
+  const board = [
+    { name: 'died rich', score: 0, dead: true },
+    { name: 'finished deep in debt', score: -250000, dead: false },
+    { name: 'died in debt', score: -4000, dead: true },
+    { name: 'finished well', score: 90000, dead: false },
+  ].sort(C.scoreOrder).map(e => e.name);
+  assert.deepStrictEqual(board, ['finished well', 'finished deep in debt', 'died rich', 'died in debt']);
 });
 scenario('mugging: takes cash on you, never the bank', () => {
   let { C, st } = fresh();

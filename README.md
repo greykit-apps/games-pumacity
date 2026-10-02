@@ -41,6 +41,9 @@ Saves stay in your browser's `localStorage`.
 - **On the last day you cash out.** The Boss collects what you owe, and
   anything still in your pouch is worth nothing. Score = cash + bank − debt.
   Top ten per run length, kept locally.
+- **If your health hits zero, the run ends there.** A death keeps any debt
+  on its score but none of your money, and it ranks below every run played
+  out, so dying is never a way out of a losing run.
 
 ### The city
 
@@ -109,7 +112,7 @@ The rules are data plus a DOM-free engine, which sit between the
 
 ```
 node tools/check-assets.js   # every file index.html references exists
-node tools/check-all.js      # 60 named rule scenarios
+node tools/check-all.js      # 61 named rule scenarios
 node tools/sim.js 20         # bots play whole runs; invariants after every step
 ```
 
