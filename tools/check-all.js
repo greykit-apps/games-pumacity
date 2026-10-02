@@ -271,6 +271,35 @@ scenario('sell: a big sale raises heat, and Shades halve it', () => {
   const b = ok(C, st, { t: 'sell', good: 'skooma', qty: 10 });
   assert.strictEqual(b.heat, 4);
 });
+scenario('sell: heat is tallied over the day, however the sales are split', () => {
+  let { C, st } = fresh();
+  setPrices(C, st, 1);
+  st.cash = 1000;
+  st = ok(C, st, { t: 'buy', good: 'reddot', qty: 40 });
+  st.prices.reddot = 4000;
+  const one = ok(C, st, { t: 'sell', good: 'reddot', qty: 20 });
+  let many = st;
+  for (let i = 0; i < 20; i++) many = ok(C, many, { t: 'sell', good: 'reddot', qty: 1 });
+  assert.strictEqual(one.heat, 8);
+  assert.strictEqual(many.heat, 8, 'twenty sales of $4,000 are one day of selling, not twenty');
+  // small sales add up to the same point a big one would
+  let bits = st;
+  for (let i = 0; i < 4; i++) bits = ok(C, bits, { t: 'sell', good: 'reddot', qty: 1 });
+  assert.strictEqual(bits.heat, 4, '$16,000 in four sales is four points');
+  // Shades halve the day's total, whichever way it was sold
+  const shaded = Object.assign(JSON.parse(JSON.stringify(st)), { gear: Object.assign({}, st.gear, { shades: 'shades' }) });
+  let s1 = shaded;
+  for (let i = 0; i < 20; i++) s1 = ok(C, s1, { t: 'sell', good: 'reddot', qty: 1 });
+  assert.strictEqual(s1.heat, 4);
+  // a new day starts the tally again
+  const next = travelQuiet(C, Object.assign(JSON.parse(JSON.stringify(one)), { heat: 20 }), 'ranch');
+  assert.strictEqual(next.soldToday, 0);
+  next.prices.reddot = 4000;
+  assert.strictEqual(ok(C, next, { t: 'sell', good: 'reddot', qty: 1 }).heat, next.heat + 1);
+  // and a trade can still be undone, tally included
+  const back = C.undoTrade(st, one);
+  assert.ok(back && back.heat === st.heat && back.soldToday === st.soldToday);
+});
 
 // ---- days, debt and the bank
 scenario('travel: takes a day, compounds the debt 10% and the bank 1%', () => {
@@ -520,6 +549,14 @@ scenario('watchers: more heat brings more of them, and Joyeuse', () => {
   const hot = C.forceEncounter(st, 'watchers');
   assert.ok(hot.enc.foes.length >= 4);
   assert.ok(hot.enc.foes[0].name.includes('Joyeuse'));
+  // a heavy load brings a bigger patrol, whatever the heat
+  st.heat = 0;
+  st.stash = { skooma: 200 }; st.cost = { skooma: 0 };
+  assert.strictEqual(C.carryRisk(st), C.RULES.carryWatchMax);
+  const laden = C.forceEncounter(st, 'watchers');
+  assert.ok(laden.enc.foes.length >= 2 && laden.enc.foes.length <= 3, `a maxed load drew ${laden.enc.foes.length}`);
+  assert.ok(laden.enc.foes.length > calm.enc.foes.length || laden.enc.n >= 2, 'one more than the load-free patrol');
+  assert.ok(!laden.enc.foes.some(f => f.name.includes('Joyeuse')), 'Joyeuse comes for heat, not for cargo');
 });
 scenario('combat: a won fight pays out and raises heat', () => {
   let { C, st } = fresh();
