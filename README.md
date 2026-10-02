@@ -133,12 +133,12 @@ Figures for 20 runs per cell:
 
 | Days | Bot | Profit | Deaths | Median score |
 |---|---|---|---|---|
-| 30 | careful | 14/20 | 0 | $200,677 |
-| 30 | reckless | 19/20 | 0 | $210,946 |
-| 60 | careful | 14/20 | 2 | $640,822 |
-| 60 | reckless | 13/20 | 5 | $1,920,180 |
-| 90 | careful | 16/20 | 1 | $3,304,987 |
-| 90 | reckless | 12/20 | 6 | $2,485,918 |
+| 30 | careful | 16/20 | 0 | $114,765 |
+| 30 | reckless | 18/20 | 1 | $116,912 |
+| 60 | careful | 18/20 | 0 | $1,428,536 |
+| 60 | reckless | 13/20 | 6 | $1,294,581 |
+| 90 | careful | 17/20 | 2 | $3,983,986 |
+| 90 | reckless | 15/20 | 4 | $4,177,853 |
 
 ### Debugging
 
