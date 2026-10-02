@@ -364,7 +364,7 @@ button.link:hover{color:var(--text)}
 
 .setup{width:min(640px,100%);padding:var(--s6) var(--s6) var(--s5)}
 .setup .sky{display:block;width:100%;height:auto;margin:0 0 var(--s1)}
-.setup .title{font-size:26px;letter-spacing:.35em;color:var(--accent);margin:0}
+.setup .title{font-size:clamp(19px,5.6vw,26px);letter-spacing:.18em;color:var(--accent);margin:0}
 .setup .tag{color:var(--steel);margin:var(--s1) 0 var(--s3)}
 .setup .row{display:flex;gap:var(--s2);align-items:center;flex-wrap:wrap;margin:var(--s3) 0}
 .setup .row label{width:7em;color:var(--dim)}
@@ -1745,7 +1745,7 @@ function setupHTML() {
   const list = Array.isArray(all[scoreTab]) ? all[scoreTab] : [];
   return `<div class="pc setup">
   ${skyline()}
-  <h1 class="title">PUMACITY</h1>
+  <h1 class="title">PumaCity: Nip Wars</h1>
   <p class="tag">Buy low. Sell high. Stay one step ahead of the Watchers.</p>
   <ol class="primer">
     <li>Buy where a good is <span class="rw cheap">cheap</span>.</li>
