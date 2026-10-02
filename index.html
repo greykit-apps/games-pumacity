@@ -283,6 +283,7 @@ button.link:hover{color:var(--text)}
 .bd.mid{color:var(--warn);border-color:#4a3a12}
 .bd.high,.bd.goons,.bd.vet{color:var(--danger);border-color:#5a1f2a}
 .bd.safe{color:var(--good);border-color:#1d4a2a}
+.bd .sm{display:none}
 .bd.tip,.bd.here{color:var(--accent);border-color:#17485a}
 .legend .li{display:inline-flex;gap:6px;align-items:center;margin-right:var(--s3)}
 .legend{display:flex;flex-wrap:wrap;gap:4px var(--s2);align-items:center;margin:var(--s3) 0 0;font-size:12px;color:var(--dim)}
@@ -437,6 +438,8 @@ button.link:hover{color:var(--text)}
   .market,.place,.log,.sidepanel{padding-left:var(--s3);padding-right:var(--s3)}
   .spot{padding:3px}
   .spot .lab b{font-size:10px;white-space:normal;line-height:1.15}
+  .bd .lg{display:none}
+  .bd .sm{display:inline}
   .bd{font-size:9px;padding:0 3px;gap:2px}
   .bd svg{width:9px;height:9px}
   .spot-starport{padding-left:calc(14% + 3px)}
@@ -1977,9 +1980,15 @@ function tradePopHTML(t, i) {
 }
 
 /* An overhead map of PumaCity, as the author laid it out (600x600; each of
- * the 2x3 squares is 300x200). Starport, Ranch and Convention Center run up
- * the west side along the highway; the Vault, Suburbs and Downtown down the
- * east. Drawn once and cached; the live badges sit on buttons above it. */
+ * the 2x3 squares is 300x200):
+ *   Convention Center | The Ranch
+ *   The Vault         | Suburbs
+ *   Starport          | Downtown
+ * A north/south highway runs from the Starport up through the Vault to a
+ * roundabout before the Convention Center. The suburbs' main road runs
+ * north from Downtown, through the Suburbs, into the Ranch, and curves west
+ * to meet the highway at a right angle in front of the Convention Center.
+ * Drawn once and cached; the live badges sit on buttons above it. */
 let cityArt = null;
 function cityMapSVG() {
   if (cityArt) return cityArt;
@@ -1987,15 +1996,16 @@ function cityMapSVG() {
   let o = '';
   // ground: a faint tint per district
   o += `<rect class="gnd" width="600" height="600"/>`;
-  o += `<rect class="gnd-farm" x="0" y="200" width="300" height="200"/><rect class="gnd-hill" x="300" y="0" width="300" height="200"/>`;
-  // the Vault: rolling hills, the door, and a path wandering south
-  for (const [y, a] of [[30, 14], [62, 18], [128, 16], [160, 12], [188, 8]]) o += `<path class="contour" d="M300 ${y} Q345 ${y - a} 390 ${y} T480 ${y} T570 ${y} T620 ${y}"/>`;
-  o += `<ellipse class="contour" cx="372" cy="104" rx="44" ry="18"/><ellipse class="contour" cx="372" cy="104" rx="24" ry="9"/>`;
-  o += `<ellipse class="contour" cx="552" cy="110" rx="36" ry="16"/>`;
-  o += `<path class="hillside" d="M440 96 Q470 60 500 96"/><circle class="door" cx="470" cy="86" r="16"/><circle class="door-in" cx="470" cy="86" r="8"/>`;
-  for (let i = 0; i < 10; i++) { const a = i / 10 * Math.PI * 2; o += `<path class="door-t" d="M${(470 + Math.cos(a) * 16).toFixed(1)} ${(86 + Math.sin(a) * 16).toFixed(1)} L${(470 + Math.cos(a) * 20).toFixed(1)} ${(86 + Math.sin(a) * 20).toFixed(1)}"/>`; }
-  o += `<path class="path" d="M470 106 C452 128 498 146 474 168 S428 188 442 214 S456 236 448 252"/>`;
-  // the Suburbs: big arching streets, cul-de-sacs, houses
+  o += `<rect class="gnd-farm" x="300" y="0" width="300" height="200"/><rect class="gnd-hill" x="0" y="200" width="300" height="200"/>`;
+  // the Vault (west, middle): rolling hills off the highway's west side, the
+  // door the only structure, a dotted path to it from the highway
+  for (const [y, a] of [[214, 8], [236, 12], [372, 10], [392, 6]]) o += `<path class="contour" d="M0 ${y} Q35 ${y - a} 70 ${y} T138 ${y}"/>`;
+  o += `<ellipse class="contour" cx="66" cy="300" rx="56" ry="44"/><ellipse class="contour" cx="66" cy="300" rx="38" ry="28"/>`;
+  o += `<ellipse class="contour" cx="232" cy="250" rx="46" ry="18"/><ellipse class="contour" cx="240" cy="352" rx="40" ry="16"/>`;
+  o += `<path class="hillside" d="M44 312 Q66 276 88 312"/><circle class="door" cx="66" cy="302" r="16"/><circle class="door-in" cx="66" cy="302" r="8"/>`;
+  for (let i = 0; i < 10; i++) { const a = i / 10 * Math.PI * 2; o += `<path class="door-t" d="M${(66 + Math.cos(a) * 16).toFixed(1)} ${(302 + Math.sin(a) * 16).toFixed(1)} L${(66 + Math.cos(a) * 20).toFixed(1)} ${(302 + Math.sin(a) * 20).toFixed(1)}"/>`; }
+  o += `<path class="path" d="M143 328 C126 334 118 318 104 324 S92 312 86 308"/>`;
+  // the Suburbs (east, middle): big arching streets, cul-de-sacs, houses
   o += `<clipPath id="pc-sub"><rect x="300" y="200" width="300" height="200"/></clipPath><g clip-path="url(#pc-sub)">`;
   const cx = 450, cy = 420;
   for (const R of [80, 130, 180]) {
@@ -2005,29 +2015,30 @@ function cityMapSVG() {
       const a = Math.PI + Math.PI * k / n;
       for (const off of [-11, 11]) {
         const hx = cx + Math.cos(a) * (R + off), hy = cy + Math.sin(a) * (R + off);
-        if (hy < 206 || hy > 392) continue;
+        if (hy < 206 || hy > 392 || Math.abs(hx - 450) < 9) continue;  // keep the main road clear
         o += `<rect class="house" x="${(hx - 3).toFixed(1)}" y="${(hy - 3).toFixed(1)}" width="6" height="6"/>`;
       }
     }
   }
-  for (const [a, R] of [[200, 130], [235, 80], [305, 80], [340, 130], [250, 180], [290, 180]]) {
+  for (const [a, R] of [[200, 130], [235, 80], [305, 80], [340, 130], [245, 180], [295, 180]]) {
     const t = a * Math.PI / 180, x1 = cx + Math.cos(t) * R, y1 = cy + Math.sin(t) * R, x2 = cx + Math.cos(t) * (R + 30), y2 = cy + Math.sin(t) * (R + 30);
     o += `<path class="st" d="M${x1.toFixed(1)} ${y1.toFixed(1)} L${x2.toFixed(1)} ${y2.toFixed(1)}"/><circle class="cul" cx="${x2.toFixed(1)}" cy="${y2.toFixed(1)}" r="6"/>`;
   }
-  o += `</g><path class="path" d="M448 252 Q446 244 450 240"/>`;
-  // the Convention Center: sprawling halls, an arena, parking; the highway's roundabout in front
+  o += `</g>`;
+  // the Convention Center (west, north): sprawling halls, an arena, parking
   o += r(18, 28, 150, 82) + r(26, 116, 108, 34) + r(140, 116, 34, 30);
   for (let x = 38; x < 168; x += 22) o += `<path class="roof" d="M${x} 28 V110"/>`;
   o += `<ellipse class="arena" cx="232" cy="74" rx="52" ry="38"/><ellipse class="arena-in" cx="232" cy="74" rx="30" ry="18"/>`;
-  for (let x = 196; x < 292; x += 8) o += `<path class="lot" d="M${x} 128 V146 M${x} 154 V172"/>`;
-  o += `<path class="lot" d="M192 150 H292"/>`;
-  // the Ranch: fields either side of the highway, barn, paddock, windmill
-  for (let y = 214; y < 300; y += 6) o += `<path class="row" d="M14 ${y} H134"/>`;
-  for (let x = 172; x < 290; x += 6) o += `<path class="row" d="M${x} 306 V392"/>`;
-  o += r(196, 226, 34, 20, 'barn') + `<path class="roof" d="M196 236 H230"/>` + r(240, 232, 14, 12);
-  o += `<rect class="paddock" x="22" y="316" width="104" height="70" rx="22"/>`;
-  o += `<circle class="mill" cx="270" cy="216" r="7"/><path class="mill" d="M263 216 H277 M270 209 V223"/>`;
-  // the Starport: the pad along the west edge, then streets of hangars and warehouses
+  for (let x = 196; x < 292; x += 8) o += `<path class="lot" d="M${x} 122 V138 M${x} 142 V156"/>`;
+  o += `<path class="lot" d="M192 140 H292"/>`;
+  // the Ranch (east, north): fields, barn, paddock and windmill, with the
+  // road curving through its south-west corner
+  for (let y = 18; y < 132; y += 6) o += `<path class="row" d="M314 ${y} H432"/>`;
+  for (let x = 472; x < 592; x += 6) o += `<path class="row" d="M${x} 18 V104"/>`;
+  o += r(476, 118, 34, 20, 'barn') + `<path class="roof" d="M476 128 H510"/>` + r(520, 122, 14, 12);
+  o += `<rect class="paddock" x="472" y="148" width="116" height="44" rx="16"/>`;
+  o += `<circle class="mill" cx="452" cy="40" r="7"/><path class="mill" d="M445 40 H459 M452 33 V47"/>`;
+  // the Starport (west, south): the pad along the west edge, then streets of hangars and warehouses
   o += `<rect class="pad" x="6" y="406" width="78" height="188"/><path class="pad-mark" d="M45 414 V586"/><circle class="pad-mark" cx="45" cy="500" r="22"/>`;
   for (let y = 414; y < 594; y += 18) o += `<circle class="lt" cx="9" cy="${y}" r="1.5"/><circle class="lt" cx="81" cy="${y}" r="1.5"/>`;
   o += `<path class="ship" d="M45 432 L60 466 L60 548 L30 548 L30 466 Z"/><path class="ship-w" d="M38 470 H52"/>`;
@@ -2038,19 +2049,22 @@ function cityMapSVG() {
       o += r(x0, y0, x1 - x0, y1 - y0, 'hangar') + `<path class="roof" d="M${x0 + 3} ${(y0 + y1) / 2} H${x1 - 3}"/>`;
     }
   }
-  // Downtown: the outer loop, two streets quartering it, the roundabout where they meet
+  // Downtown (east, south): the outer loop, two streets quartering it, the roundabout where they meet
   o += `<rect class="loop" x="318" y="414" width="264" height="172" rx="26"/>`;
   for (const [x, y, w, h] of [[336, 430, 22, 22], [336, 458, 22, 26], [416, 430, 20, 26], [470, 428, 26, 24], [504, 428, 26, 24], [540, 428, 26, 24], [470, 458, 40, 26], [520, 460, 46, 24],
     [334, 516, 30, 24], [372, 516, 30, 24], [410, 516, 24, 24], [334, 546, 46, 26], [388, 546, 46, 26]]) o += r(x, y, w, h);
-  // PVN Tower (north-west quarter): the tower, its lit penthouse, the theater's marquee on the street
   o += r(360, 426, 50, 50, 'tower') + `<rect class="pent" x="372" y="438" width="26" height="26"/><path class="marquee" d="M358 486 H412"/>`;
-  // Market Plaza (south-east quarter): an open-air mall round a courtyard and fountain
   o += `<path class="mall" d="M466 516 H570 V572 H548 V538 H488 V572 H466 Z"/><circle class="fount" cx="518" cy="556" r="7"/>`;
   for (const [x, y] of [[478, 582], [500, 584], [536, 584], [558, 582]]) o += `<path class="palm" d="M${x - 4} ${y} H${x + 4} M${x} ${y - 4} V${y + 4} M${x - 3} ${y - 3} L${x + 3} ${y + 3} M${x + 3} ${y - 3} L${x - 3} ${y + 3}"/>`;
-  // roads over everything: highway, the road west, the north-south street, the suburbs road
+  // roads over everything
   const road = d => `<path class="rd" d="${d}"/><path class="rdc" d="${d}"/>`;
+  // the highway: Starport up through the Vault to the Convention Center
   o += `<path class="hwy" d="M150 182 V586"/><path class="rdc" d="M150 182 V586"/>`;
-  o += road('M150 500 H600') + road('M450 334 V600');
+  // the road west from Downtown into the Starport, T-boning the highway
+  o += road('M150 500 H600');
+  // the suburbs' main road: up from Downtown, through the Suburbs, into the
+  // Ranch, curving west to meet the highway at a right angle by the roundabout
+  o += road('M450 600 V266 Q450 194 380 194 H157');
   o += `<circle class="rdring" cx="150" cy="168" r="14"/><circle class="island" cx="150" cy="168" r="7"/>`;
   o += `<circle class="rdring" cx="450" cy="500" r="18"/><circle class="island" cx="450" cy="500" r="10"/>`;
   cityArt = `<svg class="citymap" viewBox="0 0 600 600" aria-hidden="true" focusable="false">${o}</svg>`;
@@ -2059,8 +2073,8 @@ function cityMapSVG() {
 
 /* Where each district's button sits over the map, as % of the map. */
 const SPOT = {
-  convention: [0, 0, 50, 33.34], vault: [50, 0, 50, 33.34],
-  ranch: [0, 33.33, 50, 33.34], suburbs: [50, 33.33, 50, 33.34],
+  convention: [0, 0, 50, 33.34], ranch: [50, 0, 50, 33.34],
+  vault: [0, 33.33, 50, 33.34], suburbs: [50, 33.33, 50, 33.34],
   starport: [0, 66.66, 50, 33.34],
   pvn: [50, 66.66, 25, 16.67], plaza: [75, 83.33, 25, 16.67],
 };
@@ -2088,7 +2102,7 @@ function mapHTML() {
     const here = P.id === S.loc;
     const badges = [];
     const said = [];
-    if (here) { badges.push(`<span class="bd here">${ICON.here}You are here</span>`); said.push('You are here'); }
+    if (here) { badges.push(`<span class="bd here">${ICON.here}<span class="lg">You are here</span><span class="sm">Here</span></span>`); said.push('You are here'); }
     else {
       const r = arrivalWatchOdds(S, P.id);
       badges.push(`<span class="bd ${watchLevel(r)}" title="Chance the Watchers find you on arrival">${ICON.eye}${Math.round(r * 100)}%</span>`);
