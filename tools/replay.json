@@ -3,34 +3,34 @@
   "seed": 1,
   "days": 30,
   "style": "careful",
-  "score": 994247,
+  "score": 316147,
   "reason": "days",
   "day": 30,
-  "events": 209,
-  "eventsHash": "aadc5d2e53ff85a3",
-  "stateHash": "331d48a7556d2c39"
+  "events": 157,
+  "eventsHash": "a8ce400ad438416e",
+  "stateHash": "0c630d26ce0bfa3c"
  },
  {
   "seed": 7,
   "days": 30,
   "style": "careful",
-  "score": 498020,
+  "score": 100713,
   "reason": "days",
   "day": 30,
-  "events": 124,
-  "eventsHash": "341ff55d1c334475",
-  "stateHash": "dd11d5eb52b16f30"
+  "events": 136,
+  "eventsHash": "53d6b5d10db3b6d0",
+  "stateHash": "8b7e78a7b6b552d6"
  },
  {
   "seed": 42,
   "days": 30,
   "style": "careful",
-  "score": -75553,
+  "score": -75783,
   "reason": "days",
   "day": 30,
-  "events": 130,
-  "eventsHash": "864537ca02082f95",
-  "stateHash": "bdd7f90532942fca"
+  "events": 129,
+  "eventsHash": "1b9ae09e80d40811",
+  "stateHash": "d2cda581f8b890fc"
  },
  {
   "seed": 99,
@@ -80,45 +80,45 @@
   "seed": 65535,
   "days": 30,
   "style": "careful",
-  "score": -85063,
+  "score": -30444,
   "reason": "days",
   "day": 30,
-  "events": 129,
-  "eventsHash": "552571dea73b90a8",
-  "stateHash": "c5cbc575b06c1902"
+  "events": 177,
+  "eventsHash": "0467e10da56a23cc",
+  "stateHash": "dfd2815ec154cf5d"
  },
  {
   "seed": 1,
   "days": 30,
   "style": "reckless",
-  "score": 994247,
+  "score": 316147,
   "reason": "days",
   "day": 30,
-  "events": 209,
-  "eventsHash": "aadc5d2e53ff85a3",
-  "stateHash": "331d48a7556d2c39"
+  "events": 157,
+  "eventsHash": "a8ce400ad438416e",
+  "stateHash": "0c630d26ce0bfa3c"
  },
  {
   "seed": 7,
   "days": 30,
   "style": "reckless",
-  "score": 189056,
+  "score": 100713,
   "reason": "days",
   "day": 30,
-  "events": 159,
-  "eventsHash": "bff1d21bb2d559ea",
-  "stateHash": "d8dd7cb2d690159a"
+  "events": 136,
+  "eventsHash": "53d6b5d10db3b6d0",
+  "stateHash": "8b7e78a7b6b552d6"
  },
  {
   "seed": 42,
   "days": 30,
   "style": "reckless",
-  "score": -75553,
+  "score": -75783,
   "reason": "days",
   "day": 30,
-  "events": 130,
-  "eventsHash": "864537ca02082f95",
-  "stateHash": "bdd7f90532942fca"
+  "events": 129,
+  "eventsHash": "1b9ae09e80d40811",
+  "stateHash": "d2cda581f8b890fc"
  },
  {
   "seed": 99,
@@ -168,45 +168,45 @@
   "seed": 65535,
   "days": 30,
   "style": "reckless",
-  "score": -85063,
+  "score": 10459,
   "reason": "days",
   "day": 30,
-  "events": 129,
-  "eventsHash": "552571dea73b90a8",
-  "stateHash": "c5cbc575b06c1902"
+  "events": 181,
+  "eventsHash": "acf8f0b1753b9e0f",
+  "stateHash": "215cee4092018df2"
  },
  {
   "seed": 1,
   "days": 60,
   "style": "careful",
-  "score": 5397558,
+  "score": 2374046,
   "reason": "days",
   "day": 60,
-  "events": 530,
-  "eventsHash": "2907f4f5faa25652",
-  "stateHash": "a8a061f810c84869"
+  "events": 513,
+  "eventsHash": "0434a8c9b98e76b8",
+  "stateHash": "f218c3f140f7307f"
  },
  {
   "seed": 7,
   "days": 60,
   "style": "careful",
-  "score": 1724706,
+  "score": 2288353,
   "reason": "days",
   "day": 60,
-  "events": 326,
-  "eventsHash": "ba6629723265e496",
-  "stateHash": "83d4aea6a2630e0b"
+  "events": 429,
+  "eventsHash": "16bb4a8ccf758219",
+  "stateHash": "e163ba49515522b5"
  },
  {
   "seed": 42,
   "days": 60,
   "style": "careful",
-  "score": -992929,
+  "score": -1003383,
   "reason": "days",
   "day": 60,
-  "events": 232,
-  "eventsHash": "ab7f8cc3cd7b07d0",
-  "stateHash": "148427539db7dede"
+  "events": 236,
+  "eventsHash": "edc4d8ec956df21b",
+  "stateHash": "7a6ed3a256ed6385"
  },
  {
   "seed": 99,
@@ -256,45 +256,45 @@
   "seed": 65535,
   "days": 60,
   "style": "careful",
-  "score": 699648,
+  "score": -568584,
   "reason": "days",
   "day": 60,
-  "events": 274,
-  "eventsHash": "3cb0ab1cc2262a59",
-  "stateHash": "fcd42c5680361fed"
+  "events": 373,
+  "eventsHash": "d96f3606e500880e",
+  "stateHash": "51cf3a3f68a77da1"
  },
  {
   "seed": 1,
   "days": 60,
   "style": "reckless",
-  "score": 5430405,
+  "score": 2118403,
   "reason": "days",
   "day": 60,
-  "events": 581,
-  "eventsHash": "ee2c43a40d0a1706",
-  "stateHash": "e8293cb7a456a512"
+  "events": 483,
+  "eventsHash": "b3f6ff2a5f56100b",
+  "stateHash": "27908582ba81d759"
  },
  {
   "seed": 7,
   "days": 60,
   "style": "reckless",
-  "score": 1277205,
+  "score": 1756584,
   "reason": "days",
   "day": 60,
-  "events": 380,
-  "eventsHash": "97aeb7959f65609d",
-  "stateHash": "bd36b1b1bbe521c0"
+  "events": 452,
+  "eventsHash": "432cc2f25b2148d5",
+  "stateHash": "2e6b686d4ea16747"
  },
  {
   "seed": 42,
   "days": 60,
   "style": "reckless",
-  "score": -820502,
+  "score": -1003383,
   "reason": "days",
   "day": 60,
-  "events": 341,
-  "eventsHash": "b1ce4e8aacaf4e31",
-  "stateHash": "29fd1d9aa06b6e62"
+  "events": 236,
+  "eventsHash": "edc4d8ec956df21b",
+  "stateHash": "7a6ed3a256ed6385"
  },
  {
   "seed": 99,
@@ -333,56 +333,56 @@
   "seed": 31337,
   "days": 60,
   "style": "reckless",
-  "score": 1756186,
+  "score": 1427871,
   "reason": "days",
   "day": 60,
-  "events": 359,
-  "eventsHash": "435ca084f73971c4",
-  "stateHash": "80c3288f49517d17"
+  "events": 363,
+  "eventsHash": "4608f30f7ea04211",
+  "stateHash": "b8ffacc1e9a55110"
  },
  {
   "seed": 65535,
   "days": 60,
   "style": "reckless",
-  "score": 389287,
-  "reason": "days",
-  "day": 60,
-  "events": 392,
-  "eventsHash": "3a1d90e7fc92034d",
-  "stateHash": "4b344ebf371351ac"
+  "score": -145895,
+  "reason": "dead",
+  "day": 35,
+  "events": 236,
+  "eventsHash": "6aa7bd3190c852b5",
+  "stateHash": "57d8a61b0dc6a05b"
  },
  {
   "seed": 1,
   "days": 90,
   "style": "careful",
-  "score": 7821510,
+  "score": 5370923,
   "reason": "days",
   "day": 90,
-  "events": 956,
-  "eventsHash": "89676eebb85fab27",
-  "stateHash": "d47272c81f211b79"
+  "events": 935,
+  "eventsHash": "af1e31df4a48736c",
+  "stateHash": "a63145383e69bd3e"
  },
  {
   "seed": 7,
   "days": 90,
   "style": "careful",
-  "score": 3248126,
+  "score": 3686048,
   "reason": "days",
   "day": 90,
-  "events": 585,
-  "eventsHash": "aae8cb4eeaa54486",
-  "stateHash": "6e7343d238f91aa6"
+  "events": 812,
+  "eventsHash": "6be720078f86aade",
+  "stateHash": "d17aceae445e7fb8"
  },
  {
   "seed": 42,
   "days": 90,
   "style": "careful",
-  "score": -17947537,
+  "score": -18440983,
   "reason": "days",
   "day": 90,
-  "events": 348,
-  "eventsHash": "5207c55d3f4ddb2f",
-  "stateHash": "d1f20a5b1d12589c"
+  "events": 370,
+  "eventsHash": "a22021732d0fb388",
+  "stateHash": "3db68a62daadd989"
  },
  {
   "seed": 99,
@@ -403,8 +403,8 @@
   "reason": "days",
   "day": 90,
   "events": 701,
-  "eventsHash": "0beb8571eaadbadc",
-  "stateHash": "baa5d0bbd79dd4e8"
+  "eventsHash": "99d6b9d34583717b",
+  "stateHash": "5ab2247d71d81630"
  },
  {
   "seed": 2718,
@@ -432,56 +432,56 @@
   "seed": 65535,
   "days": 90,
   "style": "careful",
-  "score": 1665628,
+  "score": -15010488,
   "reason": "days",
   "day": 90,
-  "events": 491,
-  "eventsHash": "d245dd10821cd857",
-  "stateHash": "f69dc27408be9f73"
+  "events": 632,
+  "eventsHash": "b1bef01e0dc9744c",
+  "stateHash": "2339e9d76b588e45"
  },
  {
   "seed": 1,
   "days": 90,
   "style": "reckless",
-  "score": 7987868,
-  "reason": "days",
-  "day": 90,
-  "events": 886,
-  "eventsHash": "ad1a2fb3eea5145e",
-  "stateHash": "16abd27c0ccdeae7"
+  "score": 0,
+  "reason": "dead",
+  "day": 83,
+  "events": 710,
+  "eventsHash": "f915499eefdc6072",
+  "stateHash": "c6ae5676656ced44"
  },
  {
   "seed": 7,
   "days": 90,
   "style": "reckless",
-  "score": 2373677,
+  "score": 3480611,
   "reason": "days",
   "day": 90,
-  "events": 602,
-  "eventsHash": "50287c7dd2961c6c",
-  "stateHash": "e20a1cf8da2cb119"
+  "events": 743,
+  "eventsHash": "1186299376d3953c",
+  "stateHash": "17ad98bed94db312"
  },
  {
   "seed": 42,
   "days": 90,
   "style": "reckless",
-  "score": -13788696,
+  "score": -18440983,
   "reason": "days",
   "day": 90,
-  "events": 564,
-  "eventsHash": "138a1687b2dc140a",
-  "stateHash": "b19ed57a435a6509"
+  "events": 370,
+  "eventsHash": "a22021732d0fb388",
+  "stateHash": "3db68a62daadd989"
  },
  {
   "seed": 99,
   "days": 90,
   "style": "reckless",
-  "score": 4987312,
+  "score": 4911939,
   "reason": "days",
   "day": 90,
-  "events": 989,
-  "eventsHash": "bb0d0d9ba691b7dc",
-  "stateHash": "5207ea9e1f0fefa7"
+  "events": 933,
+  "eventsHash": "96db333a19273aeb",
+  "stateHash": "573dff32d4c94bce"
  },
  {
   "seed": 314,
@@ -509,22 +509,22 @@
   "seed": 31337,
   "days": 90,
   "style": "reckless",
-  "score": 4935649,
-  "reason": "days",
-  "day": 90,
-  "events": 686,
-  "eventsHash": "bc0801a9579c85fb",
-  "stateHash": "7ccdc5bb61327a3b"
+  "score": 0,
+  "reason": "dead",
+  "day": 85,
+  "events": 856,
+  "eventsHash": "47918d3dc961c397",
+  "stateHash": "ea52fc6a36cea948"
  },
  {
   "seed": 65535,
   "days": 90,
   "style": "reckless",
-  "score": 2366126,
-  "reason": "days",
-  "day": 90,
-  "events": 867,
-  "eventsHash": "050df676dad5a9b0",
-  "stateHash": "73f59b82d02fbb97"
+  "score": -145895,
+  "reason": "dead",
+  "day": 35,
+  "events": 236,
+  "eventsHash": "6aa7bd3190c852b5",
+  "stateHash": "2c7a5cf636b3fdf2"
  }
 ]

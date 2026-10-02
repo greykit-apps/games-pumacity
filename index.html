@@ -758,6 +758,8 @@ function heatUp(st, n) {
   if (st.gear.shades) n = Math.ceil(n / 2);
   st.heat = Math.min(100, st.heat + n);
 }
+/* The heat a sale adds: a point per $4,000, at most 8, whoever is buying. */
+function saleHeat(st, value) { heatUp(st, Math.min(8, Math.floor(value / 4000))); }
 function addLog(st, text, cls) {
   st.logN++;
   st.log.push({ n: st.logN, d: st.day, text, cls: cls || '' });
@@ -862,9 +864,11 @@ function goonsDue(st) { return st.debt > 0 && st.debtAge + 1 >= R(st).goonDays; 
 
 function rollEncounter(st) {
   const P = here(st);
+  // The Watchers roll first, so the odds the map showed for this district
+  // are exactly the odds here, whether or not the goons are also due.
   const table = [
-    ['goons',    st.debt > 0 && st.debtAge >= R(st).goonDays && P.id !== 'pvn' ? R(st).goonRate : 0],
     ['watchers', watchOdds(st, st.heat, P)],
+    ['goons',    st.debt > 0 && st.debtAge >= R(st).goonDays && P.id !== 'pvn' ? R(st).goonRate : 0],
     ['rival',    R(st).rivalRate],
     ['boss',     R(st).bossRate * (P.boss || 1)],
     ['mugging',  R(st).mugRate * (P.mug == null ? 1 : P.mug)],
@@ -1089,7 +1093,9 @@ const ENC = {
       else addLog(st, `You put your paws up. You're clean, but they fine you ${fmt(fine)} for loitering.`, 'bad');
       st.stash = {};
       st.cost = {};
-      st.heat = Math.min(st.heat, 10);
+      // A real bust clears the slate. Giving up with nothing on you is a
+      // loitering fine and nothing more, so it can't be used to wash heat.
+      if (held > 0) st.heat = Math.min(st.heat, 10);
     } else if (held > 0) {
       let took = 0;
       for (const g of GOODS) {
@@ -1116,6 +1122,7 @@ const ENC = {
       takeGoods(st, g.id, q);
       st.cash += q * d.price;
       st.stats.sold += q * d.price;
+      saleHeat(st, q * d.price);
       addLog(st, `You sell ${e.boss} ${q} ${g.name} at ${fmt(d.price)}.`, 'trade');
     } else {
       st.cash -= q * d.price;
@@ -1171,7 +1178,9 @@ const ENC = {
     st.hp = Math.max(0, st.hp - dmg);
     st.cash -= take;
     st.debt -= take;
-    st.debtAge = R(st).goonDays - 4;
+    // They're back in a few days: the clock goes to goonDays - 4, but never
+    // below half way, so a short clock (Custom's 4 days) isn't reset by a refusal.
+    st.debtAge = Math.max(Math.ceil(R(st).goonDays / 2), R(st).goonDays - 4);
     st.enc = null;
     addLog(st, `The goons rough you up (${dmg} HP)${take ? ` and take ${fmt(take)} toward the debt` : ''}. "We'll be back."`, 'bad');
     if (st.hp <= 0) die(st, "The Boss's goons go too far.");
@@ -1240,7 +1249,7 @@ const MARKET = {
     takeGoods(st, g.id, q);
     st.cash += value;
     st.stats.sold += value;
-    heatUp(st, Math.min(8, Math.floor(value / 4000)));
+    saleHeat(st, value);
     addLog(st, `Sold ${q} ${g.name} at ${fmt(p)}.`, 'trade');
   },
   /* Sells every good you hold that someone here is buying, each at today's
