@@ -26,11 +26,12 @@ const record = process.argv.includes('--record');
 
 /* The final state, minus what is allowed to differ between engine versions
  * without changing the game: the preset and rules the run carries (they are
- * inputs, not outcomes). */
+ * inputs, not outcomes) and the build's version stamp. */
 function outcome(st) {
   const o = JSON.parse(JSON.stringify(st));
   delete o.rules;
   delete o.preset;
+  delete o.version;
   return o;
 }
 const sha = s => crypto.createHash('sha256').update(s).digest('hex').slice(0, 16);
