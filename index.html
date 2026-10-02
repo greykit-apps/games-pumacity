@@ -2001,7 +2001,7 @@ function cityMapSVG() {
   // door the only structure, a dotted path to it from the highway
   for (const [y, a] of [[214, 8], [236, 12], [372, 10], [392, 6]]) o += `<path class="contour" d="M0 ${y} Q35 ${y - a} 70 ${y} T138 ${y}"/>`;
   o += `<ellipse class="contour" cx="66" cy="300" rx="56" ry="44"/><ellipse class="contour" cx="66" cy="300" rx="38" ry="28"/>`;
-  o += `<ellipse class="contour" cx="232" cy="250" rx="46" ry="18"/><ellipse class="contour" cx="240" cy="352" rx="40" ry="16"/>`;
+  o += `<ellipse class="contour" cx="232" cy="250" rx="46" ry="18"/><ellipse class="contour" cx="204" cy="364" rx="30" ry="13"/>`;
   o += `<path class="hillside" d="M44 312 Q66 276 88 312"/><circle class="door" cx="66" cy="302" r="16"/><circle class="door-in" cx="66" cy="302" r="8"/>`;
   for (let i = 0; i < 10; i++) { const a = i / 10 * Math.PI * 2; o += `<path class="door-t" d="M${(66 + Math.cos(a) * 16).toFixed(1)} ${(302 + Math.sin(a) * 16).toFixed(1)} L${(66 + Math.cos(a) * 20).toFixed(1)} ${(302 + Math.sin(a) * 20).toFixed(1)}"/>`; }
   o += `<path class="path" d="M143 328 C126 334 118 318 104 324 S92 312 86 308"/>`;
@@ -2023,6 +2023,25 @@ function cityMapSVG() {
   for (const [a, R] of [[200, 130], [235, 80], [305, 80], [340, 130], [245, 180], [295, 180]]) {
     const t = a * Math.PI / 180, x1 = cx + Math.cos(t) * R, y1 = cy + Math.sin(t) * R, x2 = cx + Math.cos(t) * (R + 30), y2 = cy + Math.sin(t) * (R + 30);
     o += `<path class="st" d="M${x1.toFixed(1)} ${y1.toFixed(1)} L${x2.toFixed(1)} ${y2.toFixed(1)}"/><circle class="cul" cx="${x2.toFixed(1)}" cy="${y2.toFixed(1)}" r="6"/>`;
+  }
+  o += `</g>`;
+  // the Suburbs' outer arc carries on across the boundary into the Vault
+  // square, with houses either side and a cul-de-sac, so the street reads as one
+  o += `<clipPath id="pc-sub2"><rect x="236" y="280" width="64" height="120"/></clipPath><g clip-path="url(#pc-sub2)">`;
+  o += `<path class="st" d="M${cx - 180} ${cy} A180 180 0 0 1 ${cx + 180} ${cy}"/>`;
+  {
+    const R = 180, n = Math.round(R / 7);
+    for (let k = 1; k < n; k++) {
+      const a = Math.PI + Math.PI * k / n;
+      for (const off of [-11, 11]) {
+        const hx = cx + Math.cos(a) * (R + off), hy = cy + Math.sin(a) * (R + off);
+        if (hx >= 297 || hy > 394 || hy < 284) continue;
+        o += `<rect class="house" x="${(hx - 3).toFixed(1)}" y="${(hy - 3).toFixed(1)}" width="6" height="6"/>`;
+      }
+    }
+    const t = 200 * Math.PI / 180, x1 = cx + Math.cos(t) * R, y1 = cy + Math.sin(t) * R, x2 = cx + Math.cos(t) * (R + 28), y2 = cy + Math.sin(t) * (R + 28);
+    o += `<path class="st" d="M${x1.toFixed(1)} ${y1.toFixed(1)} L${x2.toFixed(1)} ${y2.toFixed(1)}"/><circle class="cul" cx="${x2.toFixed(1)}" cy="${y2.toFixed(1)}" r="6"/>`;
+    for (const [dx, dy] of [[-8, -12], [-16, 12], [-26, -8]]) o += `<rect class="house" x="${(x1 + dx - 3).toFixed(1)}" y="${(y1 + dy - 3).toFixed(1)}" width="6" height="6"/>`;
   }
   o += `</g>`;
   // the Convention Center (west, north): sprawling halls, an arena, parking
