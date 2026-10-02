@@ -53,6 +53,9 @@ Saves stay in your browser's `localStorage`.
 - **On the last day you cash out.** The Boss collects what you owe, and
   anything still in your pouch is worth nothing. Score = cash + bank − debt.
   Top ten per run length, kept locally.
+- **You can leave town early**, from the menu. The run is scored at once
+  under the same rules, but ranks below every run played to the end: a way
+  out of a run the debt has already won, not a way to bank a good week.
 - **If your health hits zero, the run ends there.** A death keeps any debt
   on its score but none of your money, and it ranks below every run played
   out, so dying is never a way out of a losing run.
@@ -78,7 +81,9 @@ Psychos, Red Dot, Moonsugar, Skooma.
 - **Rival dealers.** Some offer a deal; some just jump you.
 - **Casey Benton.** She names a bribe to make your heat go away, or quietly
   buys your Skooma.
-- **The Boss's goons.**
+- **The Boss's goons.** Pay what they ask and the clock resets; hand over
+  what you have and they come back in a few days; refuse and they take it
+  out of your hide.
 - **Strays** selling gear cheap.
 - **Muggers**, and the odd stash in a drainpipe.
 
@@ -134,7 +139,7 @@ The rules are data plus a DOM-free engine, which sit between the
 
 ```
 node tools/check-assets.js   # every file index.html references exists
-node tools/check-all.js      # 70 named rule scenarios
+node tools/check-all.js      # 71 named rule scenarios
 node tools/replay.js         # fixed seeds replay exactly as recorded
 node tools/sim.js 20         # bots play whole runs; invariants after every step
 ```
