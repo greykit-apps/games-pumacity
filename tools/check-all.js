@@ -74,6 +74,8 @@ scenario('data: every shop item exists, and every gear item is sold somewhere', 
 });
 scenario('data: the places the plan names have their specials', () => {
   const { C } = fresh();
+  assert.ok(C.PLACE.plaza.shop.includes('fanny') && C.PLACE.plaza.shop.includes('spray'), 'the outfitter is at Market Plaza');
+  assert.strictEqual(C.PLACE.suburbs.shop.length, 0, 'the Suburbs keep only the vet');
   assert.strictEqual(C.PLACE.pvn.service, 'loan');
   assert.strictEqual(C.PLACE.vault.service, 'bank');
   assert.strictEqual(C.PLACE.suburbs.service, 'vet');
@@ -373,16 +375,16 @@ scenario('watchers: surrender confiscates the whole stash and fines you', () => 
   assert.ok(st.heat <= 10);
   assert.strictEqual(st.enc, null);
 });
-scenario('watchers: more heat brings more of them, and Hardclaw', () => {
+scenario('watchers: more heat brings more of them, and Joyeuse', () => {
   let { C, st } = fresh();
   st.heat = 0;
   const calm = C.forceEncounter(st, 'watchers');
   assert.ok(calm.enc.foes.length <= 2);
-  assert.ok(!calm.enc.foes.some(f => f.name.includes('Hardclaw')));
+  assert.ok(!calm.enc.foes.some(f => f.name.includes('Joyeuse')));
   st.heat = 90;
   const hot = C.forceEncounter(st, 'watchers');
   assert.ok(hot.enc.foes.length >= 4);
-  assert.ok(hot.enc.foes[0].name.includes('Hardclaw'));
+  assert.ok(hot.enc.foes[0].name.includes('Joyeuse'));
 });
 scenario('combat: a won fight pays out and raises heat', () => {
   let { C, st } = fresh();
@@ -591,8 +593,12 @@ scenario('costs: what a choice says it costs is what it costs', () => {
 scenario('gear: only sold where stocked, only trades up, and pouches add room', () => {
   let { C, st } = fresh();
   st.cash = 50000;
-  assert.match(refused(C, st, { t: 'gear', item: 'fanny' }), /isn't sold/);
   st.loc = 'suburbs';
+  assert.ok(!C.waiting(st).options.includes('gear'), 'no shop in the Suburbs');
+  refused(C, st, { t: 'gear', item: 'fanny' });
+  st.loc = 'starport';
+  assert.match(refused(C, st, { t: 'gear', item: 'fanny' }), /isn't sold/);
+  st.loc = 'plaza';
   st = ok(C, st, { t: 'gear', item: 'saddle' });
   assert.strictEqual(C.capacity(st), 160);
   assert.match(refused(C, st, { t: 'gear', item: 'fanny' }), /better/);

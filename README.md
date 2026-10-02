@@ -41,13 +41,13 @@ Saves stay in your browser's `localStorage`.
 
 | Place | What's special |
 |---|---|
-| Market Plaza | Start here. Downtown's open-air mall; tourists pay a premium for luxury goods. Shades stall. |
-| PVN Tower | Casey Benton's tower: a theater below, her offices, a nightclub on the roof. Borrow and repay; Skooma sells high. |
+| Market Plaza | Start here. Downtown's open-air mall; tourists pay a premium for luxury goods. The outfitter: pouches, weapons, the Kevlar Collar, Sneaky Mittens, Shades. |
+| PVN Tower | Casey Benton's tower: a theater at ground level, a nightclub above it, her office in the penthouse. Borrow and repay; Skooma sells high. |
 | The Vault | A vault kept for PumaCity's leadership in case of war, run as a bank meanwhile. Money in it is safe and earns 1% a day. |
 | The Ranch | An old horse ranch turned grow fields. Cheap 'nip, and the Watchers rarely come out this far (heat cools faster). |
-| Starport | Where The Ship lands. Moonsugar and Skooma come in cheap. Hover-Crate and Mech-Claws. |
+| Starport | Where the ship lands, trading with other ports. Moonsugar and Skooma come in cheap. Hover-Crate and Mech-Claws. |
 | The Convention Center | By the starport, a new event every week. Everything sells high. Pickpockets. The Pawphone. |
-| Suburbs | Cul-de-sacs of Casey's rentals. The vet, and the pet store: pouches, weapons, the Kevlar Collar, Sneaky Mittens. |
+| Suburbs | Cul-de-sacs of Casey's rentals. The vet patches you up. |
 
 **Goods**, cheapest first: Catnip, Feathers, Nappers, Zoomers, Silvervine,
 Psychos, Red Dot, Moonsugar, Skooma.
