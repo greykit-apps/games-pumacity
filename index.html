@@ -127,6 +127,9 @@ p{margin:0 0 var(--s2)}
 .stat.bad span,.stat.bad em{color:var(--danger)}
 .stat.warn span{color:var(--warn)}
 .stat.cash{position:relative}
+.stat.cash .undo{position:absolute;right:var(--s3);bottom:var(--s2);min-height:0;padding:1px 8px;font-size:12px;
+  background:var(--panel2);border-color:var(--lit);color:var(--text);animation:popIn .14s cubic-bezier(.22,1,.36,1)}
+.stat.cash .undo kbd{margin:0 0 0 6px}
 .delta{position:absolute;right:var(--s4);top:var(--s2);font-size:13px;font-weight:600;pointer-events:none;
   animation:deltaUp 1s cubic-bezier(.22,1,.36,1) forwards}
 .delta.up{color:var(--good)}.delta.down{color:var(--steel)}
@@ -1202,6 +1205,25 @@ function step(st0, a) {
 }
 
 /* For the debug hook and the tests: the same state with a given encounter started. */
+/* Undo the trade that turned `before` into `after`: back to exactly before,
+ * the heat a big sale added included. Refused (null) unless the only things
+ * that changed are the ones a market trade touches, so it can never rewind a
+ * trip, a roll of the dice, a debt payment or an encounter. */
+const TRADE_FIELDS = ['cash', 'stash', 'cost', 'heat', 'stats', 'log', 'logN'];
+function undoTrade(before, after) {
+  if (!before || !after || before.over || after.over || before.enc || after.enc) return null;
+  for (const k of Object.keys(after)) {
+    if (TRADE_FIELDS.includes(k)) continue;
+    if (JSON.stringify(after[k]) !== JSON.stringify(before[k])) return null;
+  }
+  if (!(after.logN > before.logN)) return null;
+  const st = JSON.parse(JSON.stringify(before));
+  st.logN = after.logN;
+  st.log = JSON.parse(JSON.stringify(after.log));
+  addLog(st, 'You think better of it. Trade undone.', 'dim');
+  return st;
+}
+
 /* The Konami code: $25,000 and a clean slate with the Watchers. The run is
  * marked as cheated, and its high-score entry says so. */
 const CHEAT_CASH = 25000;
@@ -1355,6 +1377,7 @@ function coachStep(a) {
 
 // ---- actions
 const TRADES = ['buy', 'sell', 'sellall', 'deal'];
+const UNDO_MS = 6000;
 function act(a) {
   if (!S) return;
   const before = S;
@@ -1365,6 +1388,14 @@ function act(a) {
   announce(r.events.map(l => l.text));
   // A trade gets a beat: the cash moves, and the rows that changed light up.
   coachStep(a);
+  // Any action ends the chance to undo the previous trade; a market trade
+  // opens a new one for a few seconds.
+  ui.undo = null;
+  if (a && ['buy', 'sell', 'sellall'].includes(a.t) && !before.enc) {
+    const u = { before, after: S };
+    ui.undo = u;
+    setTimeout(() => { if (ui.undo === u) { ui.undo = null; if (S === u.after) render(); } }, UNDO_MS);
+  }
   if (a && TRADES.includes(a.t) && S.cash !== before.cash) {
     ui.fx = { from: before.cash, to: S.cash, rows: GOODS.map((g, i) => (S.stash[g.id] || 0) !== (before.stash[g.id] || 0) ? i : -1).filter(i => i >= 0) };
   }
@@ -1378,6 +1409,21 @@ function act(a) {
   if (a.t === 'travel') ui.arrived = true;
   if (a.t === 'travel' || a.t === 'finish') ui.modal = S.over ? { kind: 'over' } : null;
   if (['buy', 'sell', 'sellall', 'travel', 'finish'].includes(a.t)) { ui.trade = null; ui.side = null; ui.confirmCash = false; }
+  render();
+}
+
+function undoLast() {
+  const u = ui.undo;
+  if (!u || S !== u.after) return;
+  const back = undoTrade(u.before, u.after);
+  ui.undo = null;
+  if (!back) return;
+  const from = S.cash;
+  S = back;
+  save(KEY_GAME, S);
+  ui.trade = null;
+  ui.fx = { from, to: S.cash, rows: GOODS.map((g, i) => (S.stash[g.id] || 0) !== (u.after.stash[g.id] || 0) ? i : -1).filter(i => i >= 0) };
+  announce([S.log[S.log.length - 1].text]);
   render();
 }
 
@@ -1794,7 +1840,7 @@ function gameHTML() {
   </header>
   <div class="dayline${last ? ' last' : ''}"><i style="width:${Math.round(st.day / st.days * 100)}%"></i></div>
   <div class="status">
-    <div class="stat lead cash"><small>Cash</small><span>${fmt(st.cash)}</span></div>
+    <div class="stat lead cash"><small>Cash</small><span>${fmt(st.cash)}</span>${ui.undo && ui.undo.after === st ? '<button class="undo" data-act="undo" title="Undo that trade (Z)">Undo<kbd>Z</kbd></button>' : ''}</div>
     <div class="stat lead${st.debt > 0 ? (st.debtAge >= CONFIG.goonDays - 2 ? ' bad' : ' warn') : ''}"><small>Debt</small><span>${fmt(st.debt)}</span><em>${debtNote(st)}</em></div>
     <div class="stat"><small>Bank</small><span>${fmt(st.bank)}</span></div>
     <div class="stat${st.hp <= 30 ? ' bad' : ''}"><small>Health</small><span>${st.hp} / ${CONFIG.maxHp}</span>${meter(st.hp, CONFIG.maxHp, st.hp <= 30 ? 'low' : '')}</div>
@@ -2465,6 +2511,7 @@ root.addEventListener('click', e => {
     case 'qmax': setQty(qtyMax(ui.trade)); return;
     case 'qmaxgo': { const t = ui.trade; act({ t: t.side, good: GOODS[t.good].id, qty: qtyMax(t) }); return; }
     case 'stay': closePanels(); return;
+    case 'undo': undoLast(); return;
     case 'coachoff': prefs.coachDone = true; save(KEY_PREFS, prefs); render(); return;
     case 'finishcancel': ui.confirmCash = false; ui.panelOpener = null; render(); return;
     case 'sellall': act({ t: 'sellall' }); return;
@@ -2505,7 +2552,7 @@ root.addEventListener('input', e => { if (e.target.id === 'pc-qty') updateTotal(
  * for a market key. So the two key sets share no letters (tools/check-all.js
  * holds them apart), and an encounter ignores input for a moment after it
  * appears, so a key already in flight can't answer it. */
-const MARKET_KEYS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'b', 's', 'a', 't', 'e', 'v', 'h', '?', '/'];
+const MARKET_KEYS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'b', 's', 'a', 't', 'e', 'v', 'h', 'z', '?', '/'];
 const ENC_KEYS = { r: ['run'], f: ['fight'], u: ['surrender'], d: ['deal'], l: ['leave'], p: ['pay'], y: ['sell', 'buy'], n: ['refuse', 'decline'] };
 const ENC_LOCK_MS = 400;
 function encLocked() { return S && S.enc && performance.now() < (ui.encUntil || 0); }
@@ -2605,6 +2652,7 @@ document.addEventListener('keydown', e => {
   if (inInput) return;
   if (/^[1-9]$/.test(k)) { ui.sel = Number(k) - 1; ui.trade = null; ui.flash = ''; render(); return; }
   if (k === 'a') { act({ t: 'sellall' }); return; }
+  if (k === 'z') { undoLast(); return; }
   if (k === 'ArrowDown') { e.preventDefault(); ui.sel = (ui.sel + 1) % GOODS.length; render(); return; }
   if (k === 'ArrowUp') { e.preventDefault(); ui.sel = (ui.sel + GOODS.length - 1) % GOODS.length; render(); return; }
   if (k === 'b') { openQty(ui.sel, 'buy'); return; }

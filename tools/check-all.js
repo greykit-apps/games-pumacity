@@ -726,6 +726,27 @@ scenario('cheat: the Konami code adds $25,000, clears heat, marks the run, and c
   ok(C, after, C.botAct(after));
 });
 
+scenario('undo: reverses a trade exactly, heat included, and refuses anything else', () => {
+  let { C, st } = fresh();
+  setPrices(C, st, 4000);
+  st.cash = 100000;
+  st = ok(C, st, { t: 'buy', good: 'skooma', qty: 10 });
+  const before = st;
+  const sold = ok(C, st, { t: 'sell', good: 'skooma', qty: 10 });
+  assert.ok(sold.heat > before.heat, 'the sale should have raised heat');
+  const undone = C.undoTrade(before, sold);
+  for (const k of ['cash', 'stash', 'cost', 'heat', 'stats', 'day', 'rng', 'loc', 'debt']) assert.deepStrictEqual(undone[k], before[k], k);
+  assert.ok(/undone/.test(undone.log[undone.log.length - 1].text));
+  ok(C, undone, C.botAct(undone));
+  const all = ok(C, before, { t: 'sellall' });
+  assert.strictEqual(C.undoTrade(before, all).cash, before.cash);
+  const moved = travelQuiet(C, before, 'ranch');
+  assert.strictEqual(C.undoTrade(before, moved), null, 'a trip must not be undoable');
+  const paid = Object.assign(JSON.parse(JSON.stringify(before)), { loc: 'pvn' });
+  assert.strictEqual(C.undoTrade(paid, ok(C, paid, { t: 'repay', amt: 100 })), null, 'a repayment is not a trade');
+  assert.strictEqual(C.undoTrade(before, before), null, 'nothing happened, nothing to undo');
+});
+
 // ---- the door
 scenario('step: never modifies the state it was given', () => {
   let { C, st } = fresh();
