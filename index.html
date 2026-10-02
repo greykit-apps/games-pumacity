@@ -2060,7 +2060,8 @@ function cityMapSVG() {
   o += `<rect class="pad" x="6" y="406" width="78" height="188"/><path class="pad-mark" d="M45 414 V586"/><circle class="pad-mark" cx="45" cy="500" r="22"/>`;
   for (let y = 414; y < 594; y += 18) o += `<circle class="lt" cx="9" cy="${y}" r="1.5"/><circle class="lt" cx="81" cy="${y}" r="1.5"/>`;
   o += `<path class="ship" d="M45 432 L60 466 L60 548 L30 548 L30 466 Z"/><path class="ship-w" d="M38 470 H52"/>`;
-  for (const x of [108, 206, 258]) o += `<path class="st" d="M${x} 404 V596"/>`;
+  for (const x of [108, 206]) o += `<path class="st" d="M${x} 404 V596"/>`;
+
   for (const y of [446, 556]) o += `<path class="st" d="M88 ${y} H300"/>`;
   for (const [x0, x1] of [[112, 142], [160, 202], [210, 254], [262, 296]]) {
     for (const [y0, y1] of [[408, 442], [450, 490], [512, 552], [560, 594]]) {
@@ -2069,6 +2070,18 @@ function cityMapSVG() {
   }
   // Downtown (east, south): the outer loop, two streets quartering it, the roundabout where they meet
   o += `<rect class="loop" x="318" y="414" width="264" height="172" rx="26"/>`;
+  // the Suburbs' streets run on south out of their square: the outer one
+  // doglegs into the Starport's east street, the inner two meet the loop
+  {
+    const arcX = (R, y, side) => 450 + side * Math.sqrt(R * R - (420 - y) ** 2);
+    const loopTop = x => { const c = Math.min(556, Math.max(344, x)); return 440 - Math.sqrt(26 * 26 - (x - c) ** 2); };
+    const f = n => n.toFixed(1);
+    o += `<path class="st" d="M${f(arcX(180, 390, -1))} 390 L${f(arcX(180, 403, -1))} 403 L258 416 V596"/>`;
+    for (const R of [80, 130]) for (const side of [-1, 1]) {
+      const x = arcX(R, 403, side);
+      o += `<path class="st" d="M${f(arcX(R, 392, side))} 392 L${f(x)} 403 V${f(loopTop(x))}"/>`;
+    }
+  }
   // the Starport's cross streets run on into the loop around the city centre
   o += `<path class="st" d="M296 446 H320 M296 556 H320"/>`;
   for (const [x, y, w, h] of [[336, 430, 22, 22], [336, 458, 22, 26], [416, 430, 20, 26], [470, 428, 26, 24], [504, 428, 26, 24], [540, 428, 26, 24], [470, 458, 40, 26], [520, 460, 46, 24],
