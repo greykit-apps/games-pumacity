@@ -1987,7 +1987,7 @@ function tradePopHTML(t, i) {
  * A north/south highway runs from the Starport up through the Vault to a
  * roundabout before the Convention Center. The suburbs' main road runs
  * north from Downtown, through the Suburbs, into the Ranch, and curves west
- * to meet the highway at a right angle in front of the Convention Center.
+ * into the roundabout in front of the Convention Center, below its parking.
  * Drawn once and cached; the live badges sit on buttons above it. */
 let cityArt = null;
 function cityMapSVG() {
@@ -2063,8 +2063,8 @@ function cityMapSVG() {
   // the road west from Downtown into the Starport, T-boning the highway
   o += road('M150 500 H600');
   // the suburbs' main road: up from Downtown, through the Suburbs, into the
-  // Ranch, curving west to meet the highway at a right angle by the roundabout
-  o += road('M450 600 V266 Q450 194 380 194 H157');
+  // Ranch, curving west to run just below the parking lot into the roundabout
+  o += road('M450 600 V246 Q450 168 372 168 H163');
   o += `<circle class="rdring" cx="150" cy="168" r="14"/><circle class="island" cx="150" cy="168" r="7"/>`;
   o += `<circle class="rdring" cx="450" cy="500" r="18"/><circle class="island" cx="450" cy="500" r="10"/>`;
   cityArt = `<svg class="citymap" viewBox="0 0 600 600" aria-hidden="true" focusable="false">${o}</svg>`;
