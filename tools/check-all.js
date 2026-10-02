@@ -53,6 +53,32 @@ function travelQuiet(C, st, to) {
 }
 
 // ---- data
+scenario('presets: Regular is the defaults; the others start and charge on their own rules', () => {
+  const { C } = fresh();
+  assert.deepStrictEqual(C.PRESET_IDS, ['tourist', 'regular', 'wanted']);
+  assert.deepStrictEqual(C.presetRules('regular'), C.RULES);
+  const plain = C.newGame({ seed: 5, days: 30 });
+  assert.strictEqual(plain.preset, 'regular', 'no preset given means Regular');
+  assert.strictEqual(C.newGame({ seed: 5, days: 30, preset: 'nightmare' }).preset, 'regular', 'an unknown preset means Regular');
+  for (const id of ['tourist', 'wanted']) {
+    const R = C.presetRules(id);
+    const st = C.newGame({ seed: 5, days: 30, preset: id });
+    assert.strictEqual(st.preset, id);
+    assert.deepStrictEqual(st.rules, R);
+    assert.strictEqual(st.cash, R.startCash);
+    assert.strictEqual(st.debt, R.startDebt);
+    assert.ok(st.log.some(l => l.text.includes(`at ${Math.round(R.debtRate * 100)}% a day`)), `${id}: the welcome line states its own rate`);
+    const next = travelQuiet(C, st, 'ranch');
+    assert.strictEqual(next.debt, Math.round(R.startDebt * (1 + R.debtRate)), `${id}: the debt grows at its own rate`);
+  }
+});
+scenario('presets: every change names a rule that exists', () => {
+  const { C } = fresh();
+  for (const id of C.PRESET_IDS) {
+    for (const k of Object.keys(C.PRESETS[id].rules)) assert.ok(k in C.RULES, `${id} sets '${k}', which is not a rule; a typo here would change nothing`);
+    assert.ok(C.PRESETS[id].name && C.PRESETS[id].blurb, `${id} needs a name and a blurb for the title screen`);
+  }
+});
 scenario('rules: a run carries its own copy, and the engine reads that copy', () => {
   const { C, st } = fresh();
   assert.deepStrictEqual(st.rules, C.RULES, 'a new run starts on the default rules');

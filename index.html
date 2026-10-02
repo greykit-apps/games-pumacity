@@ -111,6 +111,8 @@ p{margin:0 0 var(--s2)}
 .top .day{color:var(--dim);white-space:nowrap}
 .top .day b{color:var(--text);font-weight:600}
 .top .day.last b,.top .day.last{color:var(--warn)}
+.top .mode{font-size:11px;letter-spacing:.12em;text-transform:uppercase;padding:1px 6px;border:1px solid currentColor;border-radius:3px;white-space:nowrap}
+.top .m-tourist{color:var(--good)}.top .m-wanted{color:var(--danger)}
 .top .grow{flex:1}
 .top .brand{font-size:12px;letter-spacing:.3em;text-transform:uppercase;color:var(--accent);font-weight:600}
 .dayline{height:2px;background:var(--line)}
@@ -368,6 +370,7 @@ button.link:hover{color:var(--text)}
 .setup .tag{color:var(--steel);margin:var(--s1) 0 var(--s3)}
 .setup .row{display:flex;gap:var(--s2);align-items:center;flex-wrap:wrap;margin:var(--s3) 0}
 .setup .row label{width:7em;color:var(--dim)}
+.setup .preset-note{flex-basis:100%;margin:0 0 0 calc(7em + var(--s2));color:var(--steel);font-size:12px}
 .setup .row input{flex:1;min-width:10em;max-width:20em}
 .setup .acts{display:flex;gap:var(--s2);flex-wrap:wrap;margin:var(--s5) 0 var(--s6)}
 .setup table.scores{border-collapse:collapse;width:100%}
@@ -424,6 +427,7 @@ button.link:hover{color:var(--text)}
 }
 @media (max-width:700px){
   .setup .row label{width:100%}
+  .setup .preset-note{margin-left:0}
   body{font-size:13px}
   .scene{height:92px}
   button{min-height:44px}
@@ -510,6 +514,8 @@ const RULES = {
   carryWatchMax: 0.35,     // ...capped here
   dropOnFail: 0.4,     // share of each good you drop when a getaway fails
   vetPerHp: 15,
+  watchBase: 0.05,    // the Watchers' daily odds with no heat and no load
+  watchHeat: 250,     // ...plus heat divided by this
   // what's waiting when you arrive: the daily odds of each encounter
   goonRate: 0.3,      // once the goons are due (never at PVN Tower)
   rivalRate: 0.07,
@@ -522,6 +528,22 @@ const RULES = {
   soldOut: [1, 2],    // how many goods are missing from a market, fewest to most
 };
 function R(st) { return st.rules; }
+
+/* Difficulty presets: each is a short list of changes to the defaults, and
+ * Regular is the defaults exactly. tools/sim.js holds every preset to its own
+ * profit band, so a number here that drifts out of balance fails the build. */
+const PRESETS = {
+  tourist: { name: 'Tourist', blurb: 'More cash, a patient Boss, Watchers who look the other way.',
+    rules: { startCash: 5000, startDebt: 5000, debtRate: 0.05, goonDays: 12, watchBase: 0.03, heatDecay: 6, eventChance: 0.18 } },
+  regular: { name: 'Regular', blurb: 'PumaCity as it comes.', rules: {} },
+  wanted: { name: 'Wanted', blurb: 'Little cash, a big debt, and every patrol knows your face.',
+    rules: { startCash: 800, startDebt: 12000, debtRate: 0.12, goonDays: 6, watchBase: 0.08, heatDecay: 3, eventChance: 0.08 } },
+};
+const PRESET_IDS = Object.keys(PRESETS);
+/* A preset's full rules: the defaults with its changes laid over them. */
+function presetRules(id) {
+  return Object.assign(JSON.parse(JSON.stringify(RULES)), JSON.parse(JSON.stringify(PRESETS[id].rules)));
+}
 /* A rate as players read it: 0.1 -> '10%', 0.035 -> '3.5%'. */
 function pctText(x) { return `${+(x * 100).toFixed(1)}%`; }
 /* The same rate as Casey says it out loud: 0.1 -> 'Ten percent'. */
@@ -665,9 +687,10 @@ function newGame(opts) {
   const seed = (opts.seed == null ? 1 : opts.seed) | 0;
   // Count characters, not UTF-16 units, so a cut never splits an emoji in half.
   const name = Array.from(String(opts.name || '').trim()).slice(0, 16).join('') || 'Stray';
-  const rules = JSON.parse(JSON.stringify(RULES));
+  const preset = PRESETS[opts.preset] ? opts.preset : 'regular';
+  const rules = presetRules(preset);
   const st = {
-    v: 1, version: VERSION, seed, rng: seed, name, days, day: 1, loc: CONFIG.startLoc, rules,
+    v: 1, version: VERSION, seed, rng: seed, name, days, day: 1, loc: CONFIG.startLoc, preset, rules,
     cash: rules.startCash, bank: 0, debt: rules.startDebt, debtAge: 0,
     hp: rules.maxHp, heat: 0,
     stash: {}, cost: {},
@@ -742,7 +765,7 @@ function carryRiskWith(st, id, q) {
 }
 
 /* The daily chance the Watchers find you at P, at a given heat. */
-function watchOdds(st, heat, P) { return (0.05 + heat / 250 + carryRisk(st)) * P.watch; }
+function watchOdds(st, heat, P) { return (R(st).watchBase + heat / R(st).watchHeat + carryRisk(st)) * P.watch; }
 /* The same chance as it will be on arrival at a place: travel cools your heat
  * before the roll. The map shows this for every district. */
 function arrivalWatchOdds(st, id) {
@@ -1388,7 +1411,8 @@ function esc(s) {
 const root = document.querySelector('[data-pumacity-game]');
 let S = null;            // the game state, or null on the title screen
 let ui = { sel: 0, modal: null, flash: '' };
-let prefs = Object.assign({ name: '', days: 30 }, load(KEY_PREFS, {}));
+let prefs = Object.assign({ name: '', days: 30, preset: 'regular' }, load(KEY_PREFS, {}));
+if (!PRESETS[prefs.preset]) prefs.preset = 'regular';
 let scoreTab = prefs.days;
 
 /* A save from an older build, or one edited by hand, must not crash the screen:
@@ -1406,22 +1430,35 @@ function loadGame() {
   // Saves from before runs carried their rules were all played under the
   // defaults; a save missing a rule (one added later) gets its default too.
   st.rules = Object.assign(JSON.parse(JSON.stringify(RULES)), st.rules || {});
+  if (!PRESETS[st.preset]) st.preset = 'regular';
   return st;
 }
 
+/* One top ten per difficulty and run length ('wanted:60'): scores are only
+ * comparable under the same rules. Boards from before presets were all
+ * Regular, kept under the bare run length; they move across on first load. */
+function boardKey(preset, days) { return `${preset}:${days}`; }
 function scores() {
   const s = load(KEY_SCORES, {});
-  return s && typeof s === 'object' ? s : {};
+  if (!s || typeof s !== 'object') return {};
+  let moved = false;
+  for (const d of CONFIG.lengths) {
+    if (Array.isArray(s[d])) { s[boardKey('regular', d)] = (s[boardKey('regular', d)] || []).concat(s[d]).sort(scoreOrder).slice(0, 10); delete s[d]; moved = true; }
+  }
+  if (moved) save(KEY_SCORES, s);
+  return s;
 }
+function board(preset, days) { const l = scores()[boardKey(preset, days)]; return Array.isArray(l) ? l : []; }
 function recordScore(st) {
   const all = scores();
-  const list = Array.isArray(all[st.days]) ? all[st.days] : [];
+  const key = boardKey(st.preset, st.days);
+  const list = Array.isArray(all[key]) ? all[key] : [];
   const entry = { name: st.name, score: st.over.score, cheat: !!st.stats.cheated, dead: st.over.reason === 'dead', day: st.over.day, at: new Date().toISOString().slice(0, 10), id: st.seed + ':' + st.logN };
   list.push(entry);
   list.sort(scoreOrder);
-  all[st.days] = list.slice(0, 10);
+  all[key] = list.slice(0, 10);
   save(KEY_SCORES, all);
-  return all[st.days].findIndex(e => e.id === entry.id);
+  return all[key].findIndex(e => e.id === entry.id);
 }
 
 /* First-run coach: two steps (buy something cheap, then travel), shown once
@@ -1495,7 +1532,7 @@ function startRun() {
   if (nameEl) prefs.name = Array.from(nameEl.value.trim()).slice(0, 16).join('');
   save(KEY_PREFS, prefs);
   const seed = (Date.now() ^ Math.floor(Math.random() * 0x7fffffff)) | 0;
-  S = newGame({ seed, days: prefs.days, name: prefs.name });
+  S = newGame({ seed, days: prefs.days, name: prefs.name, preset: prefs.preset });
   ui = { sel: 0, modal: null, flash: '' };
   save(KEY_GAME, S);
   render();
@@ -1773,7 +1810,8 @@ function setScene(id) {
 function setupHTML() {
   const saved = loadGame();
   const all = scores();
-  const list = Array.isArray(all[scoreTab]) ? all[scoreTab] : [];
+  const list = board(prefs.preset, scoreTab);
+  const pre = PRESETS[prefs.preset];
   return `<div class="pc setup">
   ${skyline()}
   <h1 class="title">PumaCity: Nip Wars</h1>
@@ -1781,16 +1819,17 @@ function setupHTML() {
   <ol class="primer">
     <li>Buy where a good is <span class="rw cheap">cheap</span>.</li>
     <li>Travel across town. Every trip takes a day.</li>
-    <li>Sell where it's <span class="rw steep">steep</span>, and pay Casey Benton back before her ${pctText(RULES.debtRate)} a day eats you.</li>
+    <li>Sell where it's <span class="rw steep">steep</span>, and pay Casey Benton back before her ${pctText(presetRules(prefs.preset).debtRate)} a day eats you.</li>
   </ol>
   <div class="row"><label for="pc-name">Name</label><input id="pc-name" maxlength="16" autocomplete="off" placeholder="Stray" value="${esc(prefs.name)}"></div>
+  <div class="row"><label>Difficulty</label>${PRESET_IDS.map(id => `<button data-act="preset" data-v="${id}" aria-pressed="${prefs.preset === id}">${PRESETS[id].name}</button>`).join('')}<p class="note preset-note">${esc(pre.blurb)}</p></div>
   <div class="row"><label>Run length</label>${CONFIG.lengths.map(d => `<button data-act="days" data-v="${d}" aria-pressed="${prefs.days === d}">${d} days</button>`).join('')}</div>
   <div class="acts">
     ${saved ? `<button class="primary" data-act="resume"><kbd>R</kbd>${saved.name === 'Stray' ? `Resume day ${saved.day} of ${saved.days}` : `Resume: ${esc(saved.name)}, day ${saved.day} of ${saved.days}`}</button>` : ''}
     <button${saved ? '' : ' class="primary"'} data-act="start"><kbd>N</kbd>New run</button>
     <button data-act="help"><kbd>?</kbd>How to play</button>
   </div>
-  <h2>High scores</h2>
+  <h2>High scores · ${pre.name}</h2>
   <div class="tabs">${CONFIG.lengths.map(d => `<button data-act="scoretab" data-v="${d}" aria-pressed="${scoreTab === d}">${d} days</button>`).join('')}</div>
   ${scoreTable(list, -1)}
   <p class="foot">Inspired by <i>Dope Wars</i> (John E. Dell, 1984). v${VERSION} · <a href="https://greykit.com/games/">More games</a></p>
@@ -1967,7 +2006,7 @@ function gameHTML() {
   return `<div class="pc">
   <header class="top">
     <h1 class="place-name">${P.name}</h1>
-    <span class="day${last ? ' last' : ''}">${last ? 'Last day' : `Day <b>${st.day}</b> of ${st.days} · ${left} left`}</span>
+    <span class="day${last ? ' last' : ''}">${last ? 'Last day' : `Day <b>${st.day}</b> of ${st.days} · ${left} left`}</span>${st.preset !== 'regular' ? `<span class="mode m-${st.preset}">${PRESETS[st.preset].name}</span>` : ''}
     <span class="grow"></span><span class="brand">PumaCity</span>
   </header>
   <div class="dayline${last ? ' last' : ''}"><i style="width:${Math.round(st.day / st.days * 100)}%"></i></div>
@@ -2406,7 +2445,7 @@ function encHTML() {
 /* One line that tells you how the run went, celebrating a board place. */
 function verdict(score, rank) {
   if (score < 0) return `<p class="verdict bad">You leave PumaCity still owing Casey Benton. She'll remember.</p>`;
-  if (rank === 0) return `<p class="verdict best">A new best score for this run length.</p>`;
+  if (rank === 0) return `<p class="verdict best">A new best score for this difficulty and run length.</p>`;
   if (rank > 0) return `<p class="verdict good">Number ${rank + 1} on the board.</p>`;
   return `<p class="verdict dim">Debt cleared. Not a board score this time.</p>`;
 }
@@ -2414,7 +2453,7 @@ function verdict(score, rank) {
 function overHTML() {
   const st = S;
   const o = st.over;
-  const list = scores()[st.days] || [];
+  const list = board(st.preset, st.days);
   const dead = o.reason === 'dead';
   return `<div class="back"><div class="modal${dead ? ' dead' : ''}" role="alertdialog" aria-modal="true" aria-labelledby="pc-mt">
     <h1 id="pc-mt">${dead ? 'You died' : 'The run is over'}</h1>
@@ -2426,7 +2465,7 @@ function overHTML() {
     ${o.unsold ? `<tr><td class="dim">Unsold goods (worth nothing)</td><td class="r dim">${o.unsold} ${plural(o.unsold, 'unit')}</td></tr>` : ''}
     </table>`}
     <p class="note">${st.stats.peak > 0 ? `Best net worth during the run: ${fmt(st.stats.peak)}. ` : ''}Fights won: ${st.stats.won}. Escapes: ${st.stats.fled}. Busts: ${st.stats.busted}.</p>
-    <h2>High scores, ${st.days} days</h2>${scoreTable(list, ui.rank)}
+    <h2>High scores · ${PRESETS[st.preset].name}, ${st.days} days</h2>${scoreTable(list, ui.rank)}
     <div class="acts"><button class="primary" data-act="again"><kbd>N</kbd>New run</button><button data-act="title"><kbd>Esc</kbd>Title screen</button></div>
   </div></div>`;
 }
@@ -2705,6 +2744,7 @@ root.addEventListener('click', e => {
     case 'backdrop': if (e.target === el) closeModal(); return;
     case 'days': prefs.days = Number(v); scoreTab = prefs.days; save(KEY_PREFS, prefs); render(); return;
     case 'scoretab': scoreTab = Number(v); render(); return;
+    case 'preset': prefs.preset = PRESETS[v] ? v : 'regular'; save(KEY_PREFS, prefs); render(); return;
     case 'start': startRun(); return;
     case 'resume': resume(); return;
     case 'help': ui.modal = { kind: 'help', tab: 'basics' }; render(); return;

@@ -23,7 +23,15 @@ Saves stay in your browser's `localStorage`.
 
 ### How a run goes
 
-- **Pick a length** (30, 60 or 90 days) and a name.
+- **Pick a difficulty, a length** (30, 60 or 90 days) **and a name.**
+  - *Tourist*: $5,000 cash against $5,000 of debt at 5% a day, a Boss who
+    waits 12 days, and Watchers who look the other way.
+  - *Regular*: PumaCity as it comes: $1,500 against $8,000 at 10%, goons
+    after 8 days.
+  - *Wanted*: $800 against $12,000 at 12%, goons after 6 days, Watchers who
+    come more often and forget you more slowly, and fewer headlines.
+
+  Each difficulty keeps its own high scores.
 - **Every trip takes a day.** Each district has its own scenery behind the
   terminal. Prices roll fresh at each stop, one or two goods are out of
   stock, and a headline sometimes sends one good's price wild.
@@ -117,7 +125,7 @@ The rules are data plus a DOM-free engine, which sit between the
 
 ```
 node tools/check-assets.js   # every file index.html references exists
-node tools/check-all.js      # 62 named rule scenarios
+node tools/check-all.js      # 64 named rule scenarios
 node tools/replay.js         # fixed seeds replay exactly as recorded
 node tools/sim.js 20         # bots play whole runs; invariants after every step
 ```
@@ -140,22 +148,36 @@ commit, with the reason in its message.
 - an invariant breaks: cash, bank or debt goes negative, the pouch goes over
   capacity, or health or heat leaves its range
 - a run never ends
-- the share of careful runs finishing in profit leaves its target band:
-  55–95% at 30 days, at least 60% at 60 and 90. The bot knows every price
-  band, so it's a strong player. The upper bound exists because the first
-  economy let every run win.
-- no reckless run ever dies
+- the share of careful runs finishing in profit leaves its difficulty's
+  target band. The bot knows every price band, so it's a strong player.
+  - Tourist: at least 90%.
+  - Regular: 55–95% at 30 days, at least 60% at 60 and 90. The upper bound
+    exists because the first economy let every run win.
+  - Wanted: 25–60% at 30 days, 25–70% at 60 and 90.
+- no reckless run ever dies on Regular or Wanted
 
-Figures for 20 runs per cell:
+`--preset=wanted` plays one difficulty. Figures for 20 runs per cell:
 
-| Days | Bot | Profit | Deaths | Median score |
-|---|---|---|---|---|
-| 30 | careful | 16/20 | 0 | $114,765 |
-| 30 | reckless | 18/20 | 1 | $116,912 |
-| 60 | careful | 18/20 | 0 | $1,428,536 |
-| 60 | reckless | 13/20 | 6 | $1,294,581 |
-| 90 | careful | 17/20 | 2 | $3,983,986 |
-| 90 | reckless | 15/20 | 4 | $4,177,853 |
+| Difficulty | Days | Bot | Profit | Deaths | Median score |
+|---|---|---|---|---|---|
+| Tourist | 30 | careful | 20/20 | 0 | $795,661 |
+| Tourist | 30 | reckless | 20/20 | 0 | $486,114 |
+| Tourist | 60 | careful | 20/20 | 0 | $2,620,469 |
+| Tourist | 60 | reckless | 20/20 | 0 | $2,476,493 |
+| Tourist | 90 | careful | 20/20 | 0 | $5,765,030 |
+| Tourist | 90 | reckless | 20/20 | 0 | $5,197,495 |
+| Regular | 30 | careful | 16/20 | 0 | $114,765 |
+| Regular | 30 | reckless | 18/20 | 1 | $116,912 |
+| Regular | 60 | careful | 18/20 | 0 | $1,428,536 |
+| Regular | 60 | reckless | 13/20 | 6 | $1,294,581 |
+| Regular | 90 | careful | 17/20 | 2 | $3,983,986 |
+| Regular | 90 | reckless | 15/20 | 4 | $4,177,853 |
+| Wanted | 30 | careful | 7/20 | 0 | −$81,405 |
+| Wanted | 30 | reckless | 13/20 | 0 | $144,058 |
+| Wanted | 60 | careful | 7/20 | 2 | −$5,742,867 |
+| Wanted | 60 | reckless | 6/20 | 7 | −$505,263 |
+| Wanted | 90 | careful | 10/20 | 5 | $1,299,174 |
+| Wanted | 90 | reckless | 5/20 | 9 | −$176,988 |
 
 ### Debugging
 
