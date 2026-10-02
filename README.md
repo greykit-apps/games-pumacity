@@ -30,6 +30,11 @@ Saves stay in your browser's `localStorage`.
 - **Read the market.** The *vs usual* column says whether each price is a
   bargain, cheap, fair, steep or sky-high for that good. The Held column
   shows what you paid and how today's price compares.
+- **Mind your load.** A heavy load draws the Watchers whatever your heat.
+  The Pouch box shows its pull, and the buy row tells you what a purchase
+  will do to it before you commit.
+- **First run?** A coach line walks you through your first buy and first
+  trip, then gets out of the way.
 - **The debt compounds 10% a day.** Pay it down at PVN Tower. Go eight days
   without a real payment (at least 10% of what you owe) and The Boss sends
   her goons.
@@ -45,7 +50,7 @@ Saves stay in your browser's `localStorage`.
 | PVN Tower | Casey Benton's tower: a theater at ground level, a nightclub above it, her office in the penthouse. Borrow and repay; Skooma sells high. |
 | The Vault | A vault kept for PumaCity's leadership in case of war, run as a bank meanwhile. Money in it is safe and earns 1% a day. |
 | The Ranch | An old horse ranch turned grow fields. Cheap 'nip, and the Watchers rarely come out this far (heat cools faster). |
-| Starport | Where the ship lands, trading with other ports. Moonsugar and Skooma come in cheap. Hover-Crate and Mech-Claws. |
+| Starport | Where the ship lands, trading with other ports. Moonsugar and Skooma come in cheap. The Bay 9 outfitter: Hover-Crate and Mech-Claws. |
 | The Convention Center | By the starport, a new event every week. Everything sells high. Pickpockets. The Pawphone. |
 | Suburbs | Cul-de-sacs of Casey's rentals. The vet patches you up. |
 
@@ -103,7 +108,7 @@ The rules are data plus a DOM-free engine, which sit between the
 
 ```
 node tools/check-assets.js   # every file index.html references exists
-node tools/check-all.js      # 54 named rule scenarios
+node tools/check-all.js      # 55 named rule scenarios
 node tools/sim.js 20         # bots play whole runs; invariants after every step
 ```
 

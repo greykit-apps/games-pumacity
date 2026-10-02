@@ -546,6 +546,16 @@ scenario('watchers: a heavy load draws them, capped', () => {
   const light = count({}), heavy = count({ skooma: 100 });
   assert.ok(heavy > light * 2, `heavy ${heavy} vs light ${light}`);
 });
+scenario('watchers: the load risk shown before a buy is the risk after it', () => {
+  let { C, st } = fresh();
+  setPrices(C, st, 1);
+  st.cash = 100000;
+  st = ok(C, st, { t: 'buy', good: 'moonsugar', qty: 4 });
+  const shown = C.carryRiskWith(st, 'skooma', 6);
+  st = ok(C, st, { t: 'buy', good: 'skooma', qty: 6 });
+  assert.strictEqual(C.carryRisk(st), shown);
+  assert.ok(shown > 0 && shown <= C.CONFIG.carryWatchMax);
+});
 scenario('news: headlines move a price within the declared range', () => {
   const { C } = fresh();
   let seen = 0;

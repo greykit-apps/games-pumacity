@@ -126,6 +126,17 @@ p{margin:0 0 var(--s2)}
 .stat em{display:block;font-style:normal;font-size:12px;color:var(--dim)}
 .stat.bad span,.stat.bad em{color:var(--danger)}
 .stat.warn span{color:var(--warn)}
+.stat.cash{position:relative}
+.delta{position:absolute;right:var(--s4);top:var(--s2);font-size:13px;font-weight:600;pointer-events:none;
+  animation:deltaUp 1s cubic-bezier(.22,1,.36,1) forwards}
+.delta.up{color:var(--good)}.delta.down{color:var(--steel)}
+@keyframes deltaUp{from{opacity:0;transform:translateY(8px)}18%{opacity:1}70%{opacity:1}to{opacity:0;transform:translateY(-12px)}}
+.mk tr.traded td{animation:rowFlash .85s cubic-bezier(.22,1,.36,1)}
+@keyframes rowFlash{from{background:rgba(84,242,255,.13)}}
+.mk .hq{display:inline-block;font-weight:inherit}
+.mk .hq.pulse{animation:hqPulse .55s cubic-bezier(.22,1,.36,1)}
+@keyframes hqPulse{35%{transform:scale(1.3);color:var(--accent)}}
+@media (prefers-reduced-motion:reduce){.delta,.mk tr.traded td,.mk .hq.pulse{animation:none}}
 .meter{display:block;height:6px;margin-top:var(--s1);background:var(--panel2);border:1px solid var(--line)}
 .meter i{display:block;height:100%;background:var(--good)}
 .meter.heat i{background:var(--warn)}
@@ -169,6 +180,13 @@ table.mk{width:100%;border-collapse:collapse}
 .rw.steep{color:var(--warn)}
 .rw.sky-high{color:var(--warn)}
 .ticker{margin:0 0 var(--s3);padding:6px var(--s3);border:1px solid #3a2e10;border-radius:3px;background:rgba(255,176,0,.06);color:var(--warn)}
+.coach{display:flex;gap:var(--s3);align-items:baseline;margin:0 0 var(--s3);padding:6px var(--s3);border:1px solid #17485a;border-radius:3px;background:rgba(84,242,255,.05);color:var(--text)}
+.coach b{flex:none;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent)}
+.coach span{flex:1}
+.coach kbd{margin:0 2px}
+button.link{min-height:0;padding:0 var(--s1);border:0;background:none;color:var(--steel);text-decoration:underline;cursor:pointer}
+button.link:hover{color:var(--text)}
+@media (max-width:700px){.coach{flex-wrap:wrap}.coach kbd{display:inline}}
 .ticker b{font-size:11px;letter-spacing:.12em;text-transform:uppercase;margin-right:var(--s2)}
 .up{color:var(--good)}.down{color:var(--danger)}
 /* The trend arrow is direction only; colour on a row belongs to 'vs usual',
@@ -181,6 +199,9 @@ table.mk{width:100%;border-collapse:collapse}
 .qrow{display:flex;flex-wrap:wrap;gap:6px;align-items:center;width:100%;margin-top:var(--s1)}
 .qrow input{width:6em}
 .qrow .total{margin-left:auto;margin-right:var(--s2)}
+.qrow .risk{flex-basis:100%;font-size:12px;color:var(--steel)}
+.qrow .risk:empty{display:none}
+.stat.warn em{color:var(--warn)}
 .travel,.sidepanel{position:absolute;inset:0;overflow:auto;padding:var(--s4) var(--s5)}
 .sidepanel .row{display:flex;gap:var(--s2);align-items:center;flex-wrap:wrap;margin:var(--s2) 0}
 .sidepanel .row input{width:8em}
@@ -199,8 +220,13 @@ table.mk{width:100%;border-collapse:collapse}
 .market .bar{margin-top:var(--s4)}
 .side{border-left:1px solid var(--line);display:flex;flex-direction:column;min-height:0;min-width:0}
 .place{padding:var(--s4) var(--s5);border-bottom:1px solid var(--line)}
-.place .blurb{color:var(--ink)}
-.place .spec{color:var(--steel)}
+.place .spec{color:var(--text);margin-bottom:var(--s2)}
+.place .blurb{color:var(--dim);font-style:italic;font-size:13px;line-height:1.45}
+.place h2{margin:var(--s3) 0 var(--s1)}
+.gearlist{list-style:none;margin:0;padding:0;display:grid;gap:2px;font-size:12px}
+.gearlist li{display:flex;justify-content:space-between;gap:var(--s3)}
+.gearlist li span:first-child{color:var(--ink)}
+.gearlist li span:last-child{color:var(--dim);text-align:right}
 .place .gear{color:var(--dim);font-size:12px;margin:0}
 .tip{margin-top:var(--s2);padding:6px var(--s2);border:1px dashed var(--line);font-size:12px;color:var(--steel)}
 .tip b{color:var(--accent);font-weight:600}
@@ -309,6 +335,7 @@ table.mk{width:100%;border-collapse:collapse}
 }
 @media (max-width:700px){
   body{font-size:13px}
+  .scene{height:92px}
   button{min-height:44px}
   .top{padding:var(--s3) var(--s3) var(--s2);gap:var(--s3);flex-wrap:wrap}
   .top .place-name{font-size:18px}
@@ -404,7 +431,7 @@ const PLACES = [
     mods: { nip: 0.45 }, watch: 0.5, cool: 6,
     blurb: "An old horse ranch on the edge of town, its paddocks turned over to grow fields.",
     special: "Catnip is cheap, and the Watchers rarely come out this far." },
-  { id: 'starport', name: 'Starport', service: null, serviceName: 'Outfitter, Bay 9', shop: ['hovercrate', 'mech'],
+  { id: 'starport', name: 'Starport', service: null, serviceName: 'Bay 9 outfitter', shop: ['hovercrate', 'mech'],
     mods: { moonsugar: 0.8, skooma: 0.8 }, watch: 1.3,
     blurb: "Where the ship lands, trading PumaCity's goods with other ports.",
     special: "Moonsugar and Skooma come in cheap off the ship. The outfitter in Bay 9 sells gear you can't get in town." },
@@ -574,7 +601,13 @@ function rollTip(st) {
 /* Carrying a big load draws the Watchers' eye, whatever your heat. Valued at
  * each good's usual mid price, so the risk doesn't swing with today's market. */
 function carried(st) { let v = 0; for (const g of GOODS) v += (st.stash[g.id] || 0) * (g.lo + g.hi) / 2; return v; }
-function carryRisk(st) { return Math.min(CONFIG.carryWatchMax, carried(st) * CONFIG.carryWatch); }
+function carryRisk(st) { return carryRiskWith(st, null, 0); }
+/* The load risk if you also carried q more of a good; the screen's buy row
+ * shows this before you commit. */
+function carryRiskWith(st, id, q) {
+  const extra = id ? q * (GOOD[id].lo + GOOD[id].hi) / 2 : 0;
+  return Math.min(CONFIG.carryWatchMax, (carried(st) + extra) * CONFIG.carryWatch);
+}
 
 function rollEncounter(st) {
   const P = here(st);
@@ -1206,7 +1239,22 @@ function recordScore(st) {
   return all[st.days].findIndex(e => e.id === entry.id);
 }
 
+/* First-run coach: two steps (buy something cheap, then travel), shown once
+ * ever. Anyone who already has a finished run on the board is no newcomer. */
+if (prefs.coachDone == null) {
+  const all = scores();
+  prefs.coachDone = Object.keys(all).some(k => Array.isArray(all[k]) && all[k].length > 0);
+}
+function coachStep(a) {
+  if (prefs.coachDone || !a) return;
+  if (a.t === 'buy' && !S.enc) prefs.coachTraded = true;
+  if (a.t === 'travel') prefs.coachTravelled = true;
+  if (prefs.coachTraded && prefs.coachTravelled) prefs.coachDone = true;
+  save(KEY_PREFS, prefs);
+}
+
 // ---- actions
+const TRADES = ['buy', 'sell', 'sellall', 'deal'];
 function act(a) {
   if (!S) return;
   const before = S;
@@ -1215,6 +1263,11 @@ function act(a) {
   S = r.state;
   ui.flash = '';
   announce(r.events.map(l => l.text));
+  // A trade gets a beat: the cash moves, and the rows that changed light up.
+  coachStep(a);
+  if (a && TRADES.includes(a.t) && S.cash !== before.cash) {
+    ui.fx = { from: before.cash, to: S.cash, rows: GOODS.map((g, i) => (S.stash[g.id] || 0) !== (before.stash[g.id] || 0) ? i : -1).filter(i => i >= 0) };
+  }
   if (S.over && !before.over) {
     ui.rank = recordScore(S);
     save(KEY_GAME, null);
@@ -1525,7 +1578,7 @@ function setupHTML() {
   <div class="row"><label>Run length</label>${CONFIG.lengths.map(d => `<button data-act="days" data-v="${d}" aria-pressed="${prefs.days === d}">${d} days</button>`).join('')}</div>
   <div class="acts">
     <button class="primary" data-act="start"><kbd>N</kbd>New run</button>
-    ${saved ? `<button data-act="resume"><kbd>R</kbd>Resume: ${esc(saved.name)}, day ${saved.day} of ${saved.days}</button>` : ''}
+    ${saved ? `<button data-act="resume"><kbd>R</kbd>${saved.name === 'Stray' ? `Resume day ${saved.day} of ${saved.days}` : `Resume: ${esc(saved.name)}, day ${saved.day} of ${saved.days}`}</button>` : ''}
     <button data-act="help"><kbd>?</kbd>How to play</button>
   </div>
   <h2>High scores</h2>
@@ -1548,6 +1601,20 @@ function priceStanding(g, p) {
   const word = r < 0 ? 'bargain' : r < 0.33 ? 'cheap' : r < 0.67 ? 'fair' : r <= 1 ? 'steep' : 'sky-high';
   return { r, word };
 }
+function coachHTML(st) {
+  if (prefs.coachDone || st.enc || st.over) return '';
+  let tip;
+  if (!prefs.coachTraded) {
+    const buyable = GOODS.map((g, i) => ({ g, i, p: st.prices[g.id] })).filter(x => x.p != null && x.p <= st.cash);
+    if (!buyable.length) return '';
+    const best = buyable.reduce((a, b) => priceStanding(b.g, b.p).r < priceStanding(a.g, a.p).r ? b : a);
+    tip = `${best.g.name} is ${priceStanding(best.g, best.p).word} here. Press <kbd>${best.i + 1}</kbd> then <kbd>B</kbd> to buy some, or tap its Buy button.`;
+  } else {
+    tip = `Now travel (<kbd>T</kbd>) and sell wherever it shows <span class="rw steep">steep</span>. Every trip takes a day, and the debt grows overnight.`;
+  }
+  return `<p class="coach"><b>First run</b> <span>${tip}</span><button class="link" data-act="coachoff">Got it</button></p>`;
+}
+
 function headlineToday(st) {
   if (!st.news) return '';
   const line = [...st.log].reverse().find(l => l.cls === 'news' && l.d === st.day);
@@ -1566,6 +1633,15 @@ const HEAT = [
   [70, 'wanted', 'Every patrol in PumaCity knows your face.'],
 ];
 function heatBand(h) { let b = HEAT[0]; for (const x of HEAT) if (h >= x[0]) b = x; return { word: b[1], effect: b[2] }; }
+/* The load note mirrors the goon countdown: quiet while the risk is small,
+ * then warning, then danger, at the same thresholds the buy row uses. */
+const RISK_SHOW = 0.02;  // below this the load's pull is noise, so it isn't shown
+function riskClass(r) { return r >= 0.2 ? 'bad' : r >= 0.08 ? 'warn' : ''; }
+function loadLevel(st) { const c = riskClass(carryRisk(st)); return c ? ' ' + c : ''; }
+function loadNote(st) {
+  const r = carryRisk(st);
+  return r < RISK_SHOW ? '' : `<em>Watchers +${Math.round(r * 100)}%</em>`;
+}
 function debtNote(st) {
   if (st.debt <= 0) return 'paid off';
   const n = CONFIG.goonDays - st.debtAge;
@@ -1597,12 +1673,15 @@ function gameHTML() {
       <td class="key">${i + 1}</td><td class="name">${g.name}</td>
       <td class="price">${p == null ? '<span class="out">—</span>' : fmt(p) + arrow + `<small class="rw rw-m ${priceStanding(g, p).word}">${priceStanding(g, p).word}</small>`}</td>
       <td class="range">${rangeCell(g, p)}</td>
-      <td class="held">${held ? held + avg : '<span class="dim">—</span>'}</td>
+      <td class="held">${held ? `<b class="hq">${held}</b>` + avg : '<span class="dim">—</span>'}</td>
       <td class="btns"><button data-act="buy" data-v="${i}" ${p == null ? 'disabled' : ''}>Buy</button>
       <button data-act="sell" data-v="${i}" ${p == null || !held ? 'disabled' : ''}>Sell</button></td></tr>`
       + (ui.trade && ui.trade.good === i ? tradeRowHTML(ui.trade) : '');
   }).join('');
-  const gear = SLOTS.filter(s => st.gear[s]).map(s => { const it = GEAR[st.gear[s]]; return `<span title="${esc(it.blurb)}">${it.name} <span class="dim">(${it.short})</span></span>`; });
+  const gear = SLOTS.filter(s => st.gear[s]).map(s => GEAR[st.gear[s]]);
+  const gearBlock = gear.length
+    ? `<h2>Gear</h2><ul class="gearlist">${gear.map(it => `<li title="${esc(it.blurb)}"><span>${it.name}</span><span>${it.short}</span></li>`).join('')}</ul>`
+    : '<p class="gear">No gear yet. Without a weapon you can only run or give up.</p>';
   const svc = P.service || P.shop.length;
   const tip = st.tip ? `<div class="tip"><b>Pawphone</b>: tomorrow at ${PLACE[st.tip.loc].name}<br>${GOODS.map(g =>
     `${g.name} ${st.tip.prices[g.id] == null ? '—' : fmt(st.tip.prices[g.id])}`).join(' · ')}</div>` : '';
@@ -1617,15 +1696,16 @@ function gameHTML() {
   </header>
   <div class="dayline${last ? ' last' : ''}"><i style="width:${Math.round(st.day / st.days * 100)}%"></i></div>
   <div class="status">
-    <div class="stat lead"><small>Cash</small><span>${fmt(st.cash)}</span></div>
+    <div class="stat lead cash"><small>Cash</small><span>${fmt(st.cash)}</span></div>
     <div class="stat lead${st.debt > 0 ? (st.debtAge >= CONFIG.goonDays - 2 ? ' bad' : ' warn') : ''}"><small>Debt</small><span>${fmt(st.debt)}</span><em>${debtNote(st)}</em></div>
     <div class="stat"><small>Bank</small><span>${fmt(st.bank)}</span></div>
     <div class="stat${st.hp <= 30 ? ' bad' : ''}"><small>Health</small><span>${st.hp} / ${CONFIG.maxHp}</span>${meter(st.hp, CONFIG.maxHp, st.hp <= 30 ? 'low' : '')}</div>
-    <div class="stat"><small>Pouch</small><span>${u} / ${cap}</span>${meter(u, cap, 'heat')}</div>
-    <div class="stat${st.heat >= 40 ? ' bad' : ''}" title="${heatBand(st.heat).effect}"><small>Heat</small><span>${heatBand(st.heat).word} · ${st.heat}</span>${meter(st.heat, 100, st.heat >= 40 ? 'low' : 'heat')}</div>
+    <div class="stat${loadLevel(st)}" title="A heavy load draws the Watchers: up to +${Math.round(CONFIG.carryWatchMax * 100)}% a day, whatever your heat."><small>Pouch</small><span>${u} / ${cap}</span>${meter(u, cap, 'heat')}${loadNote(st)}</div>
+    <div class="stat${st.heat >= 40 ? ' bad' : ''}" title="${heatBand(st.heat).effect}${carryRisk(st) >= RISK_SHOW ? ` Your load adds about +${Math.round(carryRisk(st) * 100)}% a day on top.` : ''}"><small>Heat</small><span>${heatBand(st.heat).word} · ${st.heat}</span>${meter(st.heat, 100, st.heat >= 40 ? 'low' : 'heat')}</div>
   </div>
   <div class="main">
     <section class="market">
+      ${coachHTML(st)}
       ${headlineToday(st)}
       <table class="mk"><thead><tr><th class="key"></th><th class="name">Good</th><th>Price</th><th class="range">vs usual</th><th class="held">Held</th><th></th></tr></thead>
       <tbody>${goods}</tbody></table>
@@ -1645,9 +1725,9 @@ function gameHTML() {
     </section>
     <aside class="side">
       ${ui.side === 'travel' ? travelPanelHTML() : ui.side === 'service' ? servicePanelHTML() : `<div class="place">
-        <p class="blurb">${P.blurb}</p>
         <p class="spec">${P.special}</p>
-        <p class="gear">${gear.length ? 'Gear: ' + gear.join(' · ') : 'No gear yet. Without a weapon you can only run or give up.'}</p>
+        <p class="blurb">${P.blurb}</p>
+        ${gearBlock}
         ${tip}
       </div>
       <div class="logwrap"><div class="log" id="pc-log" tabindex="0" aria-label="Log">${log}</div></div>`}
@@ -1678,6 +1758,21 @@ function qtyMax(m) {
   if (m.side === 'buy') return p ? Math.max(0, Math.min(free(S), Math.floor(S.cash / p))) : 0;
   return S.stash[g.id] || 0;
 }
+function riskAfterText(t) {
+  const g = GOODS[t.good];
+  const now = carryRisk(S), after = carryRiskWith(S, g.id, intAmt(t.qty) || 0);
+  if (after < RISK_SHOW) return '';
+  const cls = riskClass(after);
+  const pct = x => Math.round(x * 100);
+  if (after - now < 0.005) {
+    return after >= CONFIG.carryWatchMax
+      ? `<span class="${cls}">Your load already draws the Watchers as hard as it can: about +${pct(after)}% a day.</span>`
+      : `<span class="${cls}">Barely changes the Watcher odds: about +${pct(after)}% a day.</span>`;
+  }
+  const capped = after >= CONFIG.carryWatchMax ? ', the most it gets' : '';
+  return `<span class="${cls}">After this, your load draws the Watchers: about +${pct(after)}% a day${capped}${now >= RISK_SHOW ? `, up from +${pct(now)}%` : ''}.</span>`;
+}
+
 function tradeRowHTML(t) {
   const g = GOODS[t.good];
   const p = S.prices[g.id];
@@ -1693,6 +1788,7 @@ function tradeRowHTML(t) {
       <button type="button" data-act="qadj" data-v="1" aria-label="1 more">+1</button><button type="button" data-act="qadj" data-v="10" aria-label="10 more">+10</button>
       <button type="button" data-act="qmax"><kbd>M</kbd>Max ${max}</button>
       <span class="total">= <b id="pc-total">${fmt((intAmt(t.qty) || 0) * p)}</b></span>
+      ${t.side === 'buy' ? `<span class="risk" id="pc-risk">${riskAfterText(t)}</span>` : ''}
       <button class="primary" type="submit"><kbd>Enter</kbd>${verb}</button><button type="button" data-act="qcancel"><kbd>Esc</kbd>Cancel</button>
     </span></form></td></tr>`;
 }
@@ -1930,6 +2026,46 @@ function announce(lines) {
   setTimeout(() => { live.textContent = lines.join(' '); }, 30);
 }
 
+/* Trade feedback, run after the page is rebuilt: a floating delta by Cash,
+ * the Cash figure counting to its new value, and a flash on the traded rows.
+ * Transform, opacity and colour only; nothing moves under reduced motion. */
+let fxToken = 0;
+function runFx() {
+  const fx = ui.fx;
+  ui.fx = null;
+  if (!fx) return;
+  const calm = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const cash = root.querySelector('.stat.cash');
+  const val = cash && cash.querySelector('span');
+  const delta = fx.to - fx.from;
+  if (cash && delta) {
+    const d = document.createElement('span');
+    d.className = 'delta ' + (delta > 0 ? 'up' : 'down');
+    d.setAttribute('aria-hidden', 'true');
+    d.textContent = (delta > 0 ? '+' : '−') + fmt(Math.abs(delta));
+    cash.appendChild(d);
+    setTimeout(() => d.remove(), calm ? 1200 : 1000);
+  }
+  if (val && delta && !calm) {
+    const token = ++fxToken, t0 = performance.now(), dur = 650;
+    val.textContent = fmt(fx.from);
+    const tick = now => {
+      if (token !== fxToken || !val.isConnected) return;
+      const k = Math.min(1, (now - t0) / dur);
+      val.textContent = fmt(Math.round(fx.from + delta * (1 - Math.pow(1 - k, 4))));
+      if (k < 1) requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  }
+  for (const i of fx.rows) {
+    const tr = root.querySelector(`tr[data-act="sel"][data-v="${i}"]`);
+    if (!tr) continue;
+    tr.classList.add('traded');
+    const hq = tr.querySelector('.hq');
+    if (hq) hq.classList.add('pulse');
+  }
+}
+
 function render() {
   const before = focusKey(document.activeElement);
   const hadModal = !!root.querySelector('.back');
@@ -1978,6 +2114,7 @@ function render() {
   }
   if (target) target.focus({ preventScroll: true });
   if (target === q && q) q.select();
+  runFx();
 }
 
 // ---- input
@@ -2024,6 +2161,8 @@ function updateTotal() {
   if (!m || !input || !t) return;
   m.qty = intAmt(input.value.replace(/[^\d]/g, ''));
   t.textContent = fmt(m.qty * S.prices[GOODS[m.good].id]);
+  const risk = document.getElementById('pc-risk');
+  if (risk) risk.innerHTML = riskAfterText(m);
 }
 function closeModal() { ui.modal = null; ui.flash = ''; render(); }
 
@@ -2047,6 +2186,7 @@ root.addEventListener('click', e => {
     case 'qmax': setQty(qtyMax(ui.trade)); return;
     case 'qcancel': closePanels(); return;
     case 'stay': closePanels(); return;
+    case 'coachoff': prefs.coachDone = true; save(KEY_PREFS, prefs); render(); return;
     case 'finishcancel': ui.confirmCash = false; ui.panelOpener = null; render(); return;
     case 'sellall': act({ t: 'sellall' }); return;
     case 'mmax': { const inp = el.closest('form').querySelector('input'); inp.value = v; inp.focus(); return; }
