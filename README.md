@@ -78,6 +78,7 @@ getting away, what a failed run spills, and exactly what giving up loses.
 | `1`–`9`, `↑` `↓` | select a good |
 | `B` / `S` | buy / sell it: `Enter` trades the most you can, or type an amount first. With the mouse, double-click Buy or Sell to trade the max |
 | `A` | sell all: everything you carry that someone here is buying |
+| `Z` | undo your last trade, for a few seconds after it (or the Undo on the Cash box) |
 | `T`, then `1`–`7` | travel: a map of PumaCity opens; pick a district |
 | `E` | cash out on the last day; `E` again confirms |
 | `V` | this place's shop or office (opens beside the market) |
@@ -108,7 +109,7 @@ The rules are data plus a DOM-free engine, which sit between the
 
 ```
 node tools/check-assets.js   # every file index.html references exists
-node tools/check-all.js      # 55 named rule scenarios
+node tools/check-all.js      # 60 named rule scenarios
 node tools/sim.js 20         # bots play whole runs; invariants after every step
 ```
 
