@@ -126,6 +126,17 @@ p{margin:0 0 var(--s2)}
 .stat em{display:block;font-style:normal;font-size:12px;color:var(--dim)}
 .stat.bad span,.stat.bad em{color:var(--danger)}
 .stat.warn span{color:var(--warn)}
+.stat.cash{position:relative}
+.delta{position:absolute;right:var(--s4);top:var(--s2);font-size:13px;font-weight:600;pointer-events:none;
+  animation:deltaUp 1s cubic-bezier(.22,1,.36,1) forwards}
+.delta.up{color:var(--good)}.delta.down{color:var(--steel)}
+@keyframes deltaUp{from{opacity:0;transform:translateY(8px)}18%{opacity:1}70%{opacity:1}to{opacity:0;transform:translateY(-12px)}}
+.mk tr.traded td{animation:rowFlash .85s cubic-bezier(.22,1,.36,1)}
+@keyframes rowFlash{from{background:rgba(84,242,255,.13)}}
+.mk .hq{display:inline-block;font-weight:inherit}
+.mk .hq.pulse{animation:hqPulse .55s cubic-bezier(.22,1,.36,1)}
+@keyframes hqPulse{35%{transform:scale(1.3);color:var(--accent)}}
+@media (prefers-reduced-motion:reduce){.delta,.mk tr.traded td,.mk .hq.pulse{animation:none}}
 .meter{display:block;height:6px;margin-top:var(--s1);background:var(--panel2);border:1px solid var(--line)}
 .meter i{display:block;height:100%;background:var(--good)}
 .meter.heat i{background:var(--warn)}
@@ -1216,6 +1227,7 @@ function recordScore(st) {
 }
 
 // ---- actions
+const TRADES = ['buy', 'sell', 'sellall', 'deal'];
 function act(a) {
   if (!S) return;
   const before = S;
@@ -1224,6 +1236,10 @@ function act(a) {
   S = r.state;
   ui.flash = '';
   announce(r.events.map(l => l.text));
+  // A trade gets a beat: the cash moves, and the rows that changed light up.
+  if (a && TRADES.includes(a.t) && S.cash !== before.cash) {
+    ui.fx = { from: before.cash, to: S.cash, rows: GOODS.map((g, i) => (S.stash[g.id] || 0) !== (before.stash[g.id] || 0) ? i : -1).filter(i => i >= 0) };
+  }
   if (S.over && !before.over) {
     ui.rank = recordScore(S);
     save(KEY_GAME, null);
@@ -1614,7 +1630,7 @@ function gameHTML() {
       <td class="key">${i + 1}</td><td class="name">${g.name}</td>
       <td class="price">${p == null ? '<span class="out">—</span>' : fmt(p) + arrow + `<small class="rw rw-m ${priceStanding(g, p).word}">${priceStanding(g, p).word}</small>`}</td>
       <td class="range">${rangeCell(g, p)}</td>
-      <td class="held">${held ? held + avg : '<span class="dim">—</span>'}</td>
+      <td class="held">${held ? `<b class="hq">${held}</b>` + avg : '<span class="dim">—</span>'}</td>
       <td class="btns"><button data-act="buy" data-v="${i}" ${p == null ? 'disabled' : ''}>Buy</button>
       <button data-act="sell" data-v="${i}" ${p == null || !held ? 'disabled' : ''}>Sell</button></td></tr>`
       + (ui.trade && ui.trade.good === i ? tradeRowHTML(ui.trade) : '');
@@ -1634,7 +1650,7 @@ function gameHTML() {
   </header>
   <div class="dayline${last ? ' last' : ''}"><i style="width:${Math.round(st.day / st.days * 100)}%"></i></div>
   <div class="status">
-    <div class="stat lead"><small>Cash</small><span>${fmt(st.cash)}</span></div>
+    <div class="stat lead cash"><small>Cash</small><span>${fmt(st.cash)}</span></div>
     <div class="stat lead${st.debt > 0 ? (st.debtAge >= CONFIG.goonDays - 2 ? ' bad' : ' warn') : ''}"><small>Debt</small><span>${fmt(st.debt)}</span><em>${debtNote(st)}</em></div>
     <div class="stat"><small>Bank</small><span>${fmt(st.bank)}</span></div>
     <div class="stat${st.hp <= 30 ? ' bad' : ''}"><small>Health</small><span>${st.hp} / ${CONFIG.maxHp}</span>${meter(st.hp, CONFIG.maxHp, st.hp <= 30 ? 'low' : '')}</div>
@@ -1963,6 +1979,46 @@ function announce(lines) {
   setTimeout(() => { live.textContent = lines.join(' '); }, 30);
 }
 
+/* Trade feedback, run after the page is rebuilt: a floating delta by Cash,
+ * the Cash figure counting to its new value, and a flash on the traded rows.
+ * Transform, opacity and colour only; nothing moves under reduced motion. */
+let fxToken = 0;
+function runFx() {
+  const fx = ui.fx;
+  ui.fx = null;
+  if (!fx) return;
+  const calm = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const cash = root.querySelector('.stat.cash');
+  const val = cash && cash.querySelector('span');
+  const delta = fx.to - fx.from;
+  if (cash && delta) {
+    const d = document.createElement('span');
+    d.className = 'delta ' + (delta > 0 ? 'up' : 'down');
+    d.setAttribute('aria-hidden', 'true');
+    d.textContent = (delta > 0 ? '+' : '−') + fmt(Math.abs(delta));
+    cash.appendChild(d);
+    setTimeout(() => d.remove(), calm ? 1200 : 1000);
+  }
+  if (val && delta && !calm) {
+    const token = ++fxToken, t0 = performance.now(), dur = 650;
+    val.textContent = fmt(fx.from);
+    const tick = now => {
+      if (token !== fxToken || !val.isConnected) return;
+      const k = Math.min(1, (now - t0) / dur);
+      val.textContent = fmt(Math.round(fx.from + delta * (1 - Math.pow(1 - k, 4))));
+      if (k < 1) requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  }
+  for (const i of fx.rows) {
+    const tr = root.querySelector(`tr[data-act="sel"][data-v="${i}"]`);
+    if (!tr) continue;
+    tr.classList.add('traded');
+    const hq = tr.querySelector('.hq');
+    if (hq) hq.classList.add('pulse');
+  }
+}
+
 function render() {
   const before = focusKey(document.activeElement);
   const hadModal = !!root.querySelector('.back');
@@ -2011,6 +2067,7 @@ function render() {
   }
   if (target) target.focus({ preventScroll: true });
   if (target === q && q) q.select();
+  runFx();
 }
 
 // ---- input
