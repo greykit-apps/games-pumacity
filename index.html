@@ -305,6 +305,13 @@ button.link:hover{color:var(--text)}
 .log{position:absolute;inset:0;overflow:auto;padding:var(--s3) var(--s5)}
 .log p{margin:0 0 3px}
 .log .day{color:var(--accent);margin-top:var(--s3)}
+.logday{margin:0 0 2px}
+.logday summary{cursor:pointer;color:var(--steel);list-style:none}
+.logday summary::-webkit-details-marker{display:none}
+.logday summary::before{content:'▸ ';color:var(--dim)}
+.logday[open] summary::before{content:'▾ '}
+.logday[open]{margin-bottom:var(--s2)}
+.logday p{padding-left:1.2em}
 .log p:first-child{margin-top:0}
 .news{color:var(--warn)}.bad{color:var(--danger)}.good{color:var(--good)}.enc{color:var(--violet)}
 .trade{color:var(--steel)}.dim{color:var(--dim)}.warn{color:var(--warn)}
@@ -1800,6 +1807,26 @@ function debtNote(st) {
   return n <= 0 ? 'goons: any day now' : `goons in ${n} ${plural(n, 'day')}`;
 }
 
+/* The log, grouped by day. Today and yesterday read in full; older days fold
+ * to one line each ('Day 18 · Starport · 4 entries') that opens on a click.
+ * Which ones are open survives re-renders. */
+function logHTML(st) {
+  const days = [];
+  for (const l of st.log) {
+    if (!days.length || days[days.length - 1].d !== l.d) days.push({ d: l.d, lines: [] });
+    days[days.length - 1].lines.push(l);
+  }
+  const line = l => `<p class="${l.cls}">${esc(l.text)}</p>`;
+  return days.map(g => {
+    if (g.d >= st.day - 1) return g.lines.map(line).join('');
+    const head = g.lines.find(l => l.cls === 'day');
+    const where = head ? head.text.replace(/^Day \d+: /, '').replace(/\.$/, '') : '';
+    const rest = g.lines.filter(l => l !== head);
+    const open = ui.openDays && ui.openDays.has(g.d);
+    return `<details class="logday" data-day="${g.d}"${open ? ' open' : ''}><summary>Day ${g.d}${where ? ' · ' + esc(where) : ''} <span class="dim">· ${rest.length} ${plural(rest.length, 'entry', 'entries')}</span></summary>${rest.map(line).join('')}</details>`;
+  }).join('');
+}
+
 function gameHTML() {
   const st = S;
   const P = here(st);
@@ -1835,7 +1862,7 @@ function gameHTML() {
   const svc = P.service || P.shop.length;
   const tip = st.tip ? `<div class="tip"><b>Pawphone</b>: tomorrow at ${PLACE[st.tip.loc].name}<br>${GOODS.map(g =>
     `${g.name} ${st.tip.prices[g.id] == null ? '—' : fmt(st.tip.prices[g.id])}`).join(' · ')}</div>` : '';
-  const log = st.log.map(l => `<p class="${l.cls}">${esc(l.text)}</p>`).join('');
+  const log = logHTML(st);
   const left = st.days - st.day;
   const sellable = sellableHere(st).length > 0;
   return `<div class="pc">
@@ -2546,6 +2573,14 @@ root.addEventListener('click', e => {
     case 'title': quitToTitle(); return;
   }
 });
+
+root.addEventListener('toggle', e => {
+  const d = e.target.closest && e.target.closest('details.logday');
+  if (!d) return;
+  if (!ui.openDays) ui.openDays = new Set();
+  const day = Number(d.dataset.day);
+  if (d.open) ui.openDays.add(day); else ui.openDays.delete(day);
+}, true);
 
 root.addEventListener('submit', e => {
   e.preventDefault();
