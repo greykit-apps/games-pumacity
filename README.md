@@ -47,9 +47,10 @@ Saves stay in your browser's `localStorage`.
   will do to it before you commit.
 - **First run?** A coach line walks you through your first buy and first
   trip, then gets out of the way.
-- **The debt compounds 10% a day.** Pay it down at PVN Tower. Go eight days
-  without a real payment (at least 10% of what you owe) and The Boss sends
-  her goons.
+- **The debt compounds 10% a day**, up to The Boss's $50,000 limit; past
+  that it grows a flat $5,000 a day, so a debt she wouldn't lend can't
+  snowball out of reach. Pay it down at PVN Tower. Go eight days without a
+  real payment (at least 10% of what you owe) and The Boss sends her goons.
 - **On the last day you cash out.** The Boss collects what you owe, and
   anything still in your pouch is worth nothing. Score = cash + bank − debt.
   Top ten per run length, kept locally.
@@ -139,7 +140,7 @@ The rules are data plus a DOM-free engine, which sit between the
 
 ```
 node tools/check-assets.js   # every file index.html references exists
-node tools/check-all.js      # 71 named rule scenarios
+node tools/check-all.js      # 72 named rule scenarios
 node tools/replay.js         # fixed seeds replay exactly as recorded
 node tools/sim.js 20         # bots play whole runs; invariants after every step
 ```
@@ -167,7 +168,9 @@ commit, with the reason in its message.
   - Tourist: at least 90%.
   - Regular: 55–95% at 30 days, at least 60% at 60 and 90. The upper bound
     exists because the first economy let every run win.
-  - Wanted: 25–60% at 30 days, 25–70% at 60 and 90.
+  - Wanted: 25–65% at 30 days, where it bites; 30–85% at 60 and 40–95% at
+    90, since a debt that has stopped compounding is one a long run can
+    catch. The lower bounds keep Wanted from becoming Regular.
 - no reckless run ever dies on Regular or Wanted
 - a Custom run, with a random step on every knob, crashes, breaks an
   invariant or never ends (these runs hold no profit band: Custom can be as
@@ -178,23 +181,23 @@ commit, with the reason in its message.
 | Difficulty | Days | Bot | Profit | Deaths | Median score |
 |---|---|---|---|---|---|
 | Tourist | 30 | careful | 20/20 | 0 | $795,661 |
-| Tourist | 30 | reckless | 20/20 | 0 | $486,114 |
-| Tourist | 60 | careful | 20/20 | 0 | $2,620,469 |
-| Tourist | 60 | reckless | 20/20 | 0 | $2,476,493 |
-| Tourist | 90 | careful | 20/20 | 0 | $5,765,030 |
-| Tourist | 90 | reckless | 20/20 | 0 | $5,197,495 |
-| Regular | 30 | careful | 16/20 | 0 | $114,765 |
-| Regular | 30 | reckless | 18/20 | 1 | $116,912 |
-| Regular | 60 | careful | 18/20 | 0 | $1,428,536 |
-| Regular | 60 | reckless | 13/20 | 6 | $1,294,581 |
-| Regular | 90 | careful | 17/20 | 2 | $3,983,986 |
-| Regular | 90 | reckless | 15/20 | 4 | $4,177,853 |
-| Wanted | 30 | careful | 7/20 | 0 | −$81,405 |
-| Wanted | 30 | reckless | 13/20 | 0 | $144,058 |
-| Wanted | 60 | careful | 7/20 | 2 | −$5,742,867 |
-| Wanted | 60 | reckless | 6/20 | 7 | −$505,263 |
-| Wanted | 90 | careful | 10/20 | 5 | $1,299,174 |
-| Wanted | 90 | reckless | 5/20 | 9 | −$176,988 |
+| Tourist | 30 | reckless | 20/20 | 0 | $522,124 |
+| Tourist | 60 | careful | 20/20 | 0 | $2,412,469 |
+| Tourist | 60 | reckless | 20/20 | 0 | $2,525,097 |
+| Tourist | 90 | careful | 20/20 | 0 | $5,704,519 |
+| Tourist | 90 | reckless | 20/20 | 0 | $4,752,011 |
+| Regular | 30 | careful | 18/20 | 0 | $303,217 |
+| Regular | 30 | reckless | 18/20 | 1 | $213,096 |
+| Regular | 60 | careful | 19/20 | 0 | $1,127,016 |
+| Regular | 60 | reckless | 17/20 | 2 | $1,877,369 |
+| Regular | 90 | careful | 20/20 | 0 | $2,868,544 |
+| Regular | 90 | reckless | 18/20 | 2 | $4,170,436 |
+| Wanted | 30 | careful | 11/20 | 0 | $137,531 |
+| Wanted | 30 | reckless | 11/20 | 0 | $44,983 |
+| Wanted | 60 | careful | 12/20 | 2 | $472,647 |
+| Wanted | 60 | reckless | 9/20 | 5 | $0 |
+| Wanted | 90 | careful | 17/20 | 0 | $1,274,110 |
+| Wanted | 90 | reckless | 16/20 | 2 | $3,850,425 |
 
 ### Debugging
 

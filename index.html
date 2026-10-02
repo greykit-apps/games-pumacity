@@ -517,7 +517,7 @@ const RULES = {
   maxHp: 100,
   debtRate: 0.10,     // per day, compounding
   bankRate: 0.01,     // per day, compounding
-  debtCap: 50000,     // the most The Boss will have on her books for you
+  debtCap: 50000,     // the most The Boss will have on her books for you: she lends no more, and past it the debt stops compounding
   goonDays: 8,        // days without a real repayment before the goons come
   repayReset: 0.10,   // a repayment of at least this share of the debt counts as "real"
   heatDecay: 4,       // per day
@@ -570,7 +570,7 @@ const KNOB_GROUPS = [
   ] },
   { name: 'The Boss', knobs: [
     { id: 'goonDays', short: 'goons after', label: 'Days without a payment before her goons come', steps: [4, 5, 6, 8, 10, 12, 15], show: n => `${n} days` },
-    { id: 'debtCap', short: 'loans up to', label: 'The most she will lend', steps: [20000, 50000, 100000, 250000], show: showMoney },
+    { id: 'debtCap', short: 'loans up to', label: 'Her limit: the most she lends, and where the compounding stops', steps: [20000, 50000, 100000, 250000], show: showMoney },
   ] },
   { name: 'The Watchers', knobs: [
     { id: 'watchBase', short: 'Watchers', label: 'How often they find you, before heat', steps: [0.02, 0.03, 0.05, 0.08, 0.12], show: x => `${pctText(x)} a day` },
@@ -851,6 +851,17 @@ function carryRiskWith(st, id, q) {
   return Math.min(R(st).carryWatchMax, (carried(st) + extra) * R(st).carryWatch);
 }
 
+/* The debt after a night's interest. It compounds up to The Boss's limit
+ * (debtCap, the most she will carry); past that it grows by a flat day of
+ * interest on the limit. A debt she wouldn't lend can't snowball into a
+ * number nobody could ever pay: it keeps growing, but a late run can still
+ * catch it. */
+function debtInterest(st) { return Math.round(R(st).debtCap * R(st).debtRate); }
+function debtTomorrow(st) {
+  const cap = R(st).debtCap;
+  if (st.debt >= cap) return st.debt + debtInterest(st);
+  return Math.min(cap, Math.round(st.debt * (1 + R(st).debtRate)));
+}
 /* The daily chance the Watchers find you at P, at a given heat. */
 function watchOdds(st, heat, P) { return Math.min(1, (R(st).watchBase + heat / R(st).watchHeat + carryRisk(st)) * P.watch); }
 /* The same chance as it will be on arrival at a place: travel cools your heat
@@ -1295,7 +1306,7 @@ const MARKET = {
     if (st.day >= st.days) return 'This is your last day. Cash out.';
     st.day++;
     st.loc = P.id;
-    if (st.debt > 0) { st.debt = Math.round(st.debt * (1 + R(st).debtRate)); st.debtAge++; }
+    if (st.debt > 0) { st.debt = debtTomorrow(st); st.debtAge++; }
     if (st.bank > 0) st.bank = Math.floor(st.bank * (1 + R(st).bankRate));
     st.heat = Math.max(0, st.heat - R(st).heatDecay - (P.cool || 0));
     addLog(st, `Day ${st.day}: ${P.name}.`, 'day');
@@ -2468,7 +2479,7 @@ function servicePanelHTML() {
     <p>You owe <b>${fmt(st.debt)}</b>.${st.debt > 0 ? ` <span class="note">${st.debtAge} ${plural(st.debtAge, 'day')} since your last real payment (at least ${pctText(R(st).repayReset)} of the debt). Her goons come after ${R(st).goonDays} days without one.</span>` : ''}</p>
     ${quickPay(st)}
     ${st.debt > 0 ? moneyForm('repay', 'Repay', Math.min(st.cash, st.debt)) : ''}
-    ${moneyForm('borrow', 'Borrow', Math.max(0, R(st).debtCap - st.debt), `She'll carry up to ${fmt(R(st).debtCap)}.`)}`;
+    ${moneyForm('borrow', 'Borrow', Math.max(0, R(st).debtCap - st.debt), st.debt >= R(st).debtCap ? `Past her ${fmt(R(st).debtCap)} limit: the debt grows ${fmt(debtInterest(st))} a day now.` : `She'll carry up to ${fmt(R(st).debtCap)}.`)}`;
   }
   if (P.service === 'bank') {
     out += `<p>The blast door rolls aside and the Overseer's terminal flickers awake. WELCOME BACK, DWELLER.</p>
@@ -2645,7 +2656,7 @@ function helpHTML(tab) {
   let body = '';
   if (tab === 'basics') body = `<dl class="help">
     <dt>The goal</dt><dd>Finish the run with as much money as you can. Your score is your cash plus your bank balance, minus whatever you still owe The Boss.</dd>
-    <dt>The debt</dt><dd>You start owing Casey Benton, The Boss, ${fmt(r.startDebt)}. It grows ${pctText(r.debtRate)} every day. Pay it down at PVN Tower. Go ${r.goonDays} days without a real payment (at least ${pctText(r.repayReset)} of the debt) and her goons come to collect; the Debt box counts down to them. Pay what they ask and the clock resets; hand over what you have and they come back in a few days; refuse and they take it out of your hide.</dd>
+    <dt>The debt</dt><dd>You start owing Casey Benton, The Boss, ${fmt(r.startDebt)}. It grows ${pctText(r.debtRate)} every day, compounding, up to her limit of ${fmt(r.debtCap)}; past that it grows a flat ${fmt(Math.round(r.debtCap * r.debtRate))} a day. Pay it down at PVN Tower. Go ${r.goonDays} days without a real payment (at least ${pctText(r.repayReset)} of the debt) and her goons come to collect; the Debt box counts down to them. Pay what they ask and the clock resets; hand over what you have and they come back in a few days; refuse and they take it out of your hide.</dd>
     <dt>Trading</dt><dd>Each day you're somewhere new, and prices are new too. Buy cheap, carry it somewhere better, and sell. Your pouch holds ${r.baseCap} units until you buy a bigger one. The <i>vs usual</i> column says whether a price is a bargain, cheap, fair, steep or sky-high for that good, and the Held column shows what you paid and how today's price compares. A faint tick on the same line marks the last price you saw for it. A headline (shown above the market, and marked ! in it) sends one good's price wild.</dd>
     <dt>Travel</dt><dd>Each trip takes one day. Travel opens a map of PumaCity. Each district shows the chance the Watchers find you there tomorrow, and badges flag where the goons may be waiting (PVN Tower is always safe from them), where your Pawphone knows tomorrow's prices, and the vet when you're hurt. On your last day you can't travel; sell everything and cash out. Goods left in your pouch are worth nothing. You can also leave town early, from the menu: the run is scored at once under the same rules, but ranks below every run played to the end.</dd>
     <dt>Heat</dt><dd>Big sales and fights raise your heat: cool, warm, hot, then wanted. The hotter you are, the more often the Watchers come and the more of them there are. A heavy load draws them too, whatever your heat: the Pouch box shows its pull, and the buy box tells you before you add to it. It cools a little every day, faster at The Ranch, and The Boss will make it vanish for a price.</dd>
