@@ -850,7 +850,7 @@ function carryRiskWith(st, id, q) {
 }
 
 /* The daily chance the Watchers find you at P, at a given heat. */
-function watchOdds(st, heat, P) { return (R(st).watchBase + heat / R(st).watchHeat + carryRisk(st)) * P.watch; }
+function watchOdds(st, heat, P) { return Math.min(1, (R(st).watchBase + heat / R(st).watchHeat + carryRisk(st)) * P.watch); }
 /* The same chance as it will be on arrival at a place: travel cools your heat
  * before the roll. The map shows this for every district. */
 function arrivalWatchOdds(st, id) {
@@ -2171,8 +2171,8 @@ function modalHTML() {
     case 'help': body = helpHTML(m.tab || 'basics'); break;
     case 'menu': body = menuHTML(); break;
     case 'map': body = mapHTML(); break;
-    case 'confirmNew': body = `<h1 id="pc-mt">Abandon this run?</h1><p>Your current run will not be scored.</p>
-      <div class="acts"><button class="danger" data-act="newconfirm"><kbd>Y</kbd>Abandon and start over</button><button data-act="close"><kbd>Esc</kbd>Keep playing</button></div>`; break;
+    case 'confirmNew': body = `<h1 id="pc-mt">Abandon this run?</h1><p>Your current run will not be scored. You go back to the title screen, where you can change the difficulty and run length.</p>
+      <div class="acts"><button class="danger" data-act="newconfirm"><kbd>Y</kbd>Abandon run</button><button data-act="close"><kbd>Esc</kbd>Keep playing</button></div>`; break;
   }
   return `<div class="back" data-act="backdrop"><div class="modal${m.kind === 'map' ? ' map' : ''}" role="dialog" aria-modal="true" aria-labelledby="pc-mt">${body}</div></div>`;
 }
@@ -2585,7 +2585,7 @@ function menuHTML() {
     <button data-act="close"><kbd>Esc</kbd>Back to the game</button>
     <button data-act="help"><kbd>?</kbd>How to play</button>
     <button data-act="title"><kbd>Q</kbd>Title screen (your run is saved)</button>
-    <button class="danger" data-act="newrun"><kbd>N</kbd>Abandon run and start over</button>
+    <button class="danger" data-act="newrun"><kbd>N</kbd>Abandon run</button>
   </div>`;
 }
 
@@ -2902,7 +2902,7 @@ root.addEventListener('click', e => {
     case 'heal': act({ t: 'heal' }); return;
     case 'menu': ui.modal = { kind: 'menu' }; render(); return;
     case 'newrun': ui.modal = { kind: 'confirmNew' }; render(); return;
-    case 'newconfirm': save(KEY_GAME, null); S = null; startRun(); return;
+    case 'newconfirm': save(KEY_GAME, null); quitToTitle(); return;
     case 'enc': if (!encLocked()) act({ t: v }); return;
     case 'again': S = null; startRun(); return;
     case 'title': quitToTitle(); return;
@@ -3005,6 +3005,9 @@ document.addEventListener('keydown', e => {
     // the rules panel's selects take letters and arrows themselves
     if (m && m.kind === 'rules') { if (k === 'Escape') { e.preventDefault(); closeModal(); } return; }
     if (inInput) { if (k === 'Enter') { e.preventDefault(); startRun(); } return; }
+    // Enter on a focused button is that button (Resume, a difficulty, the
+    // help); it only starts a run when nothing else would take it.
+    if (k === 'Enter' && e.target && e.target.tagName === 'BUTTON') return;
     if (k === 'n' || k === 'Enter') { e.preventDefault(); startRun(); }
     else if (k === 'r' && loadGame()) resume();
     else if (k === '?' || k === '/') { ui.modal = { kind: 'help', tab: 'basics' }; render(); }
@@ -3029,7 +3032,7 @@ document.addEventListener('keydown', e => {
       if (/^[1-7]$/.test(k)) { const P = PLACES[Number(k) - 1]; if (P.id !== S.loc) act({ t: 'travel', to: P.id }); }
       return;
     }
-    if (m.kind === 'confirmNew' && k === 'y') { save(KEY_GAME, null); S = null; startRun(); return; }
+    if (m.kind === 'confirmNew' && k === 'y') { save(KEY_GAME, null); quitToTitle(); return; }
     if (m.kind === 'menu') { if (k === '?' || k === '/') { ui.modal = { kind: 'help', tab: 'basics' }; render(); } else if (k === 'q') quitToTitle(); else if (k === 'n') { ui.modal = { kind: 'confirmNew' }; render(); } }
     if (m.kind === 'help') helpKey(k);
     return;
@@ -3049,8 +3052,11 @@ document.addEventListener('keydown', e => {
   if (k === 'z') { undoLast(); return; }
   if (k === 'ArrowDown') { e.preventDefault(); ui.sel = (ui.sel + 1) % GOODS.length; render(); return; }
   if (k === 'ArrowUp') { e.preventDefault(); ui.sel = (ui.sel + GOODS.length - 1) % GOODS.length; render(); return; }
-  if (k === 'b') { openQty(ui.sel, 'buy'); return; }
-  if (k === 's') { openQty(ui.sel, 'sell'); return; }
+  // These open a box and focus its input in the same keystroke; without
+  // preventDefault the letter itself would land in that input, replacing the
+  // pre-filled maximum.
+  if (k === 'b') { e.preventDefault(); openQty(ui.sel, 'buy'); return; }
+  if (k === 's') { e.preventDefault(); openQty(ui.sel, 'sell'); return; }
   if (k === 't' && S.day < S.days) { openTravel(); return; }
   if (k === 'e' && S.day === S.days) {
     if (ui.confirmCash) act({ t: 'finish' });
@@ -3058,7 +3064,7 @@ document.addEventListener('keydown', e => {
     return;
   }
   if (k === 'Escape' && ui.confirmCash) { e.preventDefault(); ui.confirmCash = false; render(); return; }
-  if (k === 'v') { openSide('service'); return; }
+  if (k === 'v') { e.preventDefault(); openSide('service'); return; }
   if (k === '?' || k === '/' || k === 'h') { ui.modal = { kind: 'help', tab: 'basics' }; render(); return; }
   if (k === 'Escape') { ui.modal = { kind: 'menu' }; render(); }
 });

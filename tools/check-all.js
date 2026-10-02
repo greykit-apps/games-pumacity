@@ -641,6 +641,19 @@ scenario('map: the Watcher odds shown for a district are the odds rolled on arri
     assert.strictEqual(C.watchOdds(arrived, arrived.heat, P), shown, P.id);
   }
 });
+scenario('map: the Watcher odds are a probability, never over 100%', () => {
+  const { C, st } = fresh();
+  st.heat = 100;
+  st.stash = { skooma: 200 };
+  st.cost = { skooma: 0 };
+  // Regular at full heat and a maxed load would read 104% at the Starport uncapped
+  for (const P of C.PLACES) assert.ok(C.watchOdds(st, 100, P) <= 1, `${P.id}: ${C.watchOdds(st, 100, P)}`);
+  assert.strictEqual(C.watchOdds(st, 100, C.PLACE.starport), 1);
+  assert.ok(C.arrivalWatchOdds(st, 'starport') <= 1);
+  // the custom knobs' worst case
+  st.rules = Object.assign(JSON.parse(JSON.stringify(C.RULES)), { watchBase: 0.12, carryWatchMax: 0.5 });
+  assert.strictEqual(C.watchOdds(st, 100, C.PLACE.starport), 1);
+});
 scenario('map: goons are shown as due exactly when they can be waiting tomorrow', () => {
   const { C, st } = fresh();
   st.debtAge = C.RULES.goonDays - 2;
