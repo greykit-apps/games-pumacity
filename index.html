@@ -431,7 +431,7 @@ const PLACES = [
     mods: { nip: 0.45 }, watch: 0.5, cool: 6,
     blurb: "An old horse ranch on the edge of town, its paddocks turned over to grow fields.",
     special: "Catnip is cheap, and the Watchers rarely come out this far." },
-  { id: 'starport', name: 'Starport', service: null, serviceName: 'Outfitter, Bay 9', shop: ['hovercrate', 'mech'],
+  { id: 'starport', name: 'Starport', service: null, serviceName: 'Bay 9 outfitter', shop: ['hovercrate', 'mech'],
     mods: { moonsugar: 0.8, skooma: 0.8 }, watch: 1.3,
     blurb: "Where the ship lands, trading PumaCity's goods with other ports.",
     special: "Moonsugar and Skooma come in cheap off the ship. The outfitter in Bay 9 sells gear you can't get in town." },
@@ -1578,7 +1578,7 @@ function setupHTML() {
   <div class="row"><label>Run length</label>${CONFIG.lengths.map(d => `<button data-act="days" data-v="${d}" aria-pressed="${prefs.days === d}">${d} days</button>`).join('')}</div>
   <div class="acts">
     <button class="primary" data-act="start"><kbd>N</kbd>New run</button>
-    ${saved ? `<button data-act="resume"><kbd>R</kbd>Resume: ${esc(saved.name)}, day ${saved.day} of ${saved.days}</button>` : ''}
+    ${saved ? `<button data-act="resume"><kbd>R</kbd>${saved.name === 'Stray' ? `Resume day ${saved.day} of ${saved.days}` : `Resume: ${esc(saved.name)}, day ${saved.day} of ${saved.days}`}</button>` : ''}
     <button data-act="help"><kbd>?</kbd>How to play</button>
   </div>
   <h2>High scores</h2>
