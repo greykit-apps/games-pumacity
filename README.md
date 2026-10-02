@@ -76,7 +76,7 @@ getting away, what a failed run spills, and exactly what giving up loses.
 | Key | |
 |---|---|
 | `1`–`9`, `↑` `↓` | select a good |
-| `B` / `S` | buy / sell it: `Enter` trades the most you can, or type an amount first; with the mouse, Buy then "Buy max" is two clicks |
+| `B` / `S` | buy / sell it: `Enter` trades the most you can, or type an amount first. With the mouse, double-click Buy or Sell to trade the max |
 | `A` | sell all: everything you carry that someone here is buying |
 | `T`, then `1`–`7` | travel: a map of PumaCity opens; pick a district |
 | `E` | cash out on the last day; `E` again confirms |
