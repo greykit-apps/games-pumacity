@@ -390,6 +390,7 @@ select:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
 .verdict.best{color:var(--accent)}
 .foot{color:var(--dim);font-size:12px;margin-top:var(--s6)}
 .foot a{color:var(--steel)}
+.modal .foot{margin:var(--s3) 0 0}
 .foot > span{display:block}
 .foot .credit{display:flex;flex-wrap:wrap;column-gap:var(--s4);color:var(--steel);margin-bottom:2px}
 
@@ -3253,7 +3254,7 @@ const HELP_TABS = [['basics', 'Basics'], ['places', 'Places'], ['goods', 'Goods'
 /* One difficulty in the Rules tab: its numbers come from its own rules. */
 function presetLine(id) {
   const p = presetRules(id);
-  return `<dt>${PRESETS[id].name}</dt><dd>${esc(PRESETS[id].blurb)} ${fmt(p.startCash)} in cash against ${fmt(p.startDebt)} of debt at ${pctText(p.debtRate)} a day; her goons come after ${p.goonDays} days without a payment.</dd>`;
+  return `<dt>${PRESETS[id].name}</dt><dd>${esc(PRESETS[id].blurb)} ${fmt(p.startCash)} against ${fmt(p.startDebt)} at ${pctText(p.debtRate)} a day; goons after ${p.goonDays} days unpaid.</dd>`;
 }
 function helpHTML(tab) {
   // In a run, its own rules; on the title screen, the ones you've chosen.
@@ -3261,44 +3262,45 @@ function helpHTML(tab) {
   const tabs = HELP_TABS;
   let body = '';
   if (tab === 'basics') body = `<dl class="help">
-    <dt>The goal</dt><dd>Finish the run with as much money as you can. Your score is your cash plus your bank balance, minus whatever you still owe The Boss.</dd>
-    <dt>The debt</dt><dd>You start owing Casey Benton, The Boss, ${fmt(r.startDebt)}. It grows ${pctText(r.debtRate)} every day, compounding, up to her limit of ${fmt(r.debtCap)}; past that it grows a flat ${fmt(Math.round(r.debtCap * r.debtRate))} a day. Pay it down at PVN Tower. Go ${r.goonDays} days without a real payment (at least ${pctText(r.repayReset)} of the debt) and her goons come to collect; the Debt box counts down to them. Pay what they ask and the clock resets; hand over what you have and they come back in a few days; refuse and they take it out of your hide.</dd>
-    <dt>Trading</dt><dd>Each day you're somewhere new, and prices are new too. Buy cheap, carry it somewhere better, and sell. Your pouch holds ${r.baseCap} units until you buy a bigger one. The <i>vs usual</i> column says whether a price is a bargain, cheap, fair, steep or sky-high for that good, and the Held column shows what you paid and how today's price compares. A faint tick on the same line marks the last price you saw for it. A headline (shown above the market, and marked ! in it) sends one good's price wild.</dd>
-    <dt>Travel</dt><dd>Each trip takes one day. Travel opens a map of PumaCity. Each district shows the chance the Watchers find you there tomorrow, and badges flag where the goons may be waiting (PVN Tower is always safe from them), where your Pawphone knows tomorrow's prices, and the vet when you're hurt. On your last day you can't travel; sell everything and cash out. Goods left in your pouch are worth nothing. You can also leave town early, from the menu: the run is scored at once under the same rules, but ranks below every run played to the end.</dd>
-    <dt>Heat</dt><dd>Selling raises your heat, a point per $4,000 sold in a day, up to 8, however the sales are split; fights raise it too. Cool, warm, hot, then wanted: the hotter you are, the more often the Watchers come and the more of them there are. A heavy load draws them too, whatever your heat, and brings a bigger patrol when they come: the Pouch box shows its pull, and the buy box tells you before you add to it. It cools a little every day, faster at The Ranch, and The Boss will make it vanish for a price.</dd>
-    <dt>Encounters</dt><dd>Watchers and rival crews: run, fight (you need a weapon), or give up. Giving up to the Watchers costs your whole stash and a fine; a failed getaway spills part of your load. The more you carry, the more often they come. If your health hits zero, the run is over: you keep any debt on your score but none of your money, and a death ranks below every run played out. Money in the bank is safe from muggers.</dd>
+    <dt>The goal</dt><dd>End the run rich. Score = cash + bank − what you owe The Boss.</dd>
+    <dt>The debt</dt><dd>You owe Casey Benton, The Boss, ${fmt(r.startDebt)}, compounding ${pctText(r.debtRate)} a day up to her ${fmt(r.debtCap)} limit, then a flat ${fmt(Math.round(r.debtCap * r.debtRate))} a day. Pay it down at PVN Tower. Go ${r.goonDays} days without paying at least ${pctText(r.repayReset)} of it and her goons come; the Debt box counts down. Pay them and the clock resets, pay part and they're back in a few days, refuse and they take it out of your hide.</dd>
+    <dt>Trading</dt><dd>Prices change every day. Buy cheap, sell somewhere better. Your pouch holds ${r.baseCap} units until you upgrade it. <i>vs usual</i> rates each price from bargain to sky-high; Held shows what you paid and how today compares; a faint tick marks the last price you saw. A headline (marked !) sends one good's price wild.</dd>
+    <dt>Travel</dt><dd>Each trip takes a day. The map shows each district's odds of meeting the Watchers tomorrow, plus badges for goons (never at PVN Tower), Pawphone prices and the vet. On the last day, sell up and cash out: goods left over are worthless. Leaving town early (from the menu) scores the run at once, below every finished run.</dd>
+    <dt>Heat</dt><dd>Selling raises heat, a point per $4,000 sold in a day, up to 8; fights raise it too. More heat brings the Watchers more often, and more of them. A heavy load draws them too and brings a bigger patrol; the Pouch box shows its pull. Heat cools daily, faster at The Ranch, and The Boss can make it vanish for a price.</dd>
+    <dt>Encounters</dt><dd>Watchers and rival crews: run, fight (needs a weapon) or give up. Giving up to the Watchers costs your stash and a fine; a failed getaway spills part of your load. At zero health the run ends: you keep the debt but lose your money, and rank below every run that didn't die. Money in the bank is safe from muggers.</dd>
   </dl>`;
   if (tab === 'places') body = `<dl class="help">${PLACES.map(P => `<dt>${P.name}</dt><dd>${P.blurb} ${P.special}</dd>`).join('')}</dl>`;
   if (tab === 'goods') body = `<table><tr><th>Good</th><th class="r">Usual price</th><th></th></tr>${GOODS.map(g => `<tr><td>${g.name}</td><td class="r">${fmt(g.lo)}–${fmt(g.hi)}</td><td class="note">${g.blurb}</td></tr>`).join('')}</table>`;
   if (tab === 'gear') body = `<table><tr><th>Item</th><th class="r">Price</th><th>Where</th></tr>${Object.keys(GEAR).map(id => {
     const where = PLACES.filter(P => P.shop.includes(id)).map(P => P.name).join(', ');
     return `<tr><td><b>${GEAR[id].name}</b><br><span class="note">${GEAR[id].blurb}</span></td><td class="r">${fmt(GEAR[id].price)}</td><td class="note">${where}</td></tr>`;
-  }).join('')}</table><p class="note">Pouches and weapons only trade up: a new one replaces the old. Strays sometimes sell them cheap.</p>`;
+  }).join('')}</table><p class="note">Pouches and weapons only trade up; a new one replaces the old. Strays sometimes sell gear cheap.</p>`;
   if (tab === 'rules') {
     const id = S ? S.preset : prefs.preset;
     const ch = rulesChanges(r);
     body = `<p>${S ? 'This run is' : 'You have chosen'} <b>${presetName(id)}</b>${ch.length ? `: ${esc(ch.join(' · '))}.` : ', the rules as they come.'}</p>
     <dl class="help">${PRESET_IDS.map(presetLine).join('')}
-    <dt>Custom</dt><dd>Set the rules yourself: your money, The Boss's patience, the Watchers, your luck and your cat. Start from any difficulty above and step any setting up or down; the title screen lists what yours change.</dd>
-    <dt>High scores</dt><dd>Each difficulty keeps its own top ten for each run length, since a score only means something next to scores played under the same rules. A Custom score shows the rules it was played under.</dd></dl>`;
+    <dt>Custom</dt><dd>Start from any difficulty and step its settings up or down: money, The Boss, the Watchers, luck and your cat. The title screen lists what you changed.</dd>
+    <dt>High scores</dt><dd>A top ten per difficulty and run length, so scores only meet scores played under the same rules. A Custom score shows its rules.</dd></dl>`;
   }
   if (tab === 'keys') body = `<table>
     <tr><td><kbd>1</kbd>–<kbd>9</kbd></td><td>Select a good</td></tr>
-    <tr><td><kbd>B</kbd> / <kbd>S</kbd></td><td>Buy or sell the selected good; <kbd>Enter</kbd> then trades the most you can, or type an amount first</td></tr>
+    <tr><td><kbd>B</kbd> / <kbd>S</kbd></td><td>Buy or sell the selected good; <kbd>Enter</kbd> trades the most you can, or type an amount first</td></tr>
     <tr><td><kbd>↑</kbd> <kbd>↓</kbd></td><td>In the quantity box: one more, one fewer</td></tr>
-    <tr><td><kbd>A</kbd></td><td>Sell all: everything you carry that someone here is buying</td></tr>
-    <tr><td>Double-click</td><td>Buy or Sell with the mouse: trades the most you can</td></tr>
-    <tr><td><kbd>Z</kbd></td><td>Undo your last trade (for a few seconds after it)</td></tr>
-    <tr><td><kbd>T</kbd></td><td>Travel: a map of PumaCity opens; <kbd>1</kbd>–<kbd>7</kbd> picks a district</td></tr>
+    <tr><td><kbd>A</kbd></td><td>Sell everything you carry that sells here</td></tr>
+    <tr><td>Double-click</td><td>On Buy or Sell: trade the most you can</td></tr>
+    <tr><td><kbd>Z</kbd></td><td>Undo your last trade (for a few seconds)</td></tr>
+    <tr><td><kbd>T</kbd></td><td>Travel: open the map; <kbd>1</kbd>–<kbd>7</kbd> picks a district</td></tr>
     <tr><td><kbd>E</kbd></td><td>Cash out on the last day; <kbd>E</kbd> again confirms</td></tr>
     <tr><td><kbd>V</kbd></td><td>Visit this place's shop or office</td></tr>
-    <tr><td><kbd>R</kbd> <kbd>F</kbd> <kbd>U</kbd></td><td>Encounters: run, fight, give up. <kbd>Y</kbd> accepts an offer and <kbd>N</kbd> turns it down; every choice shows its key. None of them is a market key, so a key you were already pressing can't answer an encounter by mistake.</td></tr>
+    <tr><td><kbd>R</kbd> <kbd>F</kbd> <kbd>U</kbd></td><td>Encounters: run, fight, give up. <kbd>Y</kbd> / <kbd>N</kbd> accept or refuse an offer. None is a market key, so a stray keypress can't answer by mistake.</td></tr>
     <tr><td><kbd>M</kbd></td><td>Sound on and off, anywhere</td></tr>
     <tr><td><kbd>Enter</kbd> / <kbd>Esc</kbd></td><td>Confirm / close</td></tr></table>`;
   return `<h1 id="pc-mt">How to play</h1>
   <div class="tabs">${tabs.map(([k, l]) => `<button data-act="helptab" data-v="${k}" aria-pressed="${tab === k}">${l}</button>`).join('')}</div>
   ${body}
-  <div class="acts"><button data-act="close"><kbd>Esc</kbd>Close</button></div>`;
+  <div class="acts"><button data-act="close"><kbd>Esc</kbd>Close</button></div>
+  <p class="foot">More games at <a href="https://greykit.com/">greykit.com</a></p>`;
 }
 
 /* Every render rebuilds the page, which would drop keyboard focus to <body>
