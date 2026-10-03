@@ -218,6 +218,28 @@ Merging to `main` runs `.gitlab-ci.yml`: validate, then rsync to
 scanned, and `--delete-excluded` keeps `tools/` and `screenshots/` off the
 live site.
 
+### Icon and share card
+
+`icon.svg` is drawn by hand. Every other image in the page's `<head>` is
+rendered from it, so if it changes, re-render all of them. From this
+directory:
+
+```bash
+for s in 16 32 48; do rsvg-convert -w $s -h $s icon.svg -o favicon-${s}x${s}.png; done
+python3 -c "from PIL import Image; i=[Image.open(f'favicon-{s}x{s}.png') for s in (48,32,16)]; i[0].save('favicon.ico', sizes=[(16,16),(32,32),(48,48)], append_images=i[1:])"
+rm favicon-48x48.png
+../../greykit-meta/tools/make-assets.sh . --accent '#54f2ff' --bg '#05070f' --font mono \
+  --wordmark 'Puma[City]' --desc 'Buy low, sell high, and stay one step ahead of the Watchers.' \
+  --tagline 'A trading game in the spirit of Dope Wars'
+```
+
+The last command writes `og.png` and `apple-touch-icon.png`. The GitLab project
+avatar is a copy of `apple-touch-icon.png`, so upload that again too:
+
+```bash
+glab api --method PUT projects/87145400 --form "avatar=@apple-touch-icon.png"
+```
+
 ## Other Puma games
 
 [PumaRally](https://greykit.com/games/pumarally/) ·
