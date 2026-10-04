@@ -1997,7 +1997,7 @@ function setupHTML() {
   <h2>High scores · ${presetName(prefs.preset)}</h2>
   <div class="tabs">${CONFIG.lengths.map(d => `<button data-act="scoretab" data-v="${d}" aria-pressed="${scoreTab === d}">${d} days</button>`).join('')}</div>
   ${scoreTable(list, -1)}
-  <p class="foot"><span class="credit"><span>PumaCity: Nip Wars</span><span>v${VERSION}</span><span>by <a href="https://greykit.com/">greykit.com</a></span></span>
+  <p class="foot"><span class="credit"><span>PumaCity: Nip Wars</span><span>v${VERSION}</span><span class="gk-credit">Built by <a href="https://greykit.com/" target="_blank" rel="noopener">greykit.com</a></span></span>
     <span>Inspired by <i>Dope Wars</i> (John E. Dell, 1984)</span></p>
 </div>`;
 }
