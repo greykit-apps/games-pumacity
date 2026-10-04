@@ -1856,6 +1856,21 @@ function load(key, fallback) {
 function save(key, value) {
   try { if (value == null) localStorage.removeItem(key); else localStorage.setItem(key, JSON.stringify(value)); } catch (e) { /* private window */ }
 }
+/* Settings' "Forget everything" (games-meta STANDARD.md): every key PumaCity
+ * owns, found by its prefix so a key added later is not one this misses, and
+ * only those -- every game on greykit.com shares one origin, so one storage. */
+function forgetEverything() {
+  for (const area of ['localStorage', 'sessionStorage']) {
+    try {
+      const s = window[area];
+      for (let i = s.length - 1; i >= 0; i--) {
+        const k = s.key(i);
+        if (k && k.startsWith('pumacity')) s.removeItem(k);
+      }
+    } catch (e) { /* no storage */ }
+  }
+  location.reload();
+}
 function esc(s) {
   return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 }
@@ -2291,6 +2306,7 @@ function titleCfg() {
       { act: 'custom', label: 'Custom game', key: 'C', meta: 'difficulty, length' },
       { act: 'scores', label: 'High scores', key: 'O' },
       'gap',
+      { act: 'settings', label: 'Settings', key: 'S' },
       { act: 'help', label: 'Help', key: '?' },
       { act: 'about', label: 'About', key: 'A' },
     ],
@@ -2318,6 +2334,17 @@ function aboutHTML() {
   <p>PumaCity: Based on the game Dope Wars by John E. Dell (1984). Developed entirely with Claude Code.</p>
   <p class="gk-credit">Built by <a href="https://greykit.com/" target="_blank" rel="noopener">greykit.com</a></p>
   <div class="acts"><button data-act="close"><kbd>Esc</kbd>Close</button></div>`;
+}
+function settingsHTML() {
+  return `<h1 id="pc-mt">Settings</h1>
+  <h2>This browser</h2>
+  <div class="row"><button class="danger" data-act="forget">Forget everything</button></div>
+  <p class="note">Clears everything PumaCity keeps in this browser: the run in progress, every high score, your name, the difficulty and run length you last chose, and the coach's tips.</p>
+  <div class="acts"><button data-act="close"><kbd>Esc</kbd>Close</button></div>`;
+}
+function confirmForgetHTML() {
+  return `<h1 id="pc-mt">Forget everything?</h1><p>Forget everything PumaCity has saved in this browser: the run in progress, every high score, your name and choices? This cannot be undone.</p>
+  <div class="acts"><button class="danger" data-act="forgetconfirm"><kbd>Y</kbd>Forget everything</button><button data-act="settings"><kbd>Esc</kbd>Keep it</button></div>`;
 }
 function confirmQuickHTML() {
   const s = loadGame();
@@ -3148,7 +3175,8 @@ function render() {
   const before = focusKey(document.activeElement);
   const hadModal = !!root.querySelector('.back');
   const titleModal = !S && ui.modal && (ui.modal.kind === 'help' ? helpHTML(ui.modal.tab || 'basics') : ui.modal.kind === 'rules' ? rulesHTML()
-    : ui.modal.kind === 'scores' ? scoresHTML() : ui.modal.kind === 'about' ? aboutHTML() : ui.modal.kind === 'confirmQuick' ? confirmQuickHTML() : '');
+    : ui.modal.kind === 'scores' ? scoresHTML() : ui.modal.kind === 'about' ? aboutHTML() : ui.modal.kind === 'confirmQuick' ? confirmQuickHTML()
+    : ui.modal.kind === 'settings' ? settingsHTML() : ui.modal.kind === 'confirmForget' ? confirmForgetHTML() : '');
   const modal = S ? modalHTML() : (titleModal
     ? `<div class="back" data-act="backdrop"><div class="modal${ui.modal.kind === 'rules' ? ' rules' : ''}" role="dialog" aria-modal="true" aria-labelledby="pc-mt">${titleModal}</div></div>` : '');
   setScene(S ? S.loc : 'pvn');
@@ -3290,6 +3318,9 @@ root.addEventListener('click', e => {
     case 'custom': titleView = 'setup'; render(); return;
     case 'back': toTitle(); return;
     case 'scores': ui.modal = { kind: 'scores' }; render(); return;
+    case 'settings': ui.modal = { kind: 'settings' }; render(); return;
+    case 'forget': ui.modal = { kind: 'confirmForget' }; render(); return;
+    case 'forgetconfirm': forgetEverything(); return;
     case 'about': ui.modal = { kind: 'about' }; render(); return;
     case 'help': ui.modal = { kind: 'help', tab: 'basics' }; render(); return;
     case 'helptab': ui.modal = { kind: 'help', tab: v }; render(); return;
@@ -3420,10 +3451,12 @@ document.addEventListener('keydown', e => {
     if (m && m.kind === 'help') { if (k === 'Escape') closeModal(); else helpKey(k); return; }
     // the rules panel's selects take letters and arrows themselves
     if (m && m.kind === 'rules') { if (k === 'Escape') { e.preventDefault(); closeModal(); } return; }
+    // Esc on the forget question steps back to Settings, as its Keep it does
+    if (m && m.kind === 'confirmForget') { if (k === 'Escape') { e.preventDefault(); ui.modal = { kind: 'settings' }; render(); } else if (k === 'y') forgetEverything(); return; }
     if (m) { if (k === 'Escape') { e.preventDefault(); closeModal(); } else if (m.kind === 'confirmQuick' && k === 'y') startRun(); return; }
     if (titleView === 'title') {
       if (k === 'Enter' && e.target && e.target.tagName === 'BUTTON') return;
-      const want = { r: 'resume', n: 'quick', c: 'custom', o: 'scores', '?': 'help', '/': 'help', h: 'help', a: 'about' }[k];
+      const want = { r: 'resume', n: 'quick', c: 'custom', o: 'scores', s: 'settings', '?': 'help', '/': 'help', h: 'help', a: 'about' }[k];
       const hit = want && root.querySelector(`.gk-menu [data-act="${want}"]`);
       if (hit) { e.preventDefault(); hit.click(); return; }
       if (k === 'ArrowDown' || k === 'ArrowUp') {
