@@ -28,11 +28,11 @@
 <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
 <link rel="icon" href="favicon.ico" sizes="16x16 32x32 48x48">
 <style>
-/* Tactical tribe, PumaRally's palette: the same TOKENS table, retyped here
- * because this is a single file and imports nothing. */
+/* @gk-tokens-begin v0.1 -- greykit.games canon (games-meta STANDARD.md §4): the Tactical palette, PumaRally's (editor/render/palette.js). The copy of record is games-meta's canon/gk-tokens.css. */
 :root{--bg:#05070f;--panel:#0a0e1a;--panel2:#0d1424;--line:#1b2540;--lit:#47609c;
   --text:#dbe4fb;--ink:#8b96b8;--dim:#7d8aa8;--accent:#54f2ff;--warn:#ffb000;--danger:#ff5266;
   --good:#4ade6a;--violet:#b47dff;--steel:#94a0c4;--blue:#4c8dff}
+/* @gk-tokens-end */
 :root{--s1:4px;--s2:8px;--s3:12px;--s4:16px;--s5:24px;--s6:32px;--s7:48px;--term:1100px;
   --row:#0f1628;--z-scene:0;--z-stage:1;--z-sticky:5;--z-modal:10}
 *{box-sizing:border-box}
@@ -480,10 +480,11 @@ body.on-title .scene{position:fixed;inset:0;height:auto;border-bottom:0}
 <div class="sr-only" id="pc-live" aria-live="polite" aria-atomic="false"></div>
 <div data-pumacity-game><p class="boot">Hitting the streets…</p></div>
 <script>
-/* @gk-title-begin v0.1 -- greykit.games canon, byte-identical in every
- * Tactical game that has it: change it in one, copy it to all. Plain script,
- * no imports or exports, so a single-file game can paste it into a classic
- * <script> as it stands. */
+/* @gk-title-begin v0.3 -- greykit.games canon (games-meta STANDARD.md §3),
+ * byte-identical in every Tactical game. The copy of record is games-meta's
+ * canon/gk-title.js: change it there, bump the version, copy it to all, and
+ * tools/diff-standard.sh says where it differs. Plain script, no imports or
+ * exports, so a single-file game can paste it into a classic <script>. */
 
 /* greykit.com's mark: the right half of the face, flat cut on the left
  * (greykitweb/assets/greykit-mark.png at 240px). */
@@ -516,8 +517,11 @@ const TITLE_CSS = `
 .gk-boot .gk-slide{position:absolute;inset:0;transform:translateX(calc(var(--d) * -1));
   animation:gk-slide .6s cubic-bezier(.65,0,.35,1) .5s forwards}
 .gk-boot .gk-lh,.gk-boot .gk-rh{position:absolute;top:0;width:var(--S);height:var(--S)}
-.gk-boot .gk-lh{left:0}
-.gk-boot .gk-rh{left:var(--S)}
+/* the halves overlap by 2px, the left on top: two images laid edge to edge
+   are anti-aliased edge by edge, and some browsers (Brave) leave a hairline
+   of background between them */
+.gk-boot .gk-lh{left:0;z-index:1}
+.gk-boot .gk-rh{left:calc(var(--S) - 2px)}
 .gk-boot .gk-pulse{width:100%;height:100%;position:relative;transform-origin:100% 50%;animation:gk-pulse .7s ease-in-out 1.15s}
 .gk-boot .gk-face img{display:block;width:100%;height:100%;filter:invert(1) brightness(.72)}
 .gk-boot .gk-pulse img{animation:gk-glow .7s ease-in-out 1.15s}
@@ -694,6 +698,94 @@ function decodeTitle(h1, text) {
   }, 28);
 }
 
+/* The title's stylesheet, once, for a game that does not build its own CSS
+ * around TITLE_CSS. */
+function injectTitleCSS() {
+  if (!document.getElementById("gk-title-css")) document.head.insertAdjacentHTML("beforeend", '<style id="gk-title-css">' + TITLE_CSS + "</style>");
+}
+
+/* The boot log's first line: the page being reloaded, escaped. */
+function bootReloadLine() {
+  return "reload <b>" + escHTML(location.pathname.replace(/index\.html$/, "")) + "</b>";
+}
+
+/* The entrance: the menu rises, the name decodes, the default is focused.
+ * t is the .gk-title (the page's, if left out); the name is read off the h1. */
+function revealTitle(t = document.querySelector(".gk-title")) {
+  if (!t) return;
+  t.classList.add("gk-rise");
+  const h1 = t.querySelector("h1");
+  decodeTitle(h1, h1.getAttribute("aria-label"));
+  const b = t.querySelector(".gk-primary") || t.querySelector(".gk-menu button");
+  if (b) b.focus({ preventScroll: true });
+}
+
+/* The menu button a key presses: the one whose <kbd> shows that key, and the
+ * ? item for h and / as well. Read off the menu itself, so a key and its
+ * label cannot disagree. null when the key is not the menu's. */
+function titleKeyButton(menu, key) {
+  const k = key.length === 1 ? key.toLowerCase() : key;
+  const bs = [...menu.querySelectorAll("button")], kbd = b => (b.querySelector("kbd") || {}).textContent || "";
+  return bs.find(b => kbd(b).toLowerCase() === k) || ((k === "h" || k === "/") && bs.find(b => kbd(b) === "?")) || null;
+}
+
+/* ArrowDown / ArrowUp through the menu, wrapping. true when the key was one. */
+function titleArrow(menu, ev) {
+  if (ev.key !== "ArrowDown" && ev.key !== "ArrowUp") return false;
+  const bs = [...menu.querySelectorAll("button")], i = bs.indexOf(document.activeElement);
+  ev.preventDefault();
+  bs[(i + (ev.key === "ArrowDown" ? 1 : -1) + bs.length) % bs.length].focus();
+  return true;
+}
+
+/* A question or a notice in the title's sheet, from any screen of the game,
+ * in place of window.confirm and window.alert (STANDARD.md §11): those are
+ * silently answered "no", or never shown, where a page is embedded, and a
+ * button that does nothing reads as broken. confirmSheet resolves true only
+ * on the yes button; Cancel, Escape and the backdrop resolve false.
+ * alertSheet resolves when it is dismissed. While one is up it has the keys:
+ * Tab stays inside it and nothing reaches the game behind. Focus goes back
+ * to whatever had it. */
+function confirmSheet(question, yes, title = "Are you sure?") { return dialogSheet(title, question, yes, "Cancel"); }
+function alertSheet(message, title = "Notice") { return dialogSheet(title, message, "OK", null); }
+function dialogSheet(title, text, yes, no) {
+  return new Promise(resolve => {
+    const back = document.activeElement;
+    const el = document.createElement("div");
+    el.className = "gk-sheet";
+    el.setAttribute("role", "alertdialog");
+    el.setAttribute("aria-modal", "true");
+    el.setAttribute("aria-label", title);
+    el.innerHTML = '<div class="gk-box"><div class="gk-head"><h2>' + escHTML(title) + '</h2></div><div class="gk-body"><p>' + escHTML(text) +
+      "</p><div class='gk-row'><button data-yes>" + escHTML(yes) + "</button>" + (no ? "<button data-no>" + escHTML(no) + "</button>" : "") + "</div></div></div>";
+    const done = v => {
+      document.removeEventListener("keydown", onKey, true);
+      el.remove();
+      if (back && back.isConnected && back.focus) back.focus({ preventScroll: true });
+      resolve(v);
+    };
+    const onKey = ev => {
+      if (ev.key === "Escape") { ev.preventDefault(); ev.stopPropagation(); done(false); return; }
+      if (ev.key === "Tab") {
+        const bs = [...el.querySelectorAll("button")], i = bs.indexOf(document.activeElement);
+        ev.preventDefault();
+        bs[(i + (ev.shiftKey ? -1 : 1) + bs.length) % bs.length].focus();
+      }
+      /* nothing reaches the game behind; Enter and Space still press the
+         focused button, which is their default, not a listener's */
+      ev.stopPropagation();
+    };
+    el.addEventListener("click", ev => {
+      if (ev.target === el) return done(false);
+      const b = ev.target.closest("button");
+      if (b) done(b.hasAttribute("data-yes"));
+    });
+    document.addEventListener("keydown", onKey, true);
+    document.body.appendChild(el);
+    el.querySelector("[data-yes]").focus();
+  });
+}
+
 /**
  * The title screen, into host.
  *   name      the game's name
@@ -714,8 +806,7 @@ function mountTitle(host, cfg) {
   const ctl = new AbortController();
   const sig = { signal: ctl.signal };
   host.innerHTML = titleHTML(cfg);
-  const root = host.firstChild, h1 = root.querySelector("h1"), menu = root.querySelector(".gk-menu");
-  const items = cfg.items.filter(Boolean);
+  const root = host.firstChild, menu = root.querySelector(".gk-menu");
   if (cfg.scene) cfg.scene(root.querySelector(".scene"));
   const focusPrimary = () => { const b = menu.querySelector(".gk-primary") || menu.querySelector("button"); if (b) b.focus({ preventScroll: true }); };
 
@@ -782,18 +873,13 @@ function mountTitle(host, cfg) {
     if (ev.ctrlKey || ev.metaKey || ev.altKey) return;
     if (sheet) { if (ev.key === "Escape") { ev.preventDefault(); closeSheet(); } return; }
     if (ev.target.closest && ev.target.closest("input,select,textarea")) return;
-    const k = ev.key.toLowerCase();
-    const hit = items.find(it => it.key && it.key.toLowerCase() === k) || ((k === "h" || k === "/") && items.find(it => it.act === "help"));
-    if (hit) { ev.preventDefault(); act(hit.act); return; }
-    if (ev.key === "ArrowDown" || ev.key === "ArrowUp") {
-      const bs = [...menu.querySelectorAll("button")], i = bs.indexOf(document.activeElement);
-      bs[(i + (ev.key === "ArrowDown" ? 1 : -1) + bs.length) % bs.length].focus();
-      ev.preventDefault();
-    }
+    const hit = titleKeyButton(menu, ev.key);
+    if (hit) { ev.preventDefault(); act(hit.dataset.act); return; }
+    titleArrow(menu, ev);
   }, sig);
 
   return {
-    reveal() { root.classList.add("gk-rise"); decodeTitle(h1, cfg.name); focusPrimary(); },
+    reveal() { revealTitle(root); },
     unmount() { ctl.abort(); closeSheet(); }
   };
 }
@@ -1856,12 +1942,27 @@ function load(key, fallback) {
 function save(key, value) {
   try { if (value == null) localStorage.removeItem(key); else localStorage.setItem(key, JSON.stringify(value)); } catch (e) { /* private window */ }
 }
+/* Settings' "Forget everything" (games-meta STANDARD.md): every key PumaCity
+ * owns, found by its prefix so a key added later is not one this misses, and
+ * only those -- every game on greykit.com shares one origin, so one storage. */
+function forgetEverything() {
+  for (const area of ['localStorage', 'sessionStorage']) {
+    try {
+      const s = window[area];
+      for (let i = s.length - 1; i >= 0; i--) {
+        const k = s.key(i);
+        if (k && k.startsWith('pumacity')) s.removeItem(k);
+      }
+    } catch (e) { /* no storage */ }
+  }
+  location.reload();
+}
 function esc(s) {
   return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 }
 
 const root = document.querySelector('[data-pumacity-game]');
-document.head.insertAdjacentHTML('beforeend', '<style id="gk-title-css">' + TITLE_CSS + '</style>');
+injectTitleCSS();
 let S = null;            // the game state, or null on the title screen
 let ui = { sel: 0, modal: null, flash: '' };
 let prefs = Object.assign({ name: '', days: 30, preset: 'regular', custom: {} }, load(KEY_PREFS, {}));
@@ -2291,20 +2392,11 @@ function titleCfg() {
       { act: 'custom', label: 'Custom game', key: 'C', meta: 'difficulty, length' },
       { act: 'scores', label: 'High scores', key: 'O' },
       'gap',
+      { act: 'settings', label: 'Settings', key: 'S' },
       { act: 'help', label: 'Help', key: '?' },
       { act: 'about', label: 'About', key: 'A' },
     ],
   };
-}
-/* the entrance: the menu rises and the name decodes; after the boot, and on
- * every way back to the title, but not on a redraw for a dialog */
-function revealTitle() {
-  const t = root.querySelector('.gk-title');
-  if (!t) return;
-  t.classList.add('gk-rise');
-  decodeTitle(t.querySelector('h1'), TITLE_NAME);
-  const b = t.querySelector('.gk-primary');
-  if (b) b.focus({ preventScroll: true });
 }
 function toTitle() { titleView = 'title'; render(); revealTitle(); }
 function scoresHTML() {
@@ -2318,6 +2410,17 @@ function aboutHTML() {
   <p>PumaCity: Based on the game Dope Wars by John E. Dell (1984). Developed entirely with Claude Code.</p>
   <p class="gk-credit">Built by <a href="https://greykit.com/" target="_blank" rel="noopener">greykit.com</a></p>
   <div class="acts"><button data-act="close"><kbd>Esc</kbd>Close</button></div>`;
+}
+function settingsHTML() {
+  return `<h1 id="pc-mt">Settings</h1>
+  <h2>This browser</h2>
+  <div class="row"><button class="danger" data-act="forget">Forget everything</button></div>
+  <p class="note">Clears everything PumaCity keeps in this browser: the run in progress, every high score, your name, the difficulty and run length you last chose, and the coach's tips.</p>
+  <div class="acts"><button data-act="close"><kbd>Esc</kbd>Close</button></div>`;
+}
+function confirmForgetHTML() {
+  return `<h1 id="pc-mt">Forget everything?</h1><p>Forget everything PumaCity has saved in this browser: the run in progress, every high score, your name and choices? This cannot be undone.</p>
+  <div class="acts"><button class="danger" data-act="forgetconfirm"><kbd>Y</kbd>Forget everything</button><button data-act="settings"><kbd>Esc</kbd>Keep it</button></div>`;
 }
 function confirmQuickHTML() {
   const s = loadGame();
@@ -3148,7 +3251,8 @@ function render() {
   const before = focusKey(document.activeElement);
   const hadModal = !!root.querySelector('.back');
   const titleModal = !S && ui.modal && (ui.modal.kind === 'help' ? helpHTML(ui.modal.tab || 'basics') : ui.modal.kind === 'rules' ? rulesHTML()
-    : ui.modal.kind === 'scores' ? scoresHTML() : ui.modal.kind === 'about' ? aboutHTML() : ui.modal.kind === 'confirmQuick' ? confirmQuickHTML() : '');
+    : ui.modal.kind === 'scores' ? scoresHTML() : ui.modal.kind === 'about' ? aboutHTML() : ui.modal.kind === 'confirmQuick' ? confirmQuickHTML()
+    : ui.modal.kind === 'settings' ? settingsHTML() : ui.modal.kind === 'confirmForget' ? confirmForgetHTML() : '');
   const modal = S ? modalHTML() : (titleModal
     ? `<div class="back" data-act="backdrop"><div class="modal${ui.modal.kind === 'rules' ? ' rules' : ''}" role="dialog" aria-modal="true" aria-labelledby="pc-mt">${titleModal}</div></div>` : '');
   setScene(S ? S.loc : 'pvn');
@@ -3290,6 +3394,9 @@ root.addEventListener('click', e => {
     case 'custom': titleView = 'setup'; render(); return;
     case 'back': toTitle(); return;
     case 'scores': ui.modal = { kind: 'scores' }; render(); return;
+    case 'settings': ui.modal = { kind: 'settings' }; render(); return;
+    case 'forget': ui.modal = { kind: 'confirmForget' }; render(); return;
+    case 'forgetconfirm': forgetEverything(); return;
     case 'about': ui.modal = { kind: 'about' }; render(); return;
     case 'help': ui.modal = { kind: 'help', tab: 'basics' }; render(); return;
     case 'helptab': ui.modal = { kind: 'help', tab: v }; render(); return;
@@ -3420,17 +3527,14 @@ document.addEventListener('keydown', e => {
     if (m && m.kind === 'help') { if (k === 'Escape') closeModal(); else helpKey(k); return; }
     // the rules panel's selects take letters and arrows themselves
     if (m && m.kind === 'rules') { if (k === 'Escape') { e.preventDefault(); closeModal(); } return; }
+    // Esc on the forget question steps back to Settings, as its Keep it does
+    if (m && m.kind === 'confirmForget') { if (k === 'Escape') { e.preventDefault(); ui.modal = { kind: 'settings' }; render(); } else if (k === 'y') forgetEverything(); return; }
     if (m) { if (k === 'Escape') { e.preventDefault(); closeModal(); } else if (m.kind === 'confirmQuick' && k === 'y') startRun(); return; }
     if (titleView === 'title') {
       if (k === 'Enter' && e.target && e.target.tagName === 'BUTTON') return;
-      const want = { r: 'resume', n: 'quick', c: 'custom', o: 'scores', '?': 'help', '/': 'help', h: 'help', a: 'about' }[k];
-      const hit = want && root.querySelector(`.gk-menu [data-act="${want}"]`);
+      const menu = root.querySelector('.gk-menu'), hit = menu && titleKeyButton(menu, k);
       if (hit) { e.preventDefault(); hit.click(); return; }
-      if (k === 'ArrowDown' || k === 'ArrowUp') {
-        const bs = [...root.querySelectorAll('.gk-menu button')], i = bs.indexOf(document.activeElement);
-        e.preventDefault();
-        bs[(i + (k === 'ArrowDown' ? 1 : -1) + bs.length) % bs.length].focus();
-      }
+      if (menu) titleArrow(menu, e);
       return;
     }
     if (k === 'Escape') { e.preventDefault(); toTitle(); return; }
@@ -3510,7 +3614,7 @@ window.__PC = {
 S = null;
 /* the boot plays over the title, which is drawn underneath it at once:
  * PumaCity is one file and has nothing else to load */
-const boot = runBoot({ lines: ['reload <b>' + esc(location.pathname.replace(/index\.html$/, '')) + '</b>', 'one file: nothing to fetch'] });
+const boot = runBoot({ lines: [bootReloadLine(), 'one file: nothing to fetch'] });
 render();
 boot.finish([(s => s ? `run in progress: day ${s.day} of ${s.days}` : 'no run in progress')(loadGame())]).then(revealTitle);
 </script>
