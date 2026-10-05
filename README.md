@@ -17,7 +17,8 @@ original text and code.
 <https://greykit.com/games/pumacity/>
 
 One `index.html`: no build step, no dependencies, no network at play time.
-Saves stay in your browser's `localStorage`.
+Saves stay in your browser's `localStorage`. Every sound is synthesized in the
+page with Web Audio; `M`, or the switch in the game's header, turns it off.
 
 ![Day 12 of a Wanted run at the Starport: the terminal sits over the ship on its pad; the Debt box warns the goons could come any day and names the $4,152 payment that calls them off; a headline has crashed Skooma to a bargain; each price sits on its usual band beside a faint tick for the last price seen; and the Held column shows Catnip bought at $25 now down 44%](screenshots/market.png)
 
@@ -107,6 +108,7 @@ getting away, what a failed run spills, and exactly what giving up loses.
 | `E` | cash out on the last day; `E` again confirms |
 | `V` | this place's shop or office (opens beside the market) |
 | `R` `F` `U`, `Y` / `N` | encounters: run, fight, give up; accept or turn down an offer |
+| `M` | sound on and off, anywhere |
 | `?` | how to play · `Esc` menu / close |
 
 Encounter keys never share a letter with market keys, and an encounter ignores
@@ -138,12 +140,17 @@ The rules are data plus a DOM-free engine, which sit between the
   knobs, which is what makes *start from Wanted* exact.
 - **Bots play through the same door.** They read the state and never advance
   the RNG.
+- **Sound reads the move, never the other way round.** `cuesFor(before,
+  action, result)` picks a move's sounds from what it did: a till for a sale,
+  the siren when the Watchers are waiting, a thump when you're hit. It sits in
+  the core so the checks can play it, and changes nothing, so a run sounds
+  however you like and replays the same. The synth itself is screen-side.
 
 ### Checks
 
 ```
 node tools/check-assets.js   # every file index.html references exists
-node tools/check-all.js      # 73 named rule scenarios
+node tools/check-all.js      # 76 named rule scenarios
 node tools/replay.js         # fixed seeds replay exactly as recorded
 node tools/sim.js 20         # bots play whole runs; invariants after every step
 ```

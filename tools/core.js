@@ -13,7 +13,7 @@ const path = require('path');
 const EXPORTS = [
   'VERSION', 'CONFIG', 'RULES', 'R', 'PRESETS', 'PRESET_IDS', 'presetRules', 'KNOBS', 'KNOB_GROUPS', 'customRules', 'choicesFor', 'rulesChanges', 'stepOf', 'GOODS', 'GOOD', 'PLACES', 'PLACE', 'GEAR', 'SLOTS',
   'newGame', 'step', 'waiting', 'forceEncounter', 'botAct', 'encOptions', 'dealQty',
-  'capacity', 'used', 'free', 'netWorth', 'canUpgrade', 'hash32', 'fmt', 'carried', 'carryRisk', 'runChance', 'giveUpCost', 'goonTake', 'carryRiskWith', 'watchOdds', 'arrivalWatchOdds', 'goonsDue', 'cheat', 'CHEAT_CASH', 'undoTrade', 'scoreOrder',
+  'capacity', 'used', 'free', 'netWorth', 'canUpgrade', 'hash32', 'fmt', 'carried', 'carryRisk', 'runChance', 'giveUpCost', 'goonTake', 'carryRiskWith', 'watchOdds', 'arrivalWatchOdds', 'goonsDue', 'cheat', 'CHEAT_CASH', 'undoTrade', 'scoreOrder', 'CUES', 'cuesFor',
 ];
 
 function coreSource() {

@@ -107,6 +107,10 @@ p{margin:0 0 var(--s2)}
 .top .m-tourist{color:var(--good)}.top .m-wanted{color:var(--danger)}.top .m-custom{color:var(--violet)}
 .top .grow{flex:1}
 .top .brand{font-size:12px;letter-spacing:.3em;text-transform:uppercase;color:var(--accent);font-weight:600}
+.top .snd{align-self:center;min-height:30px;padding:3px 7px;line-height:0;border-color:var(--line);color:var(--dim)}
+.top .snd[aria-pressed=true]{color:var(--text)}
+.top .snd svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.4;stroke-linecap:round;stroke-linejoin:round}
+.top .snd .spk{fill:currentColor;stroke:none}
 .dayline{height:2px;background:var(--line)}
 .dayline i{display:block;height:100%;background:var(--accent)}
 .dayline.last i{background:var(--warn)}
@@ -1926,6 +1930,53 @@ function botAct(st, style) {
  * bank a good week, and dying is never a way out. */
 function scoreRank(e) { return e.dead ? 2 : e.left ? 1 : 0; }
 function scoreOrder(a, b) { return (scoreRank(a) - scoreRank(b)) || (b.score - a.score); }
+
+/* The sounds a move makes, read off what it did: the state before, the
+ * action, and step()'s result. Nothing here touches the run, so sound can
+ * never change a game; it sits in the core only so the checks can play it.
+ * Several cues play one after another (a trip, then what was waiting). */
+const CUES = ['nope', 'tick', 'buy', 'sell', 'coin', 'gear', 'heal', 'undo', 'travel', 'news', 'siren', 'jump', 'psst',
+  'limo', 'goons', 'hit', 'strike', 'whiff', 'escape', 'win', 'bust', 'cashout', 'broke', 'dead'];
+const STING = { watchers: 'siren', boss: 'limo', goons: 'goons', stray: 'psst' };
+function foeHp(st) { return st.enc && st.enc.foes ? st.enc.foes.reduce((n, f) => n + Math.max(0, f.hp), 0) : 0; }
+function cuesFor(before, a, r) {
+  if (r.refused) return ['nope'];
+  const st = r.state;
+  if (st.over && !before.over) return [st.over.reason === 'dead' ? 'dead' : st.over.score > 0 ? 'cashout' : 'broke'];
+  const hurt = st.hp < before.hp ? ['hit'] : [];
+  if (before.enc) {
+    switch (a.t) {
+      case 'run': return st.enc ? ['nope', ...hurt] : ['escape'];
+      case 'fight': {
+        const landed = foeHp(st) < foeHp(before) || !st.enc;
+        return [landed ? 'strike' : 'whiff', ...(st.enc ? hurt : ['win'])];
+      }
+      case 'surrender': return ['bust'];
+      case 'deal': return [before.enc.deal.side === 'buy' ? 'sell' : 'buy'];
+      case 'sell': return ['sell'];
+      case 'buy': return ['gear'];
+      case 'pay': return ['coin'];
+      case 'refuse': return hurt.length ? hurt : ['nope'];
+      default: return ['tick'];
+    }
+  }
+  switch (a.t) {
+    case 'buy': return ['buy'];
+    case 'sell': case 'sellall': return ['sell'];
+    case 'gear': return ['gear'];
+    case 'heal': return ['heal'];
+    case 'borrow': case 'repay': case 'deposit': case 'withdraw': return ['coin'];
+    case 'travel': {
+      const ev = r.events;
+      if (st.enc) return ['travel', st.enc.type === 'rival' ? (st.enc.hostile ? 'jump' : 'psst') : STING[st.enc.type]];
+      if (ev.some(l => l.cls === 'bad')) return ['travel', 'hit'];           // a mugging
+      if (ev.some(l => l.cls === 'good')) return ['travel', 'coin'];         // a stash in a drainpipe
+      if (ev.some(l => l.cls === 'news' || l.cls === 'warn')) return ['travel', 'news'];
+      return ['travel'];
+    }
+  }
+  return [];
+}
 // ===== @core-end =====
 
 /* ---------------------------------------------------------------------------
@@ -1959,6 +2010,95 @@ function forgetEverything() {
 }
 function esc(s) {
   return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+/* ---- sound (games-meta STANDARD.md §8): M anywhere, saved as "1" or "0".
+ * Every sound is synthesised on the spot; PumaCity is one file with nothing
+ * to fetch. A pager, a till and a siren: the back room's noises, kept quiet. */
+const KEY_MUTED = 'pumacity_muted_v1';
+let muted = (() => { try { return localStorage.getItem(KEY_MUTED) === '1'; } catch (e) { return false; } })();
+let AC = null, OUT = null, NOISE = null;
+function audio() {
+  if (AC === null) {
+    try {
+      AC = new (window.AudioContext || window.webkitAudioContext)();
+      OUT = AC.createGain();
+      OUT.gain.value = 0.7;
+      const comp = AC.createDynamicsCompressor();
+      OUT.connect(comp).connect(AC.destination);
+      NOISE = AC.createBuffer(1, AC.sampleRate, AC.sampleRate);
+      const d = NOISE.getChannelData(0);
+      for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+    } catch (e) { AC = false; }
+  }
+  if (AC && AC.state === 'suspended') AC.resume();
+  return AC || null;
+}
+/* One note at time t: f slides to `to` if given; `lp` puts a low-pass on it. */
+function tone(t, f, dur, type, gain, o = {}) {
+  const osc = AC.createOscillator(), g = AC.createGain();
+  osc.type = type;
+  osc.frequency.setValueAtTime(f, t);
+  if (o.to) osc.frequency.exponentialRampToValueAtTime(o.to, t + dur);
+  g.gain.setValueAtTime(0, t);
+  g.gain.linearRampToValueAtTime(gain, t + (o.attack || 0.006));
+  g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  let node = osc.connect(g);
+  if (o.lp) { const f2 = AC.createBiquadFilter(); f2.type = 'lowpass'; f2.frequency.value = o.lp; node = node.connect(f2); }
+  node.connect(OUT);
+  osc.start(t); osc.stop(t + dur + 0.02);
+}
+/* A burst of filtered noise: a click, a thump, a whoosh. */
+function hiss(t, dur, gain, type, f, o = {}) {
+  const src = AC.createBufferSource(), flt = AC.createBiquadFilter(), g = AC.createGain();
+  src.buffer = NOISE;
+  flt.type = type;
+  flt.frequency.setValueAtTime(f, t);
+  if (o.to) flt.frequency.exponentialRampToValueAtTime(o.to, t + dur);
+  flt.Q.value = o.q || 1;
+  g.gain.setValueAtTime(0, t);
+  g.gain.linearRampToValueAtTime(gain, t + (o.attack || 0.004));
+  g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  src.connect(flt).connect(g).connect(OUT);
+  src.start(t, Math.random() * 0.5); src.stop(t + dur + 0.02);
+}
+const SFX = {
+  nope:    t => { tone(t, 150, 0.08, 'square', 0.035, { lp: 1200 }); tone(t + 0.1, 112, 0.12, 'square', 0.035, { lp: 1200 }); },
+  tick:    t => tone(t, 1047, 0.04, 'square', 0.02, { lp: 3000 }),
+  buy:     t => { hiss(t, 0.03, 0.05, 'highpass', 3000); tone(t, 660, 0.05, 'square', 0.03, { lp: 2400 }); tone(t + 0.05, 494, 0.08, 'square', 0.03, { lp: 2400 }); },
+  sell:    t => { hiss(t, 0.035, 0.07, 'highpass', 2500); tone(t + 0.02, 1319, 0.09, 'sine', 0.06); tone(t + 0.09, 1760, 0.32, 'sine', 0.06); tone(t + 0.09, 2637, 0.2, 'sine', 0.015); },
+  coin:    t => { tone(t, 988, 0.06, 'triangle', 0.06); tone(t + 0.06, 1319, 0.16, 'triangle', 0.06); },
+  gear:    t => { hiss(t, 0.05, 0.08, 'bandpass', 1800, { q: 2 }); tone(t, 196, 0.07, 'square', 0.035, { lp: 1500 }); tone(t + 0.07, 294, 0.12, 'square', 0.035, { lp: 1500 }); },
+  heal:    t => { tone(t, 392, 0.4, 'sine', 0.05, { to: 784, attack: 0.05 }); tone(t + 0.12, 587, 0.35, 'sine', 0.03, { to: 1175, attack: 0.05 }); },
+  undo:    t => { tone(t, 494, 0.05, 'square', 0.025, { lp: 2400 }); tone(t + 0.05, 660, 0.06, 'square', 0.025, { lp: 2400 }); },
+  travel:  t => { hiss(t, 0.5, 0.06, 'bandpass', 300, { to: 1400, q: 1.5, attack: 0.15 }); tone(t, 98, 0.45, 'triangle', 0.03, { to: 147, attack: 0.1 }); },
+  news:    t => { tone(t, 1568, 0.07, 'square', 0.022, { lp: 4000 }); tone(t + 0.12, 1568, 0.07, 'square', 0.022, { lp: 4000 }); },
+  siren:   t => { for (let i = 0; i < 4; i++) tone(t + i * 0.2, i % 2 ? 587 : 784, 0.2, 'triangle', 0.045, { attack: 0.02 }); },
+  jump:    t => { hiss(t, 0.14, 0.1, 'lowpass', 900); tone(t, 110, 0.32, 'sawtooth', 0.06, { to: 55, lp: 700 }); },
+  psst:    t => { hiss(t, 0.28, 0.035, 'bandpass', 5500, { q: 3, attack: 0.08 }); },
+  limo:    t => { tone(t, 49, 0.7, 'sawtooth', 0.05, { lp: 220, attack: 0.1 }); tone(t + 0.25, 220, 0.45, 'sawtooth', 0.012, { to: 330, lp: 900, attack: 0.08 }); },
+  goons:   t => { for (const d of [0, 0.24]) { hiss(t + d, 0.1, 0.14, 'lowpass', 320); tone(t + d, 70, 0.14, 'sine', 0.12); } },
+  hit:     t => { hiss(t, 0.09, 0.1, 'lowpass', 1400); tone(t, 160, 0.2, 'sawtooth', 0.06, { to: 60, lp: 900 }); },
+  strike:  t => { hiss(t, 0.05, 0.08, 'bandpass', 1800, { q: 2 }); tone(t, 330, 0.06, 'square', 0.03, { lp: 2000 }); },
+  whiff:   t => hiss(t, 0.18, 0.035, 'bandpass', 700, { to: 3200, q: 2, attack: 0.05 }),
+  escape:  t => tone(t, 330, 0.24, 'triangle', 0.045, { to: 990 }),
+  win:     t => [523, 659, 784].forEach((f, i) => tone(t + i * 0.08, f, i === 2 ? 0.3 : 0.1, 'triangle', 0.05)),
+  bust:    t => [392, 311, 233].forEach((f, i) => tone(t + i * 0.15, f, i === 2 ? 0.35 : 0.15, 'square', 0.03, { lp: 1600 })),
+  cashout: t => [523, 659, 784, 1047].forEach((f, i) => tone(t + i * 0.1, f, i === 3 ? 0.6 : 0.12, 'triangle', 0.055)),
+  broke:   t => [392, 349, 294].forEach((f, i) => tone(t + i * 0.22, f, i === 2 ? 0.5 : 0.22, 'triangle', 0.05)),
+  dead:    t => { hiss(t, 0.12, 0.1, 'lowpass', 1200); tone(t, 220, 1.1, 'sawtooth', 0.06, { to: 45, lp: 600 }); },
+};
+/* Each cue a beat after the last; audio is a nicety, never a failure. */
+function play(cues) {
+  if (muted || !cues || !cues.length || !audio()) return;
+  cues.forEach((c, i) => { try { SFX[c](AC.currentTime + 0.01 + i * 0.3); } catch (e) { /* no audio device */ } });
+}
+function setMuted(on) {
+  muted = on;
+  try { localStorage.setItem(KEY_MUTED, on ? '1' : '0'); } catch (e) { /* private window */ }
+  announce([on ? 'Sound off.' : 'Sound on.']);
+  play(['tick']);
+  render();
 }
 
 const root = document.querySelector('[data-pumacity-game]');
@@ -2040,6 +2180,7 @@ function act(a) {
   if (!S) return;
   const before = S;
   const r = step(S, a);
+  play(cuesFor(before, a, r));
   if (r.refused) { ui.flash = r.refused; announce([r.refused]); render(); return; }
   S = r.state;
   ui.flash = '';
@@ -2076,6 +2217,7 @@ function undoLast() {
   const back = undoTrade(u.before, u.after);
   ui.undo = null;
   if (!back) return;
+  play(['undo']);
   const from = S.cash;
   S = back;
   save(KEY_GAME, S);
@@ -2413,9 +2555,12 @@ function aboutHTML() {
 }
 function settingsHTML() {
   return `<h1 id="pc-mt">Settings</h1>
+  <h2>Sound</h2>
+  <div class="row"><button data-act="sound" data-v="1" aria-pressed="${!muted}">On</button><button data-act="sound" data-v="0" aria-pressed="${muted}">Off</button></div>
+  <p class="note"><kbd>M</kbd> switches it anywhere, and the game's header has a switch too.</p>
   <h2>This browser</h2>
   <div class="row"><button class="danger" data-act="forget">Forget everything</button></div>
-  <p class="note">Clears everything PumaCity keeps in this browser: the run in progress, every high score, your name, the difficulty and run length you last chose, and the coach's tips.</p>
+  <p class="note">Clears everything PumaCity keeps in this browser: the run in progress, every high score, your name, the difficulty and run length you last chose, the sound setting, and the coach's tips.</p>
   <div class="acts"><button data-act="close"><kbd>Esc</kbd>Close</button></div>`;
 }
 function confirmForgetHTML() {
@@ -2614,7 +2759,7 @@ function gameHTML() {
   <header class="top">
     <h1 class="place-name">${P.name}</h1>
     <span class="day${last ? ' last' : ''}">${last ? 'Last day' : `Day <b>${st.day}</b> of ${st.days} · ${left} left`}</span>${st.preset !== 'regular' ? `<span class="mode m-${st.preset}"${st.preset === 'custom' ? ` title="${esc(rulesChanges(R(st)).join(' · ') || 'Same as Regular')}"` : ''}>${presetName(st.preset)}</span>` : ''}
-    <span class="grow"></span><span class="brand">PumaCity</span>
+    <span class="grow"></span>${soundButton()}<span class="brand">PumaCity</span>
   </header>
   <div class="dayline${last ? ' last' : ''}"><i style="width:${Math.round(st.day / st.days * 100)}%"></i></div>
   <div class="status">
@@ -2656,6 +2801,12 @@ function gameHTML() {
     </aside>
   </div>
 </div>`;
+}
+
+/* The header's sound switch: always named Sound, pressed while it is on. */
+function soundButton() {
+  const waves = muted ? '<path d="M11 6l4 4M15 6l-4 4"/>' : '<path d="M11 5.5a3.5 3.5 0 0 1 0 5M12.5 3a7 7 0 0 1 0 10"/>';
+  return `<button class="snd" data-act="mute" aria-label="Sound" aria-pressed="${!muted}" title="Sound ${muted ? 'off' : 'on'} (M)"><svg viewBox="0 0 16 16" aria-hidden="true"><path class="spk" d="M2 6h3l4-3v10l-4-3H2z"/>${waves}</svg></button>`;
 }
 
 // ---- modals
@@ -3134,7 +3285,7 @@ function helpHTML(tab) {
   if (tab === 'keys') body = `<table>
     <tr><td><kbd>1</kbd>–<kbd>9</kbd></td><td>Select a good</td></tr>
     <tr><td><kbd>B</kbd> / <kbd>S</kbd></td><td>Buy or sell the selected good; <kbd>Enter</kbd> then trades the most you can, or type an amount first</td></tr>
-    <tr><td><kbd>M</kbd> <kbd>↑</kbd> <kbd>↓</kbd></td><td>In the quantity box: the most you can, one more, one fewer</td></tr>
+    <tr><td><kbd>↑</kbd> <kbd>↓</kbd></td><td>In the quantity box: one more, one fewer</td></tr>
     <tr><td><kbd>A</kbd></td><td>Sell all: everything you carry that someone here is buying</td></tr>
     <tr><td>Double-click</td><td>Buy or Sell with the mouse: trades the most you can</td></tr>
     <tr><td><kbd>Z</kbd></td><td>Undo your last trade (for a few seconds after it)</td></tr>
@@ -3142,6 +3293,7 @@ function helpHTML(tab) {
     <tr><td><kbd>E</kbd></td><td>Cash out on the last day; <kbd>E</kbd> again confirms</td></tr>
     <tr><td><kbd>V</kbd></td><td>Visit this place's shop or office</td></tr>
     <tr><td><kbd>R</kbd> <kbd>F</kbd> <kbd>U</kbd></td><td>Encounters: run, fight, give up. <kbd>Y</kbd> accepts an offer and <kbd>N</kbd> turns it down; every choice shows its key. None of them is a market key, so a key you were already pressing can't answer an encounter by mistake.</td></tr>
+    <tr><td><kbd>M</kbd></td><td>Sound on and off, anywhere</td></tr>
     <tr><td><kbd>Enter</kbd> / <kbd>Esc</kbd></td><td>Confirm / close</td></tr></table>`;
   return `<h1 id="pc-mt">How to play</h1>
   <div class="tabs">${tabs.map(([k, l]) => `<button data-act="helptab" data-v="${k}" aria-pressed="${tab === k}">${l}</button>`).join('')}</div>
@@ -3395,6 +3547,8 @@ root.addEventListener('click', e => {
     case 'back': toTitle(); return;
     case 'scores': ui.modal = { kind: 'scores' }; render(); return;
     case 'settings': ui.modal = { kind: 'settings' }; render(); return;
+    case 'sound': if ((v === '0') !== muted) setMuted(v === '0'); return;
+    case 'mute': setMuted(!muted); return;
     case 'forget': ui.modal = { kind: 'confirmForget' }; render(); return;
     case 'forgetconfirm': forgetEverything(); return;
     case 'about': ui.modal = { kind: 'about' }; render(); return;
@@ -3497,6 +3651,7 @@ function konamiKey(k) {
 function konamiFire() {
   const from = S.cash;
   S = cheat(S);
+  play(['cashout']);
   save(KEY_GAME, S);
   ui.trade = null;
   ui.fx = { from, to: S.cash, rows: [] };
@@ -3522,6 +3677,10 @@ document.addEventListener('keydown', e => {
   const k = e.key.length === 1 ? e.key.toLowerCase() : e.key;
   const inInput = e.target && e.target.tagName === 'INPUT';
   const m = ui.modal;
+  // M is sound everywhere (games-meta STANDARD.md §8), except while typing a
+  // name or in one of Custom's selects; the amount boxes only take digits. It answers nothing else, so it
+  // is safe even under an encounter's key lock.
+  if (k === 'm' && !e.repeat && !(e.target && (e.target.id === 'pc-name' || e.target.tagName === 'SELECT'))) { e.preventDefault(); setMuted(!muted); return; }
 
   if (!S) {
     if (m && m.kind === 'help') { if (k === 'Escape') closeModal(); else helpKey(k); return; }
@@ -3572,7 +3731,6 @@ document.addEventListener('keydown', e => {
   }
   if (ui.trade) {
     if (k === 'Escape') { e.preventDefault(); closePanels(); return; }
-    if (k === 'm') { e.preventDefault(); setQty(qtyMax(ui.trade)); return; }
     if (k === 'ArrowUp' || k === '+') { e.preventDefault(); setQty(ui.trade.qty + 1); return; }
     if (k === 'ArrowDown' || k === '-') { e.preventDefault(); setQty(ui.trade.qty - 1); return; }
   }
