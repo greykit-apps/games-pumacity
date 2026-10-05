@@ -949,6 +949,82 @@ scenario('keys: encounter keys share no letter with market keys, and cover every
   assert.ok(/ENC_KEYS\[k\]/.test(html), 'the encounter key handler does not read ENC_KEYS');
 });
 
+// ---- sound
+scenario('sound: every cue has a sound, every sound is a cue, and M is no game key', () => {
+  const { C } = fresh();
+  const html = require('fs').readFileSync(require('path').join(__dirname, '..', 'index.html'), 'utf8');
+  const block = html.match(/const SFX = \{\n([\s\S]*?)\n\};/);
+  assert.ok(block, 'SFX not found in index.html');
+  const sfx = [...block[1].matchAll(/^\s+(\w+):/gm)].map(m => m[1]);
+  assert.ok(sfx.length >= 20 && C.CUES.length >= 20, 'sound tables look empty');
+  assert.deepStrictEqual([...sfx].sort(), [...C.CUES].sort());
+  const market = new Function(`return ${html.match(/const MARKET_KEYS = (\[[^\]]*\]);/)[1]}`)();
+  const enc = new Function(`return ${html.match(/const ENC_KEYS = (\{[^\n]*\});/)[1]}`)();
+  assert.ok(!market.includes('m') && !('m' in enc), "'m' is sound, and must not be a market or encounter key");
+  assert.ok(html.includes("'pumacity_muted_v1'"), 'the mute is not saved as pumacity_muted_v1');
+});
+scenario('sound: each kind of move makes its own sound', () => {
+  let { C, st } = fresh();
+  const cue = (s, a) => C.cuesFor(s, a, C.step(s, a));
+  setPrices(C, st, 10);
+  assert.deepStrictEqual(cue(st, { t: 'buy', good: 'nip', qty: 5 }), ['buy']);
+  assert.deepStrictEqual(cue(st, { t: 'buy', good: 'nip', qty: 999999 }), ['nope']);
+  const held = ok(C, st, { t: 'buy', good: 'nip', qty: 5 });
+  assert.deepStrictEqual(cue(held, { t: 'sell', good: 'nip', qty: 5 }), ['sell']);
+  assert.deepStrictEqual(cue(held, { t: 'sellall' }), ['sell']);
+  assert.deepStrictEqual(cue(travelQuiet(C, held, 'ranch'), { t: 'travel', to: 'pvn' }).slice(0, 1), ['travel']);
+  // arriving into each encounter: the trip, then its own sting
+  const arrive = (type, patch) => {
+    const to = C.forceEncounter(Object.assign(JSON.parse(JSON.stringify(st)), patch || {}), type);
+    return C.cuesFor(st, { t: 'travel', to: 'ranch' }, { state: to, events: [], refused: null });
+  };
+  assert.deepStrictEqual(arrive('watchers'), ['travel', 'siren']);
+  assert.deepStrictEqual(arrive('goons', { debt: 9000 }), ['travel', 'goons']);
+  assert.deepStrictEqual(arrive('stray'), ['travel', 'psst']);
+  assert.deepStrictEqual(arrive('boss', { heat: 50 }), ['travel', 'limo']);
+  // a fight to the finish lands a blow and wins; a death is the last sound
+  let f = C.forceEncounter(Object.assign(JSON.parse(JSON.stringify(st)), { gear: Object.assign({}, st.gear, { weapon: 'claws' }) }), 'watchers');
+  f.enc.foes = [{ name: 'Watcher', hp: 1, max: 12 }];
+  for (let seed = 1; seed < 200; seed++) {
+    f.rng = C.hash32(seed) | 0;
+    const r = C.step(f, { t: 'fight' });
+    if (!r.state.enc && !r.state.over) { assert.deepStrictEqual(C.cuesFor(f, { t: 'fight' }, r), ['strike', 'win']); break; }
+    assert.ok(seed < 199, 'no winning blow found');
+  }
+  const dying = Object.assign(JSON.parse(JSON.stringify(f)), { hp: 1 });
+  dying.enc.foes = [{ name: 'Watcher', hp: 12, max: 12 }, { name: 'Watcher', hp: 12, max: 12 }];
+  for (let seed = 1; seed < 500; seed++) {
+    dying.rng = C.hash32(seed) | 0;
+    const r = C.step(dying, { t: 'run' });
+    if (r.state.over) { assert.deepStrictEqual(C.cuesFor(dying, { t: 'run' }, r), ['dead']); break; }
+    assert.ok(seed < 499, 'no death found');
+  }
+  const last = Object.assign(JSON.parse(JSON.stringify(st)), { day: st.days, debt: 0, cash: 5000 });
+  assert.deepStrictEqual(cue(last, { t: 'finish' }), ['cashout']);
+  assert.deepStrictEqual(cue(Object.assign({}, last, { cash: 0, debt: 900 }), { t: 'finish' }), ['broke']);
+});
+scenario('sound: whole runs only ever ask for known sounds, and choosing one changes nothing', () => {
+  const C = loadCore();
+  let moves = 0;
+  for (let seed = 1; seed <= 12; seed++) {
+    let st = C.newGame({ seed, days: 30, name: 'Bot' });
+    for (let i = 0; i < 2000 && !st.over; i++) {
+      const a = C.botAct(st, seed % 2 ? 'careful' : 'reckless');
+      const r = C.step(st, a);
+      const before = JSON.stringify(st), after = JSON.stringify(r.state);
+      const cues = C.cuesFor(st, a, r);
+      assert.strictEqual(JSON.stringify(st), before, 'cuesFor changed the state before');
+      assert.strictEqual(JSON.stringify(r.state), after, 'cuesFor changed the state after');
+      assert.ok(Array.isArray(cues) && cues.length >= 1, `${JSON.stringify(a)} made no sound`);
+      for (const c of cues) assert.ok(C.CUES.includes(c), `unknown cue '${c}' for ${JSON.stringify(a)}`);
+      st = r.state;
+      moves++;
+    }
+    assert.ok(st.over, `seed ${seed} never ended`);
+  }
+  assert.ok(moves > 200, 'the bots barely moved');
+});
+
 scenario('cheat: the Konami code adds $25,000, clears heat, marks the run, and changes nothing else', () => {
   let { C, st } = fresh();
   st.heat = 73;
