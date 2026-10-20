@@ -60,36 +60,98 @@ h2:first-child{margin-top:0}
 p{margin:0 0 var(--s2)}
 
 .scene{position:fixed;inset:0;z-index:var(--z-scene);pointer-events:none;overflow:hidden;
-  background:linear-gradient(#05070f 0%,#070b17 40%,#0c1020 68%,#181622 88%,#231a17 100%)}
-.scene.under{background:linear-gradient(#04060c 0%,#080b14 55%,#0b0e17 100%)}
+  background:linear-gradient(#0b0719 0%,#2a1240 55%,#6e2a40 100%)}
+.scene.under{background:linear-gradient(#08060c 0%,#110c10 55%,#1c140c 100%)}
 .scene .layer{position:absolute;inset:0;opacity:0;transition:opacity .8s cubic-bezier(.22,1,.36,1)}
 .scene .layer.on{opacity:1}
 .scene svg{display:block;width:100%;height:100%}
-.scene .sf{fill:#0a0f1d;stroke:#2a3960;stroke-width:2;stroke-linejoin:round}
-.scene .sf.rock{fill:#070a12}
-.scene .sground{fill:#070a13}
-.scene .sl{fill:none;stroke:#2a3960;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-.scene .sd{fill:none;stroke:#1d2948;stroke-width:1.5;stroke-linecap:round}
-.scene .sw{fill:#ffb000;opacity:.3}
-.scene .swl{fill:none;stroke:#ffb000;stroke-width:2;opacity:.3}
-.scene .sx{fill:#111a30}
-.scene .sa{fill:none;stroke:#54f2ff;stroke-width:2;opacity:.42}
-.scene .sad{fill:#54f2ff;opacity:.45}
-.scene .st{fill:#8b96b8;opacity:.45}
-.scene .smoon{fill:#ffb000;opacity:.55}
-.scene .ssky{fill:#05070f}
-.scene .sglow{fill:#ffb000;opacity:.035}
+/* the districts at dusk, after the title's waterfront: plum silhouettes
+   against each district's own sky, warm windows, a little neon */
+.scene .sf{fill:#160b27;stroke:#4a2c63;stroke-width:2;stroke-linejoin:round}
+.scene .sf.rock{fill:#0d0a10;stroke:#2e2418}
+.scene .sground{fill:#0b0614}
+.scene .shill{fill:#2a1240;opacity:.85}
+.scene .sfar{fill:#1b0d2e}
+.scene .swf{fill:#ffc46b;opacity:.45}
+.scene .sl{fill:none;stroke:#4a2c63;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.scene .sd{fill:none;stroke:#33204a;stroke-width:1.5;stroke-linecap:round}
+.scene .strunk,.scene .sleaf{fill:#0e0619}
+.scene .sw{fill:#ffb45e;opacity:.5}
+.scene .swl{fill:none;stroke:#ffb45e;stroke-width:2;opacity:.45}
+.scene .sx{fill:#1d1030}
+.scene .sa{fill:none;stroke:#3ff0ff;stroke-width:2;opacity:.45}
+.scene .sad{fill:#3ff0ff;opacity:.55}
+.scene .st{fill:#ffe2f2;opacity:.5}
+.scene .smoon{fill:#ffd9a0;opacity:.8}
+.scene .sglow{fill:#ffb45e;opacity:.06}
+.scene .slamp{fill:#ffc46b;filter:url(#pcgl)}
 .scene .sbeam{fill:url(#pcb)}
 .scene .sbeam.c{fill:url(#pcc)}
-.scene .shaz{fill:#ffb000;opacity:.16}
-.scene .stx{font:600 18px ui-monospace,Menlo,Consolas,monospace;letter-spacing:.18em;fill:#54f2ff;opacity:.5}
-.scene .stx.sm{font-size:11px;letter-spacing:.12em;fill:#ffb000;opacity:.55}
-.scene .stx.xs{font-size:7px;letter-spacing:.1em;fill:#8b96b8;opacity:.6}
+.scene .shaz{fill:#ffb000;opacity:.2}
+.scene .sawn{fill:#ff4fa3;opacity:.22;stroke:#ff4fa3;stroke-opacity:.5;stroke-width:1.5}
+.scene .sawn.b{fill:#3ff0ff;opacity:.16;stroke:#3ff0ff}
+.scene .sbanner{fill:#ff4fa3;opacity:.28}
+.scene .sbanner.b{fill:#3ff0ff;opacity:.2}
+.scene .sclub{fill:#ff4fa3;opacity:.08}
+.scene .sneonl{fill:none;stroke:#ff4fa3;stroke-width:2.5;opacity:.85;filter:url(#pcgl)}
+.scene .sbeacon{fill:#ff2a3a}
+.scene .swarn{fill:#ffb000;filter:url(#pcgl)}
+.scene .sscope{fill:none;stroke:#3ff0ff;stroke-width:1.5;opacity:.6;stroke-dasharray:160}
+.scene .sfly{fill:#e8ff9a;opacity:0}
+.scene .scar{fill:#0e0619;stroke:#4a2c63;stroke-width:1.5}
+.scene .stail{fill:#ff2a3a}
+.scene .stx{font:600 18px ui-monospace,Menlo,Consolas,monospace;letter-spacing:.18em;fill:#3ff0ff;opacity:.55}
+.scene .stx.sneon{fill:#ffd1ea;opacity:.9;filter:url(#pcgl)}
+.scene .stx.sm{font-size:11px;letter-spacing:.12em;fill:#ffb45e;opacity:.6}
+.scene .stx.xs{font-size:7px;letter-spacing:.1em;fill:#c9a8d8;opacity:.6}
 .scene .stx.big{font-size:44px;fill:#ffb000;opacity:.3}
+.scene .stx.big.amber{fill:#ffb000;opacity:.55}
+/* the districts' small motions: slow, at the edges, and none under reduced
+   motion. Things that turn or swing are given their own origin inline. */
+.scene .lean,.scene .sway,.scene .sweep,.scene .spin,.scene .flap{transform-box:view-box}
+.scene .tw{animation:pc-tw 9s ease-in-out infinite}
+.scene .bulb{animation:pc-bulb 3s ease-in-out infinite}
+.scene .blink{animation:pc-blink 1.8s steps(1) infinite}
+.scene .pulse{animation:pc-pulse .6s ease-out infinite}
+.scene .sclub{animation:pc-club .6s ease-out infinite}
+.scene .slow{animation:pc-slow 4s ease-in-out infinite}
+.scene .chase{animation:pc-chase .8s steps(1) infinite}
+.scene .chase.b{animation-delay:-.4s}
+.scene .run{animation:pc-run 1.6s steps(1) infinite}
+.scene .lean{animation:pc-lean 7s ease-in-out infinite alternate}
+.scene .sway{animation:pc-sway 4.5s ease-in-out infinite alternate}
+.scene .sweep{animation:pc-sweep 11s ease-in-out infinite alternate}
+.scene .spin{animation:pc-spin 16s linear infinite}
+.scene .swarn{animation:pc-slow 1.4s ease-in-out infinite}
+.scene .flap{animation:pc-flap 5s ease-in-out infinite alternate}
+.scene .flick{animation:pc-flick 7s steps(1) infinite}
+.scene .sscope{animation:pc-scope 2.6s linear infinite}
+.scene .sfly{animation:pc-fly 6s ease-in-out infinite}
+.scene .cross{animation:pc-cross 90s linear infinite}
+.scene .drive{animation:pc-drive 22s linear infinite}
+@keyframes pc-tw{0%,40%,60%,100%{opacity:.5}46%,54%{opacity:.08}}
+@keyframes pc-bulb{0%,100%{opacity:.6}50%{opacity:.25}}
+@keyframes pc-blink{0%{opacity:1}50%{opacity:.12}}
+@keyframes pc-pulse{0%{opacity:1}100%{opacity:.6}}
+@keyframes pc-club{0%{opacity:.2}100%{opacity:.05}}
+@keyframes pc-slow{0%,100%{opacity:.9}50%{opacity:.55}}
+@keyframes pc-chase{0%{opacity:.75}50%{opacity:.15}}
+@keyframes pc-run{0%{opacity:.9}12.5%{opacity:.25}}
+@keyframes pc-lean{from{transform:rotate(-.8deg)}to{transform:rotate(1.2deg)}}
+@keyframes pc-sway{0%{transform:rotate(-5deg)}55%{transform:rotate(4deg)}100%{transform:rotate(6deg)}}
+@keyframes pc-sweep{from{transform:rotate(-14deg)}to{transform:rotate(14deg)}}
+@keyframes pc-spin{to{transform:rotate(360deg)}}
+@keyframes pc-flap{from{transform:skewY(-2deg)}to{transform:skewY(2deg)}}
+@keyframes pc-flick{0%,88%,92%,96%{opacity:.06}90%,94%{opacity:.015}}
+@keyframes pc-scope{from{stroke-dashoffset:160}to{stroke-dashoffset:-160}}
+@keyframes pc-fly{0%,100%{opacity:0;transform:translate(0,0)}30%{opacity:.7}50%{opacity:.15;transform:translate(14px,-10px)}70%{opacity:.6;transform:translate(-6px,-18px)}}
+@keyframes pc-cross{from{transform:translateX(-700px)}to{transform:translateX(1900px)}}
+@keyframes pc-drive{0%{transform:translateX(-200px)}60%,100%{transform:translateX(1800px)}}
 .top .place-name.arrive{animation:arrive .5s cubic-bezier(.22,1,.36,1) both}
 @keyframes arrive{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 @media (prefers-reduced-motion:reduce){
   .scene .layer{transition:none}
+  .scene *{animation:none!important}
   .top .place-name.arrive{animation:none}
 }
 /* The stage centres the terminal in the window, both ways, over the scenery. */
@@ -479,6 +541,11 @@ select:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
 /* the title screen stands over the whole scene on every width: on a phone
    the scene is otherwise a banner above the page */
 body.on-title .scene{position:fixed;inset:0;height:auto;border-bottom:0}
+/* the title in the waterfront's neon: the name's second line hot pink, the
+   focus the sky's cyan */
+.gk-title{--gk-title-hi:#ff4fa3;--gk-title-focus:#3ff0ff}
+.gk-title h1 span+span{text-shadow:0 0 24px rgba(255,79,163,.55),0 4px 28px rgba(0,0,0,.45)}
+.gk-title>.scene canvas{display:block;width:100%;height:100%}
 </style>
 </head>
 <body>
@@ -486,11 +553,13 @@ body.on-title .scene{position:fixed;inset:0;height:auto;border-bottom:0}
 <div class="sr-only" id="pc-live" aria-live="polite" aria-atomic="false"></div>
 <div data-pumacity-game><p class="boot">Hitting the streets…</p></div>
 <script>
-/* @gk-title-begin v0.3 -- greykit.games canon (games-meta STANDARD.md §3),
- * byte-identical in every Tactical game. The copy of record is games-meta's
- * canon/gk-title.js: change it there, bump the version, copy it to all, and
- * tools/diff-standard.sh says where it differs. Plain script, no imports or
- * exports, so a single-file game can paste it into a classic <script>. */
+/* @gk-title-begin v0.4 -- greykit.games canon (games-meta STANDARD.md §3),
+ * in every Tactical game. The copy of record is games-meta's
+ * canon/gk-title.js: change it there and bump the version, never in one game.
+ * The boot is the rule -- every game's matches canon's, and
+ * tools/diff-standard.sh says where one differs. The title is the default:
+ * a game keeps the version it took. Plain script, no imports or exports, so
+ * a single-file game can paste it into a classic <script>. */
 
 /* greykit.com's mark: the right half of the face, flat cut on the left
  * (greykitweb/assets/greykit-mark.png at 240px). */
@@ -558,48 +627,73 @@ const TITLE_CSS = `
 @keyframes gk-glint{0%{opacity:1;background-position:120% 0}100%{opacity:1;background-position:-20% 0}}
 @keyframes gk-scan{0%{top:0;opacity:1}100%{top:100%;opacity:.2}}
 
-/* ---- title ---- */
-.gk-title{position:relative;min-height:100dvh;display:flex;flex-direction:column;align-items:center;
-  padding:56px 16px}
+/* ---- title: the game's picture behind; down the left, the name, a line
+   under it, and the menu in a panel of its own -- a key, the item, what it
+   says about itself, and Settings, Help and About on one row under the rest.
+   Airborne Puma's and Raid on Puma Bay's title, made the default.
+   A game colours it with these, set on .gk-title or anywhere above it; each
+   falls back to the palette: --gk-title-ink (the name, a lit row),
+   --gk-title-hi (the name's second line), --gk-title-focus (the row with
+   the focus; --gk-title-hi if left out), --gk-title-dim,
+   --gk-title-panel, --gk-title-line, and --gk-title-font. ---- */
+.gk-title{--t-ink:var(--gk-title-ink,var(--text));--t-hi:var(--gk-title-hi,var(--accent));--t-focus:var(--gk-title-focus,var(--t-hi));--t-dim:var(--gk-title-dim,var(--dim));
+  --t-panel:var(--gk-title-panel,color-mix(in srgb,var(--panel) 92%,transparent));--t-line:var(--gk-title-line,var(--line));
+  --t-x:clamp(16px,7vw,120px);
+  position:relative;min-height:100dvh;display:flex;flex-direction:column;font-family:var(--gk-title-font,inherit)}
 .gk-title>.scene{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;
   background:linear-gradient(#05070f 0%,#070b17 40%,#0c1020 68%,#181622 88%,#231a17 100%)}
-.gk-title>.scene svg{display:block;width:100%;height:100%}
-/* a shade at the top for the title and menu, and at the foot for the credit */
+.gk-title>.scene>svg,.gk-title>.scene>canvas{display:block;width:100%;height:100%}
+/* a shade down the left for the name and menu, and at the foot for the credit */
 .gk-title>.gk-shade{position:fixed;inset:0;z-index:0;pointer-events:none;
-  background:linear-gradient(rgba(5,7,15,.82) 0%,rgba(5,7,15,.55) 38%,rgba(5,7,15,0) 72%),
-    linear-gradient(transparent calc(100% - 90px),rgba(5,7,15,.85))}
-.gk-title>main{position:relative;z-index:1}
-.gk-title.gk-rise>main{animation:gk-rise .5s cubic-bezier(.22,1,.36,1) both}
-@keyframes gk-rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
-/* the menu sits in the middle of the screen, and the name above it: three
-   rows, the outer two sharing what is left over */
-.gk-title main{flex:1;width:100%;display:grid;grid-template-rows:1fr auto 1fr;justify-items:center}
-.gk-title .gk-name{align-self:end;display:flex;flex-direction:column;align-items:center;width:100%}
-.gk-title h1{margin:6px 0 0;font-size:clamp(26px,6vw,42px);font-weight:600;letter-spacing:.24em;padding-left:.24em;text-transform:uppercase;
-  text-align:center;color:var(--accent);text-shadow:0 0 22px rgba(84,242,255,.35);min-height:1.2em}
-.gk-title .gk-rule{width:min(320px,80vw);height:1px;margin:26px 0 22px;
-  background:linear-gradient(90deg,transparent,var(--lit),transparent)}
-.gk-menu{display:flex;flex-direction:column;gap:8px;width:min(340px,100%)}
-.gk-menu .gk-gap{height:6px}
-.gk-menu button{display:flex;align-items:center;gap:12px;width:100%;min-height:42px;padding:0 14px;
-  font-family:inherit;font-size:14px;letter-spacing:.08em;text-transform:uppercase;text-align:left;
-  color:var(--text);background:var(--panel);border:1px solid var(--line);border-radius:2px;
-  transition:border-color .15s,background .15s,color .15s}
-.gk-menu button:hover:not(:disabled){border-color:var(--lit);background:var(--panel2)}
-.gk-menu button:focus-visible{outline:none;border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+  background:linear-gradient(90deg,color-mix(in srgb,var(--bg) 86%,transparent) 0%,color-mix(in srgb,var(--bg) 62%,transparent) 32%,
+    color-mix(in srgb,var(--bg) 10%,transparent) 60%,transparent 72%),
+    linear-gradient(transparent calc(100% - 90px),color-mix(in srgb,var(--bg) 60%,transparent))}
+.gk-title>main{position:relative;z-index:1;flex:1;display:flex;flex-direction:column;justify-content:center;
+  box-sizing:border-box;width:min(560px,100%);padding:32px 16px 72px var(--t-x)}
+.gk-title h1{margin:0;font-size:clamp(44px,6.4vw,92px);line-height:.9;font-weight:700;letter-spacing:.005em;text-transform:uppercase;
+  color:var(--t-ink);text-shadow:0 4px 28px rgba(0,0,0,.45)}
+.gk-title h1 span{display:block}
+.gk-title h1 span+span{color:var(--t-hi)}
+.gk-title .gk-sub{margin:16px 0 0;font-size:14px;font-weight:600;letter-spacing:.32em;text-transform:uppercase;color:var(--t-dim)}
+.gk-menu{display:flex;flex-direction:column;box-sizing:border-box;width:min(460px,100%);margin-top:30px;padding:8px 0;
+  background:var(--t-panel);border:1px solid var(--t-line);border-radius:8px;box-shadow:0 18px 50px rgba(0,0,0,.45)}
+.gk-menu button{position:relative;display:flex;align-items:center;gap:14px;width:100%;height:50px;padding:0 22px;
+  font:inherit;font-size:20px;font-weight:500;text-align:left;color:color-mix(in srgb,var(--t-ink) 86%,transparent);
+  background:transparent;border:0;border-radius:0;cursor:pointer}
 .gk-menu .gk-lbl{flex:none;white-space:nowrap}
-.gk-menu .gk-meta{flex:1;min-width:0;text-align:right;font-size:11px;letter-spacing:0;text-transform:none;
-  color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.gk-menu kbd,.gk-sheet kbd{font:inherit;font-size:11px;color:var(--dim);border:1px solid var(--line);border-radius:2px;
-  padding:0 4px;min-width:18px;text-align:center;display:inline-block;letter-spacing:0}
-.gk-menu button.gk-primary{color:var(--bg);background:var(--accent);border-color:var(--accent);font-weight:600}
-.gk-menu button.gk-primary:hover:not(:disabled){background:#8af6ff;border-color:#8af6ff}
-.gk-menu button.gk-primary kbd{color:var(--bg);border-color:rgba(5,7,15,.35)}
-.gk-menu button.gk-primary .gk-meta{color:rgba(5,7,15,.7)}
-/* pinned to the foot, with the same room kept top and bottom, so the menu's
-   middle is the screen's */
-.gk-title>footer{position:absolute;z-index:1;left:16px;right:16px;bottom:20px;font-size:12px;color:var(--dim);text-align:center}
+.gk-menu .gk-meta{margin-left:auto;min-width:0;font-size:15px;color:color-mix(in srgb,var(--t-dim) 80%,transparent);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gk-menu kbd{flex:none;font:inherit;font-size:15px;min-width:26px;padding:1px 5px;text-align:center;color:var(--t-dim);
+  border:1px solid var(--t-line);border-radius:3px}
+.gk-menu .gk-primary{color:var(--t-ink);font-weight:600}
+.gk-menu button:hover{color:var(--t-ink);background:color-mix(in srgb,var(--t-focus) 8%,transparent)}
+/* the row with the focus: a pointer at its left edge and a wash fading out
+   across it; :focus and not :focus-visible, so the default shows it too */
+.gk-menu button:focus{outline:none;color:var(--t-ink);font-weight:600;
+  background:linear-gradient(90deg,color-mix(in srgb,var(--t-focus) 26%,transparent),color-mix(in srgb,var(--t-focus) 6%,transparent) 75%,transparent)}
+.gk-menu button:focus::before{content:"";position:absolute;left:7px;top:50%;margin-top:-6px;
+  border-left:7px solid var(--t-focus);border-top:6px solid transparent;border-bottom:6px solid transparent}
+.gk-menu button:focus kbd{color:var(--t-ink);border-color:var(--t-focus)}
+.gk-menu button:focus .gk-meta{color:var(--t-dim)}
+.gk-menu .gk-util{display:flex;margin-top:6px;padding-top:6px;border-top:1px solid color-mix(in srgb,var(--t-line) 60%,transparent)}
+.gk-menu .gk-util button{flex:1 1 auto;width:auto;min-width:0;height:44px;font-size:16px;gap:10px;padding:0 14px}
+.gk-menu .gk-util button:first-child{padding-left:22px}
+.gk-menu .gk-util kbd{font-size:13px;min-width:22px}
+/* the menu arriving, a line at a time; the name decodes as it does */
+.gk-title.gk-rise .gk-sub{animation:gk-rise .5s cubic-bezier(.22,1,.36,1) both}
+.gk-title.gk-rise .gk-pr{animation:gk-pr .32s cubic-bezier(.2,.8,.2,1) calc(var(--i) * 45ms) both}
+@keyframes gk-rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes gk-pr{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.gk-title.gk-rise .gk-sub,.gk-title.gk-rise .gk-pr{animation:none}}
+.gk-title>footer{position:absolute;z-index:1;left:var(--t-x);right:16px;bottom:24px;font-size:13px;color:var(--t-dim)}
 .gk-credit a{color:var(--steel)}
+/* a phone: the shade covers the whole picture, and the row of three keeps
+   its words and drops its keys, which a phone has none of */
+@media (max-width:640px){
+  .gk-title>.gk-shade{background:color-mix(in srgb,var(--bg) 66%,transparent)}
+  .gk-menu .gk-util button,.gk-menu .gk-util button:first-child{justify-content:center;padding:0 6px}
+  .gk-menu .gk-util kbd{display:none}
+}
 
 /* ---- settings, help and about, over the title ---- */
 .gk-sheet{position:fixed;inset:0;z-index:50;display:grid;place-items:center;background:rgba(3,5,10,.9);padding:16px}
@@ -614,6 +708,8 @@ const TITLE_CSS = `
 .gk-sheet .gk-body h3{margin:16px 0 6px;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);font-weight:600}
 .gk-sheet .gk-body h3:first-child{margin-top:0}
 .gk-sheet .gk-body ol,.gk-sheet .gk-body ul{margin:0 0 10px;padding-left:20px}
+.gk-sheet kbd{font:inherit;font-size:11px;color:var(--dim);border:1px solid var(--line);border-radius:2px;
+  padding:0 4px;min-width:18px;text-align:center;display:inline-block;letter-spacing:0}
 .gk-sheet .gk-body table{border-collapse:collapse;margin:0 0 10px}
 .gk-sheet .gk-body td{padding:3px 12px 3px 0;vertical-align:top}
 .gk-sheet .gk-body a{color:var(--steel)}
@@ -677,30 +773,52 @@ function runBoot({ lines = [] } = {}) {
 
 /**
  * The title screen's markup, for a game that draws its own screens: the same
- * HTML mountTitle puts in. cfg is mountTitle's name, items and primary;
- * scene: true leaves a .scene for the game's backdrop, and a game whose
- * backdrop is already drawn behind its pages leaves it out.
+ * HTML mountTitle puts in. cfg is mountTitle's name, lines, sub, items and
+ * primary; scene: true leaves a .scene for the game's backdrop, and a game
+ * whose backdrop is already drawn behind its pages leaves it out. The items
+ * before the "gap" are the menu's rows, with their meta; the ones after it
+ * share the row under them, without.
  */
 function titleHTML(cfg) {
-  const items = cfg.items.filter(Boolean);
+  const items = cfg.items.filter(Boolean), gap = items.indexOf("gap");
+  const rows = gap < 0 ? items : items.slice(0, gap), util = gap < 0 ? [] : items.slice(gap + 1);
+  let i = 0;
+  const btn = (it, meta) => '<button data-act="' + it.act + '" class="gk-pr' + (it.act === cfg.primary ? " gk-primary" : "") + '" style="--i:' + i++ +
+    '"><kbd>' + escHTML(it.key) + '</kbd><span class="gk-lbl">' + escHTML(it.label) + "</span>" +
+    (meta && it.meta ? '<span class="gk-meta">' + escHTML(it.meta) + "</span>" : "") + "</button>";
   return '<div class="gk-title">' + (cfg.scene ? '<div class="scene" aria-hidden="true"></div>' : "") + '<div class="gk-shade" aria-hidden="true"></div>' +
-    '<main><div class="gk-name"><h1 aria-label="' + escHTML(cfg.name) + '">' + escHTML(cfg.name) + '</h1><div class="gk-rule"></div></div><nav class="gk-menu" aria-label="Main menu">' +
-    items.map(it => it === "gap" ? '<div class="gk-gap"></div>' :
-      '<button data-act="' + it.act + '"' + (it.act === cfg.primary ? ' class="gk-primary"' : "") + "><kbd>" + escHTML(it.key) + '</kbd><span class="gk-lbl">' +
-      escHTML(it.label) + "</span>" + (it.meta ? '<span class="gk-meta">' + escHTML(it.meta) + "</span>" : "") + "</button>").join("") +
+    '<main><h1 aria-label="' + escHTML(cfg.name) + '">' + titleLines(cfg).map(l => '<span data-t="' + escHTML(l) + '">' + escHTML(l) + "</span>").join("") + "</h1>" +
+    (cfg.sub ? '<p class="gk-sub">' + escHTML(cfg.sub) + "</p>" : "") +
+    '<nav class="gk-menu" aria-label="Main menu">' + rows.map(it => btn(it, true)).join("") +
+    (util.length ? '<div class="gk-util">' + util.map(it => btn(it, false)).join("") + "</div>" : "") +
     '</nav></main><footer><span class="gk-credit">Built by <a href="https://greykit.com/" target="_blank" rel="noopener">greykit.com</a></span></footer></div>';
 }
 
+/* The name's lines: the game's own, or the name broken once, at the space
+ * nearest its middle -- "Raid on / Puma Bay", "Airborne / Puma". */
+function titleLines(cfg) {
+  if (cfg.lines) return cfg.lines;
+  const n = cfg.name, mid = n.length / 2;
+  let at = -1;
+  for (let i = 0; i < n.length; i++) if (n[i] === " " && (at < 0 || Math.abs(i - mid) < Math.abs(at - mid))) at = i;
+  return at < 0 ? [n] : [n.slice(0, at), n.slice(at + 1)];
+}
+
 /* the name decodes out of noise once, as the screen arrives -- by the
- * clock, not by ticks, so a throttled background tab still ends on time */
-function decodeTitle(h1, text) {
+ * clock, not by ticks, so a throttled background tab still ends on time.
+ * Each line decodes in its own span; an h1 without them, as itself. */
+function decodeTitle(h1) {
   if (reduced()) return;
+  const spans = [...h1.querySelectorAll("span[data-t]")];
+  const parts = spans.length ? spans.map(s => [s, s.dataset.t]) : [[h1, h1.getAttribute("aria-label")]];
   const glyphs = "▚▞▖▗▘▝#/\\<>=+", t0 = performance.now(), ms = 400;
   const t = setInterval(() => {
     const p = (performance.now() - t0) / ms;
-    if (!h1.isConnected || p >= 1) { clearInterval(t); h1.textContent = text; return; }
-    const done = Math.floor(text.length * p);
-    h1.textContent = text.slice(0, done) + [...text.slice(done)].map(c => c === " " ? " " : glyphs[Math.random() * glyphs.length | 0]).join("");
+    if (!h1.isConnected || p >= 1) { clearInterval(t); for (const [el, text] of parts) el.textContent = text; return; }
+    for (const [el, text] of parts) {
+      const done = Math.floor(text.length * p);
+      el.textContent = text.slice(0, done) + [...text.slice(done)].map(c => c === " " ? " " : glyphs[Math.random() * glyphs.length | 0]).join("");
+    }
   }, 28);
 }
 
@@ -715,13 +833,12 @@ function bootReloadLine() {
   return "reload <b>" + escHTML(location.pathname.replace(/index\.html$/, "")) + "</b>";
 }
 
-/* The entrance: the menu rises, the name decodes, the default is focused.
+/* The entrance: the menu prints in, the name decodes, the default is focused.
  * t is the .gk-title (the page's, if left out); the name is read off the h1. */
 function revealTitle(t = document.querySelector(".gk-title")) {
   if (!t) return;
   t.classList.add("gk-rise");
-  const h1 = t.querySelector("h1");
-  decodeTitle(h1, h1.getAttribute("aria-label"));
+  decodeTitle(t.querySelector("h1"));
   const b = t.querySelector(".gk-primary") || t.querySelector(".gk-menu button");
   if (b) b.focus({ preventScroll: true });
 }
@@ -735,12 +852,21 @@ function titleKeyButton(menu, key) {
   return bs.find(b => kbd(b).toLowerCase() === k) || ((k === "h" || k === "/") && bs.find(b => kbd(b) === "?")) || null;
 }
 
-/* ArrowDown / ArrowUp through the menu, wrapping. true when the key was one. */
+/* ArrowDown / ArrowUp through the menu, wrapping, a row of several buttons
+ * taken as one step; ArrowLeft / ArrowRight along that row. true when the
+ * key was one. */
 function titleArrow(menu, ev) {
+  const a = document.activeElement, row = a && menu.contains(a) && a.parentElement !== menu ? [...a.parentElement.querySelectorAll("button")] : [];
+  if (row.length > 1 && (ev.key === "ArrowLeft" || ev.key === "ArrowRight")) {
+    ev.preventDefault();
+    row[(row.indexOf(a) + (ev.key === "ArrowRight" ? 1 : -1) + row.length) % row.length].focus();
+    return true;
+  }
   if (ev.key !== "ArrowDown" && ev.key !== "ArrowUp") return false;
-  const bs = [...menu.querySelectorAll("button")], i = bs.indexOf(document.activeElement);
+  const bs = [...menu.querySelectorAll("button")], down = ev.key === "ArrowDown";
+  const i = row.length > 1 ? bs.indexOf(down ? row[row.length - 1] : row[0]) : bs.indexOf(a);
   ev.preventDefault();
-  bs[(i + (ev.key === "ArrowDown" ? 1 : -1) + bs.length) % bs.length].focus();
+  bs[(i + (down ? 1 : -1) + bs.length) % bs.length].focus();
   return true;
 }
 
@@ -795,8 +921,12 @@ function dialogSheet(title, text, yes, no) {
 /**
  * The title screen, into host.
  *   name      the game's name
+ *   lines     optional: the name's lines, as ["Raid on", "Puma Bay"]; the
+ *             second wears --gk-title-hi. Left out, the name breaks itself.
+ *   sub       optional: a line under the name, as "Behind Enemy Lines"
  *   items     the menu, top to bottom: { act, label, key, meta? }, or "gap"
- *             before Settings / Help / About; anything falsy is left out
+ *             before Settings / Help / About, which share one row; anything
+ *             falsy is left out
  *   primary   the act that is the default (lit, and focused)
  *   scene(el) draws the game's backdrop into el
  *   help      [[tab, html], ...]   about: html
@@ -890,6 +1020,530 @@ function mountTitle(host, cfg) {
   };
 }
 /* @gk-title-end */
+/* @gk-intro-begin v0.2 -- greykit.games shared code (games-meta STANDARD.md §14),
+ * the integrated intro. A guideline, not a rule: nothing checks it, and a game
+ * may take it, change its copy, or leave it. The copy of record is games-meta's
+ * canon/gk-intro.js; a game that takes a newer version takes it whole.
+ * Needs the @gk-title block loaded first (runBoot, reduced, escHTML,
+ * decodeTitle, revealTitle) and changes nothing in it: the boot stays canon's
+ * byte for byte, and this drives it from outside. Plain script, no imports or
+ * exports, so a single-file game can paste it into a classic <script>.
+ *
+ * The integrated intro, in order:
+ *   1. canon's boot, with a boot sound of the game's (silent on a cold load:
+ *      the browser holds audio back until the page has been touched);
+ *   2. the boot holds at its end on "Click or press a key to continue" --
+ *      that press is what lets the title's music play;
+ *   3. the boot fades quickly and the title fades in over the game's own
+ *      live or drawn scene, the title music starting;
+ *   4. the name arrives on a timer; then the menu prints in as the shade
+ *      comes up behind it, with the Sound and Music switches top right and
+ *      the greykit.com credit centred under the menu.
+ * A key or a click during 3-4 skips to the end of it. */
+
+const INTRO_CSS = `
+/* ---- the hold at the end of the boot ---- */
+.gk-boot.gki-hold{cursor:pointer}
+.gk-boot.gki-hold .gk-skip{display:none}
+.gk-boot .gki-prompt{position:absolute;left:16px;right:16px;top:calc(50% + var(--S) / 2 + 84px);text-align:center;
+  font-size:13px;letter-spacing:.22em;text-transform:uppercase;color:var(--text);opacity:0;
+  animation:gki-in .5s ease-out forwards,gki-breathe 2.6s ease-in-out .5s infinite}
+.gk-boot .gki-prompt::before,.gk-boot .gki-prompt::after{content:"";display:inline-block;width:6px;height:6px;margin:0 14px 2px;
+  border:1px solid var(--accent);transform:rotate(45deg)}
+@keyframes gki-in{to{opacity:1}}
+/* the cat blinks while it waits, as greykit.com's mark does (greykitweb
+   consulting/index.html, .hero-mark .lid): an eyelid in the face's silver --
+   the mark is drawn inverted at brightness .72 -- closing over the eye, every
+   eight seconds, the first soon after the hold. The boot shows the mark
+   flipped, so the lid sits mirrored from the site's, at +6deg, a little larger
+   so it covers the whole eye (71-90% across, 45-60% down the flipped mark). */
+.gk-boot .gki-lid{position:absolute;left:66.5%;top:41%;width:29%;height:24%;background:#b8b8b8;border-radius:50%;
+  transform:rotate(6deg) scaleY(0);transform-origin:50% 10%;pointer-events:none}
+.gk-boot.gki-hold .gki-lid{animation:gki-blink 8s ease-in-out -6s infinite}
+@keyframes gki-blink{0%,92.5%{transform:rotate(6deg) scaleY(0)}94%,95.2%{transform:rotate(6deg) scaleY(1)}96.7%,100%{transform:rotate(6deg) scaleY(0)}}
+@keyframes gki-breathe{0%,100%{opacity:1}50%{opacity:.42}}
+
+/* ---- the integrated title: the credit centred under the menu (gkIntegrate
+   moves the footer there), the switches top right ---- */
+.gk-title.gki main>footer{width:min(460px,100%);margin-top:18px;text-align:center;font-size:16px;letter-spacing:.02em;color:var(--t-dim)}
+/* the credit: the words lower-cased on screen (the page keeps §1's string
+   byte for byte), the name lit in the title's highlight */
+.gk-title.gki .gk-credit{text-transform:lowercase}
+.gk-title.gki .gk-credit a{color:var(--t-hi,var(--accent));text-decoration:none}
+.gk-title.gki .gk-credit a:hover,.gk-title.gki .gk-credit a:focus-visible{text-decoration:underline;text-underline-offset:3px}
+.gki-toggles{position:absolute;z-index:2;top:20px;right:24px;display:flex;gap:10px}
+.gki-tg{display:flex;align-items:center;gap:9px;height:36px;padding:0 10px 0 11px;font:inherit;color:var(--t-ink,var(--text));cursor:pointer;
+  background:var(--t-panel,var(--panel));border:1px solid var(--t-line,var(--line));border-radius:18px}
+.gki-tg:hover{border-color:var(--t-focus,var(--accent))}
+.gki-tg:focus-visible{outline:2px solid var(--t-focus,var(--accent));outline-offset:2px}
+.gki-tg svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.gki-tg .gki-sw{position:relative;width:32px;height:18px;border-radius:9px;box-sizing:border-box;
+  border:1px solid var(--t-line,var(--line));background:color-mix(in srgb,var(--bg) 70%,transparent);transition:background .18s,border-color .18s}
+.gki-tg .gki-sw::after{content:"";position:absolute;top:2px;left:2px;width:12px;height:12px;border-radius:50%;
+  background:var(--t-dim,var(--dim));transition:transform .18s cubic-bezier(.3,.7,.4,1),background .18s}
+.gki-tg[aria-pressed="true"] .gki-sw{background:color-mix(in srgb,var(--t-focus,var(--accent)) 30%,transparent);border-color:var(--t-focus,var(--accent))}
+.gki-tg[aria-pressed="true"] .gki-sw::after{transform:translateX(14px);background:var(--t-focus,var(--accent))}
+.gki-tg[aria-pressed="false"]{color:var(--t-dim,var(--dim))}
+/* music the master Sound switch has silenced: still its own switch, dimmed */
+.gki-tg.gki-held{opacity:.5}
+@media (max-width:640px){.gki-toggles{top:12px;right:12px;gap:6px}.gki-tg{height:32px;padding:0 8px;gap:7px}}
+
+/* ---- the entrance: everything but the scene waits; the name on its timer,
+   then the menu, the shade (the tint), the switches and the credit together ---- */
+.gk-title.gki-intro>.gk-shade,.gk-title.gki-intro h1>span,.gk-title.gki-intro .gk-sub,.gk-title.gki-intro .gk-menu,
+.gk-title.gki-intro main>footer,.gk-title.gki-intro .gki-toggles,.gk-title.gki-intro h1 .gki-w{opacity:0}
+.gk-title.gki-intro h1>span.gki-on{opacity:1;transition:opacity 1.4s ease-in-out}
+.gk-title.gki-intro h1 .gki-w.gki-on{opacity:1;transition:opacity 1.4s ease-in-out}
+.gk-title.gki-intro.gki-menu>.gk-shade,.gk-title.gki-intro.gki-menu .gk-sub,.gk-title.gki-intro.gki-menu .gk-menu,
+.gk-title.gki-intro.gki-menu main>footer,.gk-title.gki-intro.gki-menu .gki-toggles{opacity:1;transition:opacity 1s ease-out}
+.gk-title h1 .gki-w{display:inline;color:inherit}
+/* the title fading up from the boot's ground */
+.gk-title.gki-fade{animation:gki-in .6s ease-out both}
+@media (prefers-reduced-motion:reduce){.gk-title.gki-fade{animation:none}}
+`;
+
+function injectIntroCSS() {
+  if (!document.getElementById("gk-intro-css")) document.head.insertAdjacentHTML("beforeend", '<style id="gk-intro-css">' + INTRO_CSS + "</style>");
+}
+
+/* @gk-meow-begin -- the cat on the pulse: a recording, trimmed, levelled and
+   encoded as MP3 by games-meta's tools/build-meow.sh, which rewrites this
+   block. Empty, the boot sound falls back to the arcade's coin. */
+const GK_MEOW = "data:audio/mpeg;base64,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q6KCQlGntfT/3OySKNXH72WiYkg8QGYGvCax6yIQCx7K3CJiiJp/ovWyADiqf6lSBiTUWbM/6kkzyiuKABFJkkSjEUBcOBkWD1pDWv/7UsRcgApobU0mGG7BTIxq9MSYoEdSvUnKe/QtlOsSzEwQsCOqKNcrUN/Qf7dRigsQNFloY8DlnhQHBRwjAgBHryLli67KU1fud/6P49XzVobpkD5506+V0JLMxTAcRgFOBMOgoBbJMUmARCYITTaTiUiCgJO99YHZhVKH6S4M6lSYfFnOHCMUmpN5UgePTK62JMve7pQMAh8fHcmhPjG33XO7/6KBOup273SAHyNIhnA7gKQko5j+dkNQ2EyhY5yJAsG5kp6iPoaVjcjIACZo//tSxGcAClhrSweww8FKC+twxIx86l6BdBFgmiA4REyGvKWIrsIjg0AGF0vY1THU/YXGfobtW+9r1F8tmS/FxQROsxgDN1ULCoGiQfNOEoGNjBWlxKHmm+BhxhdN1PGMZu5pTZUvERMcmYSkzeBTh8PgIkCDhCNA50mxwwCsNHkeYOJY7U7vZeLL/3L9+70VCXjbQALfNgMhSoGsnh4Qh+fKR+JVzsprSwkHgb0aOV/K0qCiVyggJaZnLVrN1u51tq14lNHoWcpRklHuLIFj6BD/+1LEcgAKaFVZZhhsoTyM6rDWGDAIkxUIi08ZbV05r/qHXfqR0MXnNXWgBngAkAACoMAaPGQdCiEUBMyieNiyIoGtTUUmLYoUfuFIkFupUyx8yIub5GfxmEMKHU6FgmMBJp5jxUUJF0XW7CJqI1HdVTq+99oDLDEF6itG0AACMtJg9A6gAdBqnsFQbCgjGkTdGCF6hMqpAPsmJw6zspirnpPIgU8RB4Ho8rHDyxuba4sWe0FDYKw7266ehX66xkkszrutppil+9i3MpUMsUmAB//7UsR+gApkqVOGDFJBS5IqcJMNzPXgqTXJqYLkZjC3KRXNLC6U4BCBP5qLnJJ4V5gWqUspxIGo+z1Ky7O0rOhXuVmuJMs8kPFbsK1jY8Y/JS3NWZ5gszJVtZvRTO+y+pR5XSoAuOUACrSCyjGBe0NMSn61Rxok/1C5NFm7spis5RIsJhc7lVrHJejTB0nJPNbPokl6kpcwYVa/UBI4FREPDZUBPAQwSgIClgalRoV8RRK5Qd/LAA0BBhylAXM2ixHKil9dhA5Gpo0xkVB8kEwV//tSxImACkRTSYYkxwFNEmfs8xWgDxsyysdQNuaQkRxGw+INgIVMgsLC5EBCwsI3eaCoq32OqIu//60UqaZb///8BC9MQU1FNC4wVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVX/+1LElIAKRJEvjBhPQScKX4jzJRBVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVQ=="; /* from DJI_0017.MP4, cleaned 8 dB, 87.24-88.02 s */
+/* @gk-meow-end */
+
+/* the meow, decoded once per context; null when there is none or it will not decode */
+const gkMeowCache = new WeakMap();
+function gkMeowBuffer(ac) {
+  if (!GK_MEOW || !ac) return Promise.resolve(null);
+  if (!gkMeowCache.has(ac)) {
+    const bin = atob(GK_MEOW.slice(GK_MEOW.indexOf(",") + 1)), bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    gkMeowCache.set(ac, new Promise(res => ac.decodeAudioData(bytes.buffer, res, () => res(null))).catch(() => null));
+  }
+  return gkMeowCache.get(ac);
+}
+
+/* when canon's logo finishes: the face pulses and glints from 1.15 s for 0.7 s */
+const GK_LOGO_END = 1.85;
+
+/**
+ * The default boot sound: the cat's meow, and nothing else, placed so it ends
+ * as the logo's animation does (GK_LOGO_END). Where there is no recording,
+ * greykit.com/arcade's coin, ending there too.
+ *   ac, out   the AudioContext and the node to play into
+ *   since     seconds since the boot started (startIntro passes it: the sound
+ *             starts only once the browser has said it may play, a moment in)
+ *   rate      the meow's playback rate: below 1 a bigger, lower cat, above 1 a
+ *             kitten (default 1); it still ends with the logo
+ *   meow      false plays the coin even with a recording
+ *   gain      the meow's level (default 0.6: 4.4 dB under the recording as
+ *             levelled to -16 LUFS, so it sits under the title music that follows)
+ */
+function gkBootSound(ac, out, { since = 0, rate = 1, meow = true, gain = 0.6 } = {}) {
+  const now = ac.currentTime, end = now + Math.max(0, GK_LOGO_END - since);
+  /* greykit.com/arcade's coin, the sound a game is launched with there
+     (greykitweb arcade/index.html, TUNES.coin and blip): B5 then E6 on a
+     square wave, each falling away, at the arcade's own level */
+  const coin = () => {
+    const notes = [[988, 0.07], [1319, 0.24]];
+    let at = Math.max(ac.currentTime + 0.01, end - notes.reduce((n, [, len]) => n + len, 0));
+    for (const [f, len] of notes) {
+      const o = ac.createOscillator(), g = ac.createGain();
+      o.type = "square";
+      o.frequency.value = f;
+      g.gain.setValueAtTime(0.035, at);
+      g.gain.exponentialRampToValueAtTime(0.0001, at + len);
+      o.connect(g);
+      g.connect(out);
+      o.start(at);
+      o.stop(at + len + 0.02);
+      at += len;
+    }
+  };
+  if (!meow || !GK_MEOW) return coin();
+  gkMeowBuffer(ac).then(buf => {
+    if (!buf) return coin();
+    const len = buf.duration / rate, at = end - len;
+    /* decoded too late to end on time: start it at once rather than lose
+       it -- unless the logo has already finished */
+    if (ac.currentTime > end) return;
+    const s = ac.createBufferSource(), g = ac.createGain();
+    s.buffer = buf;
+    s.playbackRate.value = rate;
+    g.gain.value = gain;
+    s.connect(g);
+    g.connect(out);
+    s.start(Math.max(ac.currentTime + 0.01, at));
+  });
+}
+
+/**
+ * The menu's tick: a dry click with a little pitch in it, for a row coming
+ * under the pointer or the arrow keys. Short and quiet, so a run of them down
+ * the menu reads as one gesture. It is an effect, not music: play it into the
+ * game's effects, under the Sound switch, so it is what you hear with the
+ * music off.
+ *   ac, out   the AudioContext and the node to play into
+ *   freq      the blip's pitch in Hz (default 2400)
+ *   gain      level (default 0.12)
+ */
+function gkTick(ac, out, { freq = 2400, gain = 0.12 } = {}) {
+  if (!ac || ac.state !== "running") return;
+  const t = ac.currentTime, bus = ac.createGain();
+  bus.gain.value = gain;
+  bus.connect(out);
+  /* the click: 12ms of noise through a bandpass, falling fast */
+  const n = ac.createBufferSource(), buf = ac.createBuffer(1, ac.sampleRate * 0.015 | 0, ac.sampleRate), d = buf.getChannelData(0);
+  for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / d.length, 3);
+  n.buffer = buf;
+  const bp = ac.createBiquadFilter();
+  bp.type = "bandpass";
+  bp.frequency.value = freq * 1.6;
+  bp.Q.value = 2;
+  n.connect(bp);
+  bp.connect(bus);
+  n.start(t);
+  /* the pitch: a 30ms sine blip under it */
+  const o = ac.createOscillator(), g = ac.createGain();
+  o.type = "sine";
+  o.frequency.setValueAtTime(freq, t);
+  o.frequency.exponentialRampToValueAtTime(freq * 0.7, t + 0.03);
+  g.gain.setValueAtTime(0.5, t);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + 0.03);
+  o.connect(g);
+  g.connect(bus);
+  o.start(t);
+  o.stop(t + 0.04);
+}
+
+/**
+ * Ticks for a title's menu and switches: one when a row comes under the
+ * pointer, and one when the keys move the focus to it. Not when the game
+ * focuses a row itself (the default, as the menu lands), and not twice for
+ * one row. Listens on the .gk-title, so a title mounted again needs it again.
+ *   tick()   plays the tick -- the game's, into its effects
+ */
+function gkMenuTicks(title, tick) {
+  let last = null;
+  const rows = ".gk-menu button, .gki-tg";
+  const hit = b => { if (b === last) return; last = b; try { tick(); } catch (e) { /* no sound */ } };
+  title.addEventListener("pointerover", ev => {
+    const b = ev.target.closest(rows);
+    if (b && title.contains(b)) hit(b);
+    else if (!b) last = null;
+  });
+  if (!gkMenuTicks.keys) { gkMenuTicks.keys = -1e9; window.addEventListener("keydown", () => { gkMenuTicks.keys = performance.now(); }, true); }
+  title.addEventListener("focusin", ev => {
+    const b = ev.target.closest(rows);
+    if (b && performance.now() - gkMenuTicks.keys < 250) hit(b);
+  });
+}
+
+/**
+ * Whether this page may play sound now, without waiting for a press: after a
+ * launcher's click (greykit.com/arcade goes to the game in the same tab), or on
+ * a site the browser trusts. Firefox says so outright (getAutoplayPolicy);
+ * elsewhere, a context the browser allows starts running within a moment of
+ * resume(), and one it holds back does not start until the page is touched.
+ * Resolves true or false within ms.
+ *   ac   an AudioContext (the game's, or the intro's own)
+ */
+function gkSoundAllowed(ac, ms = 250) {
+  return new Promise(resolve => {
+    if (!ac) return resolve(false);
+    try {
+      if (navigator.getAutoplayPolicy) {
+        const p = navigator.getAutoplayPolicy(ac);
+        if (p === "allowed") return resolve(true);
+        if (p === "disallowed") return resolve(false);
+      }
+    } catch (e) { /* not this browser's; ask the context */ }
+    if (ac.state === "running") return resolve(true);
+    let done = false;
+    const end = ok => { if (!done) { done = true; resolve(ok); } };
+    setTimeout(() => end(ac.state === "running"), ms);
+    ac.resume().then(() => end(ac.state === "running"), () => end(false));
+  });
+}
+
+/**
+ * Start the integrated intro: canon's boot, and the boot sound with it.
+ *   lines      the boot log's first lines, as runBoot takes them
+ *   audio()    optional: the game's AudioContext, made or found. Its sound
+ *              plays there, and the continue press resumes it. Left out, the
+ *              intro keeps a small context of its own for the boot sound.
+ *   bootSound  (ac, out, { since }) => void, the game's own -- since is the
+ *              seconds the boot has run; gkBootSound is the default, and false
+ *              plays none
+ * Returns { finish(opts), cancel() }. Mount the title under the boot while
+ * it runs, then call finish() once the game is ready.
+ */
+function startIntro({ lines = [], audio = null, bootSound = gkBootSound } = {}) {
+  injectIntroCSS();
+  const t0 = performance.now();
+  const boot = runBoot({ lines });
+  const el = document.body.lastElementChild && document.body.lastElementChild.classList.contains("gk-boot") ? document.body.lastElementChild : null;
+  /* the eyelid, shut away until the hold */
+  const face = el && el.querySelector(".gk-lh .gk-pulse");
+  if (face) face.insertAdjacentHTML("beforeend", '<div class="gki-lid"></div>');
+  let ac = null;
+  try { ac = audio ? audio() : null; } catch (e) { ac = null; }
+  if (!ac && el && bootSound) {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    try { ac = AC ? new AC() : null; } catch (e) { ac = null; }
+  }
+  /* may this page play sound already -- a launcher's click before it, or a
+     site the browser trusts? The boot sound plays only then: a context the
+     browser is holding back would play it later, late, over the title's music.
+     The same answer lets finish() skip the hold. */
+  const allowed = ac ? gkSoundAllowed(ac) : Promise.resolve(false);
+  /* decode the meow now, so it is ready by the pulse */
+  if (ac && bootSound === gkBootSound) gkMeowBuffer(ac);
+  if (ac && el && bootSound) allowed.then(ok => { if (ok) try { bootSound(ac, ac.destination, { since: (performance.now() - t0) / 1000 }); } catch (e) { /* no sound */ } });
+
+  /* the press that continues: any key but Escape and a lone modifier (the
+     browser does not count those as a touch of the page), or any click.
+     It resumes the audio there and then, inside the gesture, which some
+     browsers insist on. */
+  let pressed = false, onPress = null;
+  const press = ev => {
+    if (ev.type === "keydown" && (ev.key === "Escape" || ["Shift", "Control", "Alt", "Meta"].includes(ev.key))) return;
+    if (ac && ac.state !== "running") ac.resume().catch(() => {});
+    pressed = true;
+    if (onPress) onPress();
+  };
+  window.addEventListener("keydown", press, true);
+  window.addEventListener("pointerdown", press, true);
+  const unhook = () => { window.removeEventListener("keydown", press, true); window.removeEventListener("pointerdown", press, true); };
+  const say = html => {
+    const log = el && el.querySelector(".gk-log");
+    if (!log) return;
+    const d = document.createElement("div");
+    d.innerHTML = "&gt; " + html;
+    log.appendChild(d);
+  };
+
+  return {
+    /**
+     * Finish the boot, hold for the press, and bring the title in.
+     *   more        lines for the log now the game has loaded
+     *   title       the mounted .gk-title (the page's, if left out)
+     *   name        how the name arrives: "lines" (each line fades in on its
+     *               turn), "words" (a word at a time), "decode" (canon's decode)
+     *   timing      { name, step, menu, done } in ms after the title starts:
+     *               the name's first line, the gap between lines or words, the
+     *               menu, and the end of the fades
+     *   prompt      the hold's words; "Click or press a key to continue", or
+     *               "Tap to continue" on a touchscreen
+     *   hold        "auto" (the default): hold only when the browser will not
+     *               play sound yet -- coming from a launcher's click (the
+     *               arcade), or on a site the browser already trusts, the boot
+     *               goes straight into the title; "always": hold every time
+     *   toggles     { sound: { get, set }, music: { get, set } } for the
+     *               switches top right (gkToggles); left out, none
+     *   tick        plays the menu's tick into the game's effects (gkTick is the
+     *               sound to play); left out, the menu is silent
+     *   onContinue  the press: resume the game's audio here (inside the gesture)
+     *   onTitle     the title starts: start the title music here
+     *   onDone      the menu is in and focused
+     * Resolves when the menu is in, or the entrance was skipped.
+     */
+    async finish({ more = [], title = document.querySelector(".gk-title"), name = "lines", timing = {}, prompt = null, hold = "auto",
+      toggles = null, tick = null, onContinue = () => {}, onTitle = () => {}, onDone = () => {} } = {}) {
+      const T = Object.assign({ name: 600, step: 700, menu: 3000, done: 4200 }, timing);
+      /* a touchscreen has no keys to press */
+      if (!prompt) prompt = matchMedia("(hover: none) and (pointer: coarse)").matches ? "Tap to continue" : "Click or press a key to continue";
+      const sw = title ? gkIntegrate(title, { toggles, tick }) : null;
+      const focus = () => { const b = title && (title.querySelector(".gk-primary") || title.querySelector(".gk-menu button")); if (b) b.focus({ preventScroll: true }); };
+
+      /* no boot (reduced motion, or a game that skipped it): the title at
+         once, still; the music starts now if the page may play, else at the
+         first touch of the page, and that touch still does what it was for */
+      if (!el && !pressed && await allowed) pressed = true;
+      if (!el) {
+        unhook();
+        const first = ev => {
+          if (ev.type === "keydown" && (ev.key === "Escape" || ["Shift", "Control", "Alt", "Meta"].includes(ev.key))) return;
+          window.removeEventListener("keydown", first, true);
+          window.removeEventListener("pointerdown", first, true);
+          if (ac && ac.state !== "running") ac.resume().catch(() => {});
+          onContinue();
+          onTitle();
+        };
+        if (pressed) { onContinue(); onTitle(); }
+        else { window.addEventListener("keydown", first, true); window.addEventListener("pointerdown", first, true); }
+        boot.cancel();
+        focus();
+        onDone();
+        return { toggles: sw };
+      }
+
+      /* the title waits behind the boot, everything but its scene hidden */
+      const later = title ? [...title.querySelectorAll(".gk-menu, footer, .gki-toggles")] : [];
+      if (title) { title.classList.add("gki-intro"); for (const n of later) n.inert = true; }
+
+      /* the rest of the log, then -- unless a press already came -- the hold */
+      /* after the boot's own lines, as runBoot's finish would place them */
+      const at = Math.max(150 + lines.length * 550, performance.now() - t0);
+      for (const [i, l] of more.entries()) setTimeout(() => say(l), pressed ? 0 : Math.max(0, at + i * 300 - (performance.now() - t0)));
+      /* never before the face has pulsed, nor before the log has had its say */
+      const readyAt = Math.max(1850, at + more.length * 300 + 200);
+      await new Promise(resolve => {
+        if (pressed) return resolve();
+        onPress = resolve;
+        setTimeout(() => allowed.then(ok => {
+          if (pressed) return;
+          /* sound may already play, so the press would be for nothing: the
+             boot ends as it always did, straight into the title */
+          if (ok && hold !== "always") { onPress = null; return resolve(); }
+          el.classList.add("gk-ready", "gki-hold");
+          const p = document.createElement("div");
+          p.className = "gki-prompt";
+          p.textContent = prompt;
+          el.appendChild(p);
+        }), Math.max(0, readyAt - (performance.now() - t0)));
+      });
+      onPress = null;
+      unhook();
+      onContinue();
+
+      /* the boot goes quickly -- the press was a skip to it, so it does not
+         wait -- and the title fades up from under it */
+      if (title) title.classList.add("gki-fade");
+      /* a press while the boot fades is a skip of the entrance, not lost */
+      let early = false;
+      const earlyHit = ev => {
+        if (ev.type === "keydown" && ["Shift", "Control", "Alt", "Meta"].includes(ev.key)) return;
+        ev.preventDefault();
+        ev.stopImmediatePropagation();
+        early = true;
+      };
+      window.addEventListener("keydown", earlyHit, true);
+      window.addEventListener("pointerdown", earlyHit, true);
+      await boot.finish([]);
+      window.removeEventListener("keydown", earlyHit, true);
+      window.removeEventListener("pointerdown", earlyHit, true);
+      onTitle();
+      if (!title) { onDone(); return { toggles: sw }; }
+
+      return new Promise(resolve => {
+        const timers = [], ctl = new AbortController();
+        const lines = [...title.querySelectorAll("h1 span[data-t]")];
+        let steps = lines;
+        if (name === "words") {
+          steps = [];
+          for (const l of lines) {
+            l.innerHTML = l.dataset.t.split(" ").map(w => '<span class="gki-w">' + escHTML(w) + "</span>").join(" ");
+            l.classList.add("gki-on");
+            steps.push(...l.querySelectorAll(".gki-w"));
+          }
+        }
+        steps.forEach((s, i) => timers.push(setTimeout(() => {
+          s.classList.add("gki-on");
+          if (name === "decode") decodeLine(s);
+        }, T.name + i * T.step)));
+        const end = () => {
+          timers.forEach(clearTimeout);
+          ctl.abort();
+          for (const n of later) n.inert = false;
+          focus();
+          onDone();
+          resolve({ toggles: sw });
+        };
+        timers.push(setTimeout(() => {
+          title.classList.add("gki-menu", "gk-rise");
+          end();
+          setTimeout(() => title.classList.remove("gki-intro", "gki-menu", "gki-fade"), T.done - T.menu);
+        }, T.menu));
+        /* a key or a click during the entrance only ends it; it reaches nothing else */
+        const skip = ev => {
+          if (ev.type === "keydown" && ["Shift", "Control", "Alt", "Meta"].includes(ev.key)) return;
+          ev.preventDefault();
+          ev.stopImmediatePropagation();
+          for (const l of lines) if (name !== "words") l.textContent = l.dataset.t;
+          title.classList.remove("gki-intro", "gki-menu", "gki-fade");
+          end();
+        };
+        window.addEventListener("keydown", skip, { capture: true, signal: ctl.signal });
+        window.addEventListener("pointerdown", skip, { capture: true, signal: ctl.signal });
+        if (early) skip({ type: "early", preventDefault() {}, stopImmediatePropagation() {} });
+      });
+    },
+    cancel() { unhook(); boot.cancel(); }
+  };
+}
+
+/* one line of the name decoding out of noise, by the clock, as canon's
+   decodeTitle does the whole name */
+function decodeLine(el) {
+  const text = el.dataset.t, glyphs = "▚▞▖▗▘▝#/\\<>=+", t0 = performance.now(), ms = 700;
+  const t = setInterval(() => {
+    const p = (performance.now() - t0) / ms;
+    if (!el.isConnected || p >= 1) { clearInterval(t); el.textContent = text; return; }
+    const done = Math.floor(text.length * p);
+    el.textContent = text.slice(0, done) + [...text.slice(done)].map(c => c === " " ? " " : glyphs[Math.random() * glyphs.length | 0]).join("");
+  }, 28);
+}
+
+/**
+ * The integrated title's layout, on a mounted .gk-title: the credit moved
+ * under the menu, the switches top right, and the menu's ticks. finish()
+ * calls it; a game that mounts its title again later (back from a game)
+ * calls it again on the new one.
+ *   toggles   { sound, music } as gkToggles takes them; left out, none
+ *   tick()    the menu's tick, as gkMenuTicks takes it; left out, silent
+ * Returns gkToggles' { refresh() }, or null with no toggles.
+ */
+function gkIntegrate(title, { toggles = null, tick = null } = {}) {
+  title.classList.add("gki");
+  const main = title.querySelector("main"), foot = title.querySelector(":scope > footer");
+  if (main && foot) main.appendChild(foot);
+  if (tick) gkMenuTicks(title, tick);
+  return toggles ? gkToggles(title, toggles) : null;
+}
+
+/**
+ * The Sound and Music switches, top right of a .gk-title. Each is a button
+ * named for what it switches, pressed while that is on (STANDARD.md §8):
+ * Sound is the master -- everything, music too, as M is -- and Music is the
+ * music alone. A game with no music passes sound only.
+ *   sound, music   { get() -> bool, set(on) }
+ * Returns { refresh() }: call it when the game changes either another way
+ * (M, Settings), so the switches show it.
+ */
+function gkToggles(title, { sound = null, music = null } = {}) {
+  const ICON = {
+    sound: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11"/></svg>',
+    music: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18V6l10-2v12"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="16.5" cy="16" r="2.5"/></svg>'
+  };
+  const wrap = document.createElement("div");
+  wrap.className = "gki-toggles";
+  const made = [];
+  /* Music first, Sound -- the master -- in the corner */
+  for (const [k, label, keyHint, ctl] of [["music", "Music", "", music], ["sound", "Sound", " (M)", sound]]) {
+    if (!ctl) continue;
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "gki-tg";
+    b.setAttribute("aria-label", label);
+    b.title = label + keyHint;
+    b.innerHTML = ICON[k] + '<span class="gki-sw"></span>';
+    b.addEventListener("click", ev => { ev.stopPropagation(); ctl.set(!ctl.get()); refresh(); });
+    wrap.appendChild(b);
+    made.push([b, k, ctl]);
+  }
+  const refresh = () => {
+    for (const [b, k, ctl] of made) {
+      b.setAttribute("aria-pressed", ctl.get() ? "true" : "false");
+      if (k === "music") b.classList.toggle("gki-held", !!sound && !sound.get());
+    }
+  };
+  refresh();
+  title.appendChild(wrap);
+  return { refresh };
+}
+/* @gk-intro-end */
 </script>
 <script>
 'use strict';
@@ -2019,7 +2673,11 @@ function esc(s) {
  * to fetch. A pager, a till and a siren: the back room's noises, kept quiet. */
 const KEY_MUTED = 'pumacity_muted_v1';
 let muted = (() => { try { return localStorage.getItem(KEY_MUTED) === '1'; } catch (e) { return false; } })();
-let AC = null, OUT = null, NOISE = null;
+/* Music (games-meta STANDARD.md §14) is the title theme alone, on its own bus
+ * beside the effects; Sound silences both, Music only the theme. */
+const KEY_MUSIC = 'pumacity_music_v1';
+let musicOn = (() => { try { return localStorage.getItem(KEY_MUSIC) !== '0'; } catch (e) { return true; } })();
+let AC = null, OUT = null, NOISE = null, MUSIC = null;
 function audio() {
   if (AC === null) {
     try {
@@ -2028,6 +2686,9 @@ function audio() {
       OUT.gain.value = 0.7;
       const comp = AC.createDynamicsCompressor();
       OUT.connect(comp).connect(AC.destination);
+      MUSIC = AC.createGain();
+      MUSIC.gain.value = 0;
+      MUSIC.connect(comp);
       NOISE = AC.createBuffer(1, AC.sampleRate, AC.sampleRate);
       const d = NOISE.getChannelData(0);
       for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
@@ -2100,7 +2761,189 @@ function setMuted(on) {
   try { localStorage.setItem(KEY_MUTED, on ? '1' : '0'); } catch (e) { /* private window */ }
   announce([on ? 'Sound off.' : 'Sound on.']);
   play(['tick']);
+  themeLevel();
   render();
+}
+function setMusic(on) {
+  musicOn = on;
+  try { localStorage.setItem(KEY_MUSIC, on ? '1' : '0'); } catch (e) { /* private window */ }
+  announce([on ? 'Music on.' : 'Music off.']);
+  themeLevel();
+  render();
+}
+
+/* ---- the title theme: synthwave in A minor at 100, eight bars round. Am7,
+ * Fmaj7, Cadd9, G6, Am7, Fmaj7, Dm7, E7: pads and the octave bass from the
+ * top, the arpeggio from bar three, drums from bar five, and the lead the
+ * second and third time round, then a pass without it. Scheduled a little
+ * ahead of the clock, on the music bus, so Music and Sound both silence it. */
+const THEME = {
+  bpm: 100,
+  chords: [   // [bass root, pad voicing], one a bar
+    [45, [57, 60, 64, 67]], [41, [57, 60, 64, 65]], [48, [55, 60, 62, 64]], [43, [55, 59, 62, 64]],
+    [45, [57, 60, 64, 67]], [41, [57, 60, 64, 65]], [50, [53, 57, 60, 62]], [40, [56, 59, 62, 64]],
+  ],
+  lead: [     // [bar, sixteenth, note, length in sixteenths]
+    [0, 0, 76, 6], [0, 6, 74, 2], [0, 8, 72, 4], [0, 12, 71, 4],
+    [1, 0, 69, 8], [1, 8, 72, 4], [1, 12, 76, 4],
+    [2, 0, 79, 6], [2, 6, 76, 2], [2, 8, 74, 8],
+    [3, 0, 71, 4], [3, 4, 74, 4], [3, 8, 79, 6], [3, 14, 76, 2],
+    [4, 0, 81, 8], [4, 8, 79, 4], [4, 12, 76, 4],
+    [5, 0, 77, 6], [5, 6, 76, 2], [5, 8, 72, 8],
+    [6, 0, 74, 4], [6, 4, 77, 4], [6, 8, 81, 4], [6, 12, 79, 4],
+    [7, 0, 80, 8], [7, 8, 76, 8],
+  ],
+  arp: [0, 1, 2, 3, 4, 5, 4, 2],
+  bus: null,
+};
+THEME.leadAt = new Map(THEME.lead.map(([b, s, m, n]) => [b * 16 + s, [m, n]]));
+let theme = null;   // { timer, next, step } while the theme plays
+const midiHz = m => 440 * Math.pow(2, (m - 69) / 12);
+/* the theme's room: a dry line, a long hall for the pads and the snare, and
+ * a dotted-eighth echo for the arpeggio and the lead */
+function themeBus() {
+  if (THEME.bus) return THEME.bus;
+  const dry = AC.createGain();
+  dry.connect(MUSIC);
+  const len = AC.sampleRate * 2.4 | 0, ir = AC.createBuffer(2, len, AC.sampleRate);
+  for (let c = 0; c < 2; c++) { const d = ir.getChannelData(c); for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 3.2); }
+  const hall = AC.createConvolver(), verb = AC.createGain(), hallOut = AC.createGain();
+  hall.buffer = ir;
+  hallOut.gain.value = 0.5;
+  verb.connect(hall).connect(hallOut).connect(MUSIC);
+  const echo = AC.createGain(), dl = AC.createDelay(1), fb = AC.createGain(), dark = AC.createBiquadFilter(), echoOut = AC.createGain();
+  dl.delayTime.value = 0.75 * 60 / THEME.bpm;
+  fb.gain.value = 0.38;
+  dark.type = 'lowpass';
+  dark.frequency.value = 2600;
+  echoOut.gain.value = 0.4;
+  echo.connect(dl).connect(dark).connect(fb).connect(dl);
+  dark.connect(echoOut).connect(MUSIC);
+  echoOut.connect(verb);
+  return (THEME.bus = { dry, verb, echo });
+}
+/* One voice: detuned oscillators through a low-pass. A pluck falls away over
+ * its length; anything else swells in, holds, and lets go. */
+function tVoice(t, len, { f, type = 'sawtooth', detune = [0], gain, pluck = false, attack = 0.005, release = 0.12,
+  lp = 2000, lpTo = 0, q = 0.7, verb = 0, echo = 0, vib = 0 }) {
+  const B = THEME.bus, g = AC.createGain(), flt = AC.createBiquadFilter(), end = t + len + (pluck ? 0 : release);
+  flt.type = 'lowpass';
+  flt.Q.value = q;
+  flt.frequency.setValueAtTime(lp, t);
+  if (lpTo) flt.frequency.exponentialRampToValueAtTime(lpTo, t + len);
+  g.gain.setValueAtTime(0, t);
+  g.gain.linearRampToValueAtTime(gain, t + attack);
+  if (pluck) g.gain.exponentialRampToValueAtTime(0.0001, t + len);
+  else { g.gain.setValueAtTime(gain, t + Math.max(attack, len)); g.gain.linearRampToValueAtTime(0, end); }
+  flt.connect(g).connect(B.dry);
+  for (const [bus, amt] of [[B.verb, verb], [B.echo, echo]]) if (amt) { const s = AC.createGain(); s.gain.value = amt; g.connect(s).connect(bus); }
+  let lfo = null;
+  if (vib) {
+    lfo = AC.createOscillator();
+    const depth = AC.createGain();
+    lfo.frequency.value = 5.2;
+    depth.gain.setValueAtTime(0, t);
+    depth.gain.linearRampToValueAtTime(f * 0.007 * vib, t + Math.min(len, 0.5));
+    lfo.connect(depth);
+    lfo.start(t); lfo.stop(end + 0.05);
+    lfo.depth = depth;
+  }
+  for (const d of detune) {
+    const o = AC.createOscillator();
+    o.type = type;
+    o.frequency.value = f;
+    o.detune.value = d;
+    if (lfo) lfo.depth.connect(o.frequency);
+    o.connect(flt);
+    o.start(t); o.stop(end + 0.05);
+  }
+}
+function tKick(t) {
+  const o = AC.createOscillator(), g = AC.createGain();
+  o.frequency.setValueAtTime(150, t);
+  o.frequency.exponentialRampToValueAtTime(42, t + 0.22);
+  g.gain.setValueAtTime(0.55, t);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + 0.38);
+  o.connect(g).connect(THEME.bus.dry);
+  o.start(t); o.stop(t + 0.4);
+}
+/* the snare: a crack of noise and a body, most of it sent to the hall -- the
+ * big, gated eighties room */
+function tSnare(t, lvl = 1) {
+  const B = THEME.bus, src = AC.createBufferSource(), bp = AC.createBiquadFilter(), g = AC.createGain(), send = AC.createGain();
+  src.buffer = NOISE;
+  bp.type = 'bandpass'; bp.frequency.value = 1900; bp.Q.value = 0.7;
+  g.gain.setValueAtTime(0.24 * lvl, t);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + 0.2);
+  send.gain.value = 1.1;
+  src.connect(bp).connect(g).connect(B.dry);
+  g.connect(send).connect(B.verb);
+  src.start(t, Math.random() * 0.5); src.stop(t + 0.22);
+  const o = AC.createOscillator(), og = AC.createGain();
+  o.type = 'triangle';
+  o.frequency.setValueAtTime(200, t);
+  o.frequency.exponentialRampToValueAtTime(140, t + 0.1);
+  og.gain.setValueAtTime(0.14 * lvl, t);
+  og.gain.exponentialRampToValueAtTime(0.0001, t + 0.12);
+  o.connect(og).connect(B.dry);
+  o.start(t); o.stop(t + 0.14);
+}
+function tHat(t, lvl) {
+  const src = AC.createBufferSource(), hp = AC.createBiquadFilter(), g = AC.createGain();
+  src.buffer = NOISE;
+  hp.type = 'highpass'; hp.frequency.value = 7500;
+  g.gain.setValueAtTime(lvl, t);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + 0.045);
+  src.connect(hp).connect(g).connect(THEME.bus.dry);
+  src.start(t, Math.random() * 0.5); src.stop(t + 0.06);
+}
+/* sixteenth n of the theme, at time t */
+function themeStep(n, t, sx) {
+  const bar = Math.floor(n / 16), s = n % 16, pass = Math.floor(bar / 8), b = bar % 8;
+  const [root, pad] = THEME.chords[b];
+  if (s === 0) for (const m of pad) tVoice(t, sx * 16, { f: midiHz(m), detune: [-9, 9], gain: 0.02, attack: 0.45, release: 0.6, lp: 1500, verb: 0.6 });
+  if (s % 2 === 0) tVoice(t, sx * 1.7, { f: midiHz(root - 12 + (s % 4 === 2 ? 12 : 0)), detune: [-6, 6], gain: 0.09, pluck: true, lp: 1000, lpTo: 200, q: 5 });
+  if (bar >= 2) {
+    const notes = [...pad, pad[0] + 12, pad[1] + 12];
+    tVoice(t, sx * 0.9, { f: midiHz(notes[THEME.arp[s % 8]] + 12), type: 'square', gain: 0.016, pluck: true, lp: 3400, lpTo: 900, echo: 0.6 });
+  }
+  if (bar >= 4) {
+    if (s % 4 === 0) tKick(t);
+    if (s === 4 || s === 12 || (b === 7 && s > 12)) tSnare(t, s > 12 ? 0.55 + (s - 12) * 0.12 : 1);
+    if (s % 2 === 0) tHat(t, s % 4 === 2 ? 0.05 : 0.025);
+  }
+  const lead = pass % 3 !== 0 && THEME.leadAt.get(b * 16 + s);
+  if (lead) tVoice(t, sx * lead[1], { f: midiHz(lead[0]), detune: [-7, 7], gain: 0.045, attack: 0.02, release: 0.3, lp: 2800, q: 1, verb: 0.35, echo: 0.45, vib: 1 });
+}
+/* the music bus's level: up while the theme plays and both switches are on */
+function themeLevel() {
+  if (!MUSIC) return;
+  const on = !!theme && !muted && musicOn;
+  MUSIC.gain.setTargetAtTime(on ? 0.55 : 0, AC.currentTime, on ? 0.5 : 0.15);
+}
+/* starts only where the page may already play: the intro's press, or a
+ * return to the title */
+function startTheme() {
+  if (theme || !AC || AC.state !== 'running') return;
+  themeBus();
+  const sx = 60 / THEME.bpm / 4;
+  theme = { next: AC.currentTime + 0.1, step: 0 };
+  theme.timer = setInterval(() => {
+    // a tab that was hidden falls behind: pick up from now, never in a burst
+    if (theme.next < AC.currentTime) theme.next = AC.currentTime + 0.02;
+    while (theme.next < AC.currentTime + 0.25) {
+      if (!muted && musicOn) try { themeStep(theme.step, theme.next, sx); } catch (e) { /* no audio device */ }
+      theme.next += sx;
+      theme.step++;
+    }
+  }, 30);
+  themeLevel();
+}
+function stopTheme() {
+  if (!theme) return;
+  clearInterval(theme.timer);
+  theme = null;
+  themeLevel();
 }
 
 const root = document.querySelector('[data-pumacity-game]');
@@ -2266,7 +3109,9 @@ const G = 820;  // ground line
 function rint(seed, n) { return hash32(seed) % n; }
 function lit(seed, rate) { return (hash32(seed) % 100) < rate; }
 function win(x, y, w, h, seed, rate) {
-  return `<rect class="${lit(seed, rate == null ? 35 : rate) ? 'sw' : 'sx'}" x="${x}" y="${y}" width="${w}" height="${h}"/>`;
+  // a few of the lit ones go off and on again, each on its own clock
+  const on = lit(seed, rate == null ? 35 : rate), tw = on && rint(seed * 7 + 3, 7) === 0;
+  return `<rect class="${on ? 'sw' : 'sx'}${tw ? ' tw' : ''}"${tw ? ` style="animation-delay:-${rint(seed, 90) / 10}s"` : ''} x="${x}" y="${y}" width="${w}" height="${h}"/>`;
 }
 function grid(x0, y0, cols, rows, w, h, gx, gy, seed, rate) {
   let o = '';
@@ -2277,18 +3122,27 @@ function stars(seed, n, ymax) {
   let o = '';
   for (let i = 0; i < n; i++) {
     const x = rint(seed + i * 7, 1600), y = rint(seed + i * 13, ymax), r = rint(seed + i, 3) === 0 ? 1.6 : 1;
-    o += `<circle class="st" cx="${x}" cy="${y}" r="${r}"/>`;
+    o += `<circle class="st${rint(seed + i * 3, 4) ? '' : ' tw'}" style="animation-delay:-${rint(seed + i, 90) / 10}s" cx="${x}" cy="${y}" r="${r}"/>`;
   }
   return o;
 }
-function moon(x, y) { return `<circle class="smoon" cx="${x}" cy="${y}" r="20"/><circle class="ssky" cx="${x + 8}" cy="${y - 6}" r="18"/>`; }
+/* a crescent, lit on its left */
+function moon(x, y) { const r = 20; return `<path class="smoon" d="M${x} ${y - r} A${r} ${r} 0 1 0 ${x} ${y + r} A${r * 0.72} ${r} 0 1 1 ${x} ${y - r} Z"/>`; }
+/* a palm: a tapering trunk and filled fronds. In the breeze the whole tree
+   leans a little from its foot, and the fronds swing about the crown, each
+   palm on its own clock */
 function palm(x, h, lean) {
-  const tx = x + lean, ty = G - h;
-  let o = `<path class="sl" d="M${x} ${G} Q${x + lean * 0.15} ${G - h * 0.55} ${tx} ${ty}"/>`;
-  for (const [dx, dy] of [[-95, 34], [-70, 62], [-30, 78], [28, 76], [68, 60], [96, 30], [-10, -18]]) {
-    o += `<path class="sl" d="M${tx} ${ty} Q${tx + dx * 0.45} ${ty - 34 + dy * 0.1} ${tx + dx} ${ty + dy}"/>`;
+  const tx = x + lean, ty = G - h, mx = x + lean * 0.15;
+  const o = `<path class="strunk" d="M${x - 6} ${G} Q${mx - 4} ${G - h * 0.55} ${tx - 2} ${ty} L${tx + 2} ${ty} Q${mx + 4} ${G - h * 0.55} ${x + 6} ${G} Z"/>`;
+  let f = '';
+  for (const [dx, dy] of [[-95, 34], [-70, 62], [-30, 78], [28, 76], [68, 60], [96, 30], [-34, -20], [36, -16]]) {
+    const ex = tx + dx, ey = ty + dy, cx = tx + dx * 0.5, cy = ty - 28 + dy * 0.15, n = Math.hypot(dx, dy) || 1, wv = 10;
+    const nx = -dy / n * wv, ny = dx / n * wv;
+    f += `<path class="sleaf" d="M${tx} ${ty} Q${(cx + nx).toFixed(1)} ${(cy + ny).toFixed(1)} ${ex} ${ey} Q${(cx - nx).toFixed(1)} ${(cy - ny).toFixed(1)} ${tx} ${ty} Z"/>`;
   }
-  return o;
+  const d = rint(x, 60) / 10, sp = 4 + rint(x * 3, 20) / 10;
+  return `<g class="lean" style="transform-origin:${x}px ${G}px;animation-delay:-${d}s;animation-duration:${(sp * 1.7).toFixed(1)}s">${o}`
+    + `<g class="sway" style="transform-origin:${tx}px ${ty}px;animation-delay:-${d}s;animation-duration:${sp.toFixed(1)}s">${f}</g></g>`;
 }
 function lamp(x, h, dir) {
   const top = G - h, arm = dir * 34;
@@ -2308,7 +3162,7 @@ function house(x, base, w, h, seed, opts) {
   const ww = w * 0.16, wh = h * 0.28;
   o += win(x + w * 0.14, base - h * 0.72, ww, wh, seed, 60) + win(x + w * 0.7, base - h * 0.72, ww, wh, seed + 1, 45);
   if (opts.garage) o += `<path class="sd" d="M${x + w * 0.38} ${base} V${base - h * 0.48} H${x + w * 0.64} V${base}M${x + w * 0.38} ${base - h * 0.32} H${x + w * 0.64}M${x + w * 0.38} ${base - h * 0.16} H${x + w * 0.64}"/>`;
-  else o += `<path class="sd" d="M${x + w * 0.44} ${base} V${base - h * 0.42} H${x + w * 0.56} V${base}"/>`;
+  else o += `<path class="sd" d="M${x + w * 0.44} ${base} V${base - h * 0.42} H${x + w * 0.56} V${base}"/><circle class="sw" cx="${x + w * 0.6}" cy="${base - h * 0.5}" r="2.5"/>`;
   return o;
 }
 function rentSign(x, base) {
@@ -2330,7 +3184,12 @@ function gear(cx, cy, r, teeth) {
   }
   return `<path class="sf" d="M${pts.map(p => p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join(' L')} Z"/>`;
 }
-function beam(x, y, x1, x2, cls) { return `<path class="${cls || 'sbeam'}" d="M${x - 4} ${y} L${x1} -20 L${x2} -20 L${x + 4} ${y} Z"/>`; }
+/* a searchlight's beam from (x, y) up past the top; swept, it swings slowly
+   about its foot */
+function beam(x, y, x1, x2, cls, swept) {
+  const b = `<path class="${cls || 'sbeam'}" d="M${x - 4} ${y} L${x1} -20 L${x2} -20 L${x + 4} ${y} Z"/>`;
+  return swept ? `<g class="sweep" style="transform-origin:${x}px ${y}px;animation-delay:-${rint(x, 90) / 10}s">${b}</g>` : b;
+}
 function ship(x, y, s) {
   // The ship: a long wedge hull, nose to the left.
   const p = (dx, dy) => `${x + dx * s} ${y + dy * s}`;
@@ -2338,110 +3197,157 @@ function ship(x, y, s) {
     + `<path class="sd" d="M${p(110, 8)} L${p(130, 104)}M${p(240, -2)} V${y + 118 * s}M${p(380, -14)} V${y + 126 * s}"/>`
     + `<path class="sa" d="M${p(26, 60)} L${p(108, 22)}"/>`
     + `<rect class="sw" x="${x + 140 * s}" y="${y + 30 * s}" width="${30 * s}" height="${10 * s}"/><rect class="sw" x="${x + 186 * s}" y="${y + 26 * s}" width="${30 * s}" height="${10 * s}"/>`
-    + `<circle class="sad" cx="${x + 300 * s}" cy="${y + 124 * s}" r="${4 * s}"/><circle class="sad" cx="${x + 430 * s}" cy="${y + 130 * s}" r="${4 * s}"/>`;
+    + `<circle class="sad blink" cx="${x + 300 * s}" cy="${y + 124 * s}" r="${4 * s}"/><circle class="sad blink" style="animation-delay:-.9s" cx="${x + 430 * s}" cy="${y + 130 * s}" r="${4 * s}"/>`;
+}
+/* The dusk over each district: its sky's top, middle and horizon. The Vault
+ * is underground, and gets its work lights' brown instead. */
+const SKY = {
+  plaza: ['#0b0719', '#2a1240', '#7a2f3a'],
+  pvn: ['#0a0618', '#2b0f3e', '#6e2350'],
+  ranch: ['#0c0817', '#2a1534', '#7a3a26'],
+  starport: ['#070a1a', '#1b1640', '#4a2a5a'],
+  convention: ['#0a0619', '#24113f', '#5e2552'],
+  suburbs: ['#0b0719', '#2c1338', '#83402f'],
+  vault: ['#08060c', '#110c10', '#1c140c'],
+};
+/* The city far off, behind a district: low hills, a skyline, a few lit
+ * windows, and PVN Tower on it at x, its crown lit and its beacon blinking.
+ * Casey's building is in every view, so it stands in a side margin (x below
+ * 225 or above 1375), where the terminal never covers it. */
+function farCity(seed, px, ph) {
+  let o = `<path class="shill" d="M0 ${G - 30} Q200 ${G - 84} 420 ${G - 56} T860 ${G - 66} T1300 ${G - 50} T1600 ${G - 76} V${G} H0 Z"/>`;
+  let d = `M0 ${G}`, lights = '';
+  for (let x = 0; x < 1600;) {
+    const w = 22 + rint(seed + x, 44), h = 24 + rint(seed + x * 3, 76);
+    d += ` L${x} ${G - h} L${x + w} ${G - h}`;
+    for (let i = 0; i < 3; i++) if (lit(seed + x + i * 17, 45)) lights += `<rect class="swf${rint(seed + x + i, 6) ? '' : ' tw'}" style="animation-delay:-${rint(x + i, 80) / 10}s" x="${x + 4 + rint(seed + x + i * 5, Math.max(1, w - 10))}" y="${G - h + 6 + rint(seed + x + i * 9, Math.max(1, h - 14))}" width="3" height="3"/>`;
+    x += w + rint(seed + x * 7, 10);
+  }
+  o += `<path class="sfar" d="${d} L1600 ${G} Z"/>` + lights;
+  if (px != null) {
+    ph = ph || 300;
+    const t = G - ph;
+    o += `<path class="sfar" d="M${px - 18} ${G} V${t} H${px - 12} V${t - 14} H${px + 12} V${t} H${px + 18} V${G} Z M${px - 1} ${t - 14} V${t - 40} H${px + 1} V${t - 14} Z"/>`;
+    o += `<path class="sneonl" d="M${px - 12} ${t} V${t - 14} H${px + 12} V${t}"/>`;
+    o += `<circle class="sbeacon blink" cx="${px}" cy="${t - 42}" r="3"/>`;
+  }
+  return o;
 }
 
 const SCENES = {
   plaza() {
-    let o = stars(11, 90, 360) + moon(1480, 96);
+    let o = stars(11, 50, 300) + moon(1480, 96) + farCity(11, 1450, 390);
     o += `<path class="sf" d="M0 ${G} V700 H180 V684 H420 V706 H640 V690 H960 V706 H1180 V684 H1420 V700 H1600 V${G} Z"/>`;
     for (let x = 0; x < 1600; x += 84) {
-      o += `<path class="sl" d="M${x + 6} 724 H${x + 78} L${x + 86} 742 H${x - 2} Z"/>`;
+      o += `<path class="sawn${(x / 84) % 2 ? ' b' : ''}" d="M${x + 6} 724 H${x + 78} L${x + 86} 742 H${x - 2} Z"/>`;
       o += `<path class="sd" d="M${x - 2} 742 q10.5 10 21 0 q10.5 10 21 0 q10.5 10 21 0 q10.5 10 21 0"/>`;
-      o += win(x + 12, 760, 60, 44, x * 3 + 5, 55);
+      o += win(x + 12, 760, 60, 44, x * 3 + 5, 70);
     }
-    // the mall's entrance arch
+    // the mall's entrance arch, its name in neon
     o += `<path class="sf" d="M70 ${G} V560 H104 V${G} Z M246 ${G} V560 H280 V${G} Z"/>`;
     o += `<path class="sl" d="M70 560 Q175 450 280 560"/><rect class="sf" x="78" y="580" width="194" height="40"/>`;
-    o += `<text class="stx" x="175" y="607" text-anchor="middle">MARKET PLAZA</text>`;
+    o += `<text class="stx sneon" x="175" y="607" text-anchor="middle">MARKET PLAZA</text>`;
     // the anchor store, right
-    o += `<path class="sf" d="M1300 ${G} V600 H1600 V${G} Z"/><path class="sd" d="M1300 640 H1600"/>` + grid(1318, 662, 5, 2, 42, 44, 12, 14, 77, 50);
-    // string lights
+    o += `<path class="sf" d="M1300 ${G} V600 H1600 V${G} Z"/><path class="sd" d="M1300 640 H1600"/>` + grid(1318, 662, 5, 2, 42, 44, 12, 14, 77, 60);
+    // string lights, twinkling
     o += `<path class="sd" d="M330 520 Q800 640 1270 520"/>`;
-    for (let i = 1; i < 24; i++) { const t = i / 24, x = 330 + 940 * t, y = (1 - t) * (1 - t) * 520 + 2 * (1 - t) * t * 640 + t * t * 520; o += `<circle class="sw" cx="${x.toFixed(0)}" cy="${(y + 4).toFixed(0)}" r="3"/>`; }
+    for (let i = 1; i < 24; i++) { const t = i / 24, x = 330 + 940 * t, y = (1 - t) * (1 - t) * 520 + 2 * (1 - t) * t * 640 + t * t * 520; o += `<circle class="sw bulb" style="animation-delay:-${(i * 0.37) % 3}s" cx="${x.toFixed(0)}" cy="${(y + 4).toFixed(0)}" r="3"/>`; }
     o += palm(30, 440, 26) + palm(330, 360, -16) + palm(1272, 380, 22) + palm(1572, 460, -28);
     o += lamp(430, 220, 1) + lamp(1170, 220, -1);
     o += `<path class="sl" d="M760 ${G} V806 H840 V${G}M780 806 Q800 770 820 806M800 790 V770"/>`;
     return o;
   },
   pvn() {
-    let o = stars(23, 80, 300) + moon(140, 90);
+    let o = stars(23, 50, 260) + moon(140, 90) + farCity(23);
+    // the premiere's searchlights, behind the tower
+    o += beam(1360, 694, 1180, 1250, 'sbeam c', true) + beam(1460, 694, 1560, 1630, 'sbeam', true);
     // Bottom to top: the theater at ground level, the nightclub above it,
     // office floors, and Casey's office in the penthouse.
-    o += `<path class="sf" d="M1300 ${G} V110 H1520 V${G} Z"/>` + grid(1318, 128, 7, 15, 18, 18, 11, 12, 401, 18);
-    // Casey's penthouse: a set-back crown, lights on, beacon above
+    o += `<path class="sf" d="M1300 ${G} V110 H1520 V${G} Z"/>` + grid(1318, 128, 7, 15, 18, 18, 11, 12, 401, 26);
+    // Casey's penthouse: a set-back crown in neon, lights on, beacon above
     o += `<path class="sf" d="M1322 110 V62 H1498 V110 Z"/>` + grid(1334, 74, 6, 1, 20, 24, 8, 0, 77, 90);
-    o += `<path class="sl" d="M1410 62 V28"/><circle class="sw" cx="1410" cy="24" r="4"/>`;
-    // the nightclub, on the floors above the theater
+    o += `<path class="sneonl" d="M1300 112 V110 H1322 V62 H1498 V110 H1520 V112"/>`;
+    o += `<path class="sl" d="M1410 62 V28"/><circle class="sbeacon blink" cx="1410" cy="24" r="4"/>`;
+    // the nightclub, on the floors above the theater, pulsing on the beat
     o += `<path class="sf" d="M1296 692 V592 H1524 V692 Z"/><path class="sa" d="M1304 604 H1516M1304 680 H1516"/>`;
     for (let x = 1318; x < 1516; x += 28) o += `<path class="sd" d="M${x} 612 V672"/>`;
-    o += `<text class="stx" x="1410" y="648" text-anchor="middle">CLUB</text>`;
-    // the theater at ground level
+    o += `<rect class="sclub" x="1304" y="608" width="212" height="70"/>`;
+    o += `<text class="stx sneon pulse" x="1410" y="648" text-anchor="middle">CLUB</text>`;
+    // the theater at ground level, its marquee bulbs chasing
     o += `<path class="sf" d="M1262 760 V694 H1558 V760 Z"/>`;
-    for (let x = 1272; x <= 1548; x += 14) o += `<circle class="sw" cx="${x}" cy="700" r="2.4"/><circle class="sw" cx="${x}" cy="754" r="2.4"/>`;
+    for (let x = 1272, i = 0; x <= 1548; x += 14, i++) o += `<circle class="sw chase${i % 2 ? ' b' : ''}" cx="${x}" cy="700" r="2.4"/><circle class="sw chase${i % 2 ? '' : ' b'}" cx="${x}" cy="754" r="2.4"/>`;
     o += `<text class="stx" x="1410" y="733" text-anchor="middle">NOW SHOWING</text>`;
     o += `<path class="sd" d="M1340 ${G} V772 H1480 V${G}M1386 772 V${G}M1434 772 V${G}"/>`;
     // the office park, left
     o += `<path class="sf" d="M30 ${G} V500 H232 V${G} Z"/>`;
-    for (let y = 524; y < 800; y += 26) o += `<path class="${lit(y, 40) ? 'swl' : 'sd'}" d="M44 ${y} H218"/>`;
-    o += `<path class="sf" d="M214 ${G} V640 H330 V${G} Z"/>` + grid(228, 660, 3, 5, 24, 14, 10, 16, 909, 35);
+    for (let y = 524; y < 800; y += 26) o += `<path class="${lit(y, 50) ? 'swl' : 'sd'}" d="M44 ${y} H218"/>`;
+    o += `<path class="sf" d="M214 ${G} V640 H330 V${G} Z"/>` + grid(228, 660, 3, 5, 24, 14, 10, 16, 909, 45);
     o += tree(372, 34) + tree(1220, 30);
     o += `<path class="sl" d="M0 ${G} H1600"/>`;
     return o;
   },
   vault() {
     let o = `<path class="sf rock" d="M0 0 H1600 V104 L1530 126 L1462 108 L1390 132 L1300 112 L1210 128 L1120 106 L1010 124 L900 110 L800 128 L700 108 L590 126 L480 110 L380 132 L290 112 L190 128 L90 108 L0 124 Z"/>`;
-    for (const x of [430, 800, 1170]) o += `<path class="sl" d="M${x} 118 V190"/><path class="sglow" d="M${x - 12} 204 L${x - 120} 840 H${x + 120} L${x + 12} 204 Z"/><path class="sf" d="M${x - 22} 204 L${x - 10} 190 H${x + 10} L${x + 22} 204 Z"/>`;
-    // the blast door
+    // the work lights; the middle one has a bad tube
+    for (const x of [430, 800, 1170]) o += `<path class="sl" d="M${x} 118 V190"/><path class="sglow${x === 800 ? ' flick' : ''}" d="M${x - 12} 204 L${x - 120} 840 H${x + 120} L${x + 12} 204 Z"/><path class="sf" d="M${x - 22} 204 L${x - 10} 190 H${x + 10} L${x + 22} 204 Z"/>`;
+    // the blast door, a warning lamp turning over it
     o += `<circle class="sl" cx="170" cy="560" r="262"/>` + gear(170, 560, 240, 14);
     o += `<circle class="sd" cx="170" cy="560" r="176"/><circle class="sd" cx="170" cy="560" r="118"/><circle class="sf" cx="170" cy="560" r="40"/>`;
     for (let i = 0; i < 8; i++) { const a = i / 8 * Math.PI * 2; o += `<circle class="sx" cx="${(170 + Math.cos(a) * 150).toFixed(0)}" cy="${(560 + Math.sin(a) * 150).toFixed(0)}" r="7"/>`; }
-    o += `<text class="stx big" x="170" y="470" text-anchor="middle">PC</text>`;
+    o += `<text class="stx big sneon amber" x="170" y="470" text-anchor="middle">PC</text>`;
+    o += `<path class="sf" d="M356 252 H384 V244 H356 Z"/><circle class="swarn" cx="370" cy="236" r="8"/>`;
     // pipes, valves and the overseer's panel
     for (const x of [1310, 1346, 1382]) o += `<path class="sl" d="M${x} 120 V840"/>` + [260, 470, 690].map(y => `<path class="sd" d="M${x - 9} ${y} H${x + 9}"/>`).join('');
     o += `<circle class="sl" cx="1346" cy="560" r="22"/><path class="sd" d="M1324 560 H1368M1346 538 V582"/>`;
     o += `<path class="sf" d="M1436 760 V590 H1590 V760 Z"/><rect class="sa" x="1452" y="606" width="122" height="70"/>`;
-    for (let i = 0; i < 6; i++) o += `<circle class="${i % 3 ? 'sw' : 'sad'}" cx="${1460 + i * 22}" cy="${700}" r="5"/>`;
+    o += `<path class="sscope" d="M1456 642 h14 l6 -18 l8 34 l6 -16 h20 l6 -10 l6 10 h40"/>`;
+    for (let i = 0; i < 6; i++) o += `<circle class="${i % 3 ? 'sw' : 'sad'} tw" style="animation-delay:-${i * 1.3}s" cx="${1460 + i * 22}" cy="${700}" r="5"/>`;
     o += `<path class="sf" d="M0 840 H1600 V900 H0 Z"/>`;
     for (let x = 0; x < 1600; x += 36) o += `<path class="shaz" d="M${x} 840 l18 0 l-14 18 l-18 0 Z"/>`;
     return o;
   },
   ranch() {
-    let o = stars(37, 110, 420) + moon(1460, 110);
+    let o = stars(37, 70, 380) + moon(1460, 110) + farCity(37, 1515, 270);
     o += `<path class="sf" d="M0 792 Q200 742 420 772 T860 762 T1300 774 T1600 752 V900 H0 Z"/>`;
     for (let i = -22; i <= 22; i++) o += `<path class="sd" d="M${800 + i * 14} 790 L${800 + i * 96} 900"/>`;
-    // the old barn
+    // fireflies over the grow rows
+    for (let i = 0; i < 14; i++) o += `<circle class="sfly" style="animation-delay:-${rint(i * 41, 70) / 10}s;animation-duration:${5 + rint(i * 7, 40) / 10}s" cx="${40 + rint(i * 97, 1520)}" cy="${770 + rint(i * 53, 110)}" r="2"/>`;
+    // the old barn, its lantern lit
     o += `<path class="sf" d="M50 ${G} V600 L84 540 L170 504 L256 540 L290 600 V${G} Z"/><path class="sd" d="M50 600 H290"/>`;
     o += `<path class="sd" d="M128 ${G} V706 H212 V${G}M128 706 L212 ${G}M212 706 L128 ${G}"/>` + win(152, 556, 36, 30, 5, 100);
+    o += `<path class="sl" d="M232 664 V672"/><rect class="slamp" x="228" y="672" width="8" height="12"/>`;
     o += `<path class="sl" d="M170 504 V470M150 462 H186 L192 454M150 462 L146 452M156 462 V472M182 462 V472"/>`;
-    // the windmill
+    // the windmill, turning in the evening wind
     o += `<path class="sl" d="M1396 ${G} L1430 470 M1484 ${G} L1450 470 M1404 760 H1476 M1412 680 H1468 M1420 600 H1460 M1404 760 L1468 680 M1476 760 L1412 680"/>`;
-    o += `<circle class="sl" cx="1440" cy="450" r="64"/>`;
-    for (let i = 0; i < 12; i++) { const a = i / 12 * Math.PI * 2; o += `<path class="sd" d="M1440 450 L${(1440 + Math.cos(a) * 64).toFixed(0)} ${(450 + Math.sin(a) * 64).toFixed(0)}"/>`; }
+    let blades = `<circle class="sl" cx="1440" cy="450" r="64"/>`;
+    for (let i = 0; i < 12; i++) { const a = i / 12 * Math.PI * 2; blades += `<path class="sd" d="M1440 450 L${(1440 + Math.cos(a) * 64).toFixed(0)} ${(450 + Math.sin(a) * 64).toFixed(0)}"/>`; }
+    o += `<g class="spin" style="transform-origin:1440px 450px">${blades}</g>`;
     o += `<path class="sl" d="M1440 450 L1530 446 L1546 420 L1546 470 Z"/>`;
     o += fence(0, 340, 796) + fence(1260, 1600, 796);
     return o;
   },
   starport() {
-    let o = stars(51, 100, 380) + moon(980, 70);
-    o += beam(160, 236, 60, 110, 'sbeam c');
+    let o = stars(51, 60, 380) + moon(980, 70) + farCity(51, 1450, 350);
+    o += beam(160, 236, 60, 110, 'sbeam c', true);
     o += `<path class="sf" d="M130 ${G} V360 H190 V${G} Z"/><path class="sf" d="M96 360 L80 300 H240 L224 360 Z"/>`;
-    o += grid(98, 316, 6, 1, 16, 14, 8, 0, 3, 80);
-    o += `<path class="sl" d="M160 300 V236"/><circle class="sw" cx="160" cy="232" r="6"/>`;
+    o += grid(98, 316, 6, 1, 16, 14, 8, 0, 3, 90);
+    o += `<path class="sl" d="M160 300 V236"/><circle class="sbeacon blink" cx="160" cy="232" r="6"/>`;
     for (let i = 0; i < 6; i++) { const x = 224 + (i % 3) * 70, y = 776 - Math.floor(i / 3) * 44; o += `<path class="sf" d="M${x} ${y + 44} V${y} H${x + 64} V${y + 44} Z"/><path class="sd" d="M${x + 16} ${y + 6} V${y + 38}M${x + 32} ${y + 6} V${y + 38}M${x + 48} ${y + 6} V${y + 38}"/>`; }
-    // the ship, on its pad
+    // the ship, on its pad, its running lights blinking
     o += ship(1170, 610, 1.0);
     o += `<path class="sl" d="M1330 726 L1316 812M1540 738 L1556 812M1302 812 H1330M1542 812 H1570"/>`;
     o += `<path class="sf" d="M1400 734 H1452 L1424 812 H1372 Z"/><path class="sd" d="M1390 760 H1442M1382 786 H1434"/>`;
     o += `<path class="sl" d="M0 ${G} H1600"/>`;
-    for (let x = 20; x < 1600; x += 40) o += `<circle class="${(x / 40) % 2 ? 'sad' : 'sw'}" cx="${x}" cy="${G + 10}" r="3"/>`;
+    // the pad's edge lights, running toward the ship
+    for (let x = 20, i = 0; x < 1600; x += 40, i++) o += `<circle class="${i % 2 ? 'sad' : 'sw'} run" style="animation-delay:-${((40 - i) % 8) * 0.2}s" cx="${x}" cy="${G + 10}" r="3"/>`;
     return o;
   },
   convention() {
-    let o = stars(67, 90, 360) + moon(1470, 90);
-    o += beam(330, G, 140, 210) + beam(1270, G, 1400, 1480, 'sbeam c');
-    o += ship(140, 120, 0.28) + `<path class="sd" d="M300 150 Q420 160 560 150" stroke-dasharray="4 10"/>`;
-    o += `<path class="sf" d="M0 700 Q800 560 1600 700 V${G} H0 Z"/>`;
+    let o = stars(67, 60, 360) + moon(1470, 90) + farCity(67, 1449, 350);
+    o += beam(330, G, 140, 210, 'sbeam', true) + beam(1270, G, 1400, 1480, 'sbeam c', true);
+    // the ship, going over on its way in
+    o += `<g class="cross">${ship(140, 120, 0.28)}<path class="sd" d="M300 150 Q420 160 560 150" stroke-dasharray="4 10"/></g>`;
+    o += `<path class="sf" d="M0 700 Q800 560 1600 700 V${G} H0 Z"/><path class="sa" d="M0 700 Q800 560 1600 700"/>`;
     for (let x = 20; x < 1600; x += 40) {
       if (x > 340 && x < 1260) continue;
       const t = x / 1600, y = (1 - t) * (1 - t) * 700 + 2 * (1 - t) * t * 560 + t * t * 700;
@@ -2449,20 +3355,23 @@ const SCENES = {
     }
     for (const x of [50, 130, 210, 1390, 1470, 1550]) {
       o += `<path class="sl" d="M${x} ${G} V420"/><path class="sl" d="M${x} 420 L${x + 26} 428 L${x} 436"/>`;
-      o += `<path class="sf" d="M${x + 4} 452 H${x + 34} V600 L${x + 19} 586 L${x + 4} 600 Z"/><path class="${rint(x, 2) ? 'sa' : 'swl'}" d="M${x + 4} 470 H${x + 34}"/>`;
+      o += `<g class="flap" style="transform-origin:${x + 4}px 452px;animation-delay:-${rint(x, 40) / 10}s"><path class="sbanner${rint(x, 2) ? '' : ' b'}" d="M${x + 4} 452 H${x + 34} V600 L${x + 19} 586 L${x + 4} 600 Z"/><path class="${rint(x, 2) ? 'sa' : 'swl'}" d="M${x + 4} 470 H${x + 34}"/></g>`;
     }
-    o += `<text class="stx" x="130" y="680" text-anchor="middle">EXPO</text><text class="stx" x="1470" y="680" text-anchor="middle">EXPO</text>`;
+    o += `<text class="stx sneon slow" x="130" y="680" text-anchor="middle">EXPO</text><text class="stx sneon slow" x="1470" y="680" text-anchor="middle">EXPO</text>`;
     return o;
   },
   suburbs() {
-    let o = stars(83, 100, 380) + moon(160, 100);
+    let o = stars(83, 60, 380) + moon(160, 100) + farCity(83);
     // Casey's tower on the skyline: you live in her city
-    o += `<path class="sf" d="M1446 760 V420 H1500 V760 Z"/><path class="sa" d="M1442 416 H1504"/>` + grid(1455, 440, 3, 9, 8, 10, 8, 18, 61, 30);
+    o += `<path class="sf" d="M1446 760 V420 H1500 V760 Z"/><path class="sneonl" d="M1442 416 H1504"/>` + grid(1455, 440, 3, 9, 8, 10, 8, 18, 61, 40);
+    o += `<path class="sl" d="M1473 416 V392"/><circle class="sbeacon blink" cx="1473" cy="388" r="3"/>`;
     for (let x = 340; x < 1260; x += 116) o += house(x, 790, 90, 44, x, { garage: rint(x, 2) });
     o += house(20, 850, 250, 150, 7, { garage: true }) + rentSign(300, 850);
     o += `<rect class="sf" x="120" y="708" width="54" height="30"/><path class="sl" d="M135 740 q12 12 24 0"/>`;
     o += house(1340, 850, 240, 140, 13) + rentSign(1300, 850);
     o += tree(1196, 40, 850) + lamp(440, 230, 1) + lamp(1110, 230, -1);
+    // a neighbour coming home, lights on, along the street
+    o += `<g class="drive"><path class="sglow" d="M78 858 L160 846 V872 L78 866 Z"/><path class="scar" d="M0 866 V856 L14 852 L24 842 H52 L62 852 L78 855 V866 Z"/><rect class="stail" x="0" y="856" width="3" height="3"/></g>`;
     o += `<path class="sl" d="M0 852 H1600M0 872 H1600"/>`;
     return o;
   },
@@ -2471,10 +3380,14 @@ const SCENES = {
 const sceneCache = {};
 function sceneSVG(id) {
   if (!sceneCache[id]) {
+    const [a, b, c] = SKY[id];
     sceneCache[id] = `<svg viewBox="0 0 1600 900" preserveAspectRatio="xMidYMax slice" aria-hidden="true" focusable="false">
-<defs><linearGradient id="pcb" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#ffb000" stop-opacity=".16"/><stop offset="1" stop-color="#ffb000" stop-opacity="0"/></linearGradient>
-<linearGradient id="pcc" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#54f2ff" stop-opacity=".12"/><stop offset="1" stop-color="#54f2ff" stop-opacity="0"/></linearGradient></defs>
-${id === 'vault' ? '' : `<rect class="sground" x="0" y="${G}" width="1600" height="${900 - G}"/>`}${SCENES[id]()}</svg>`;
+<defs><linearGradient id="pcb" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#ffb45e" stop-opacity=".16"/><stop offset="1" stop-color="#ffb45e" stop-opacity="0"/></linearGradient>
+<linearGradient id="pcc" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#3ff0ff" stop-opacity=".12"/><stop offset="1" stop-color="#3ff0ff" stop-opacity="0"/></linearGradient>
+<linearGradient id="pcsky-${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${a}"/><stop offset=".5" stop-color="${b}"/><stop offset="${(G / 900).toFixed(3)}" stop-color="${c}"/><stop offset="1" stop-color="${c}"/></linearGradient>
+<radialGradient id="pchz" cx=".5" cy="1" r=".7"><stop offset="0" stop-color="#ff8a4a" stop-opacity=".4"/><stop offset="1" stop-color="#ff7a5a" stop-opacity="0"/></radialGradient>
+<filter id="pcgl" x="-30%" y="-60%" width="160%" height="220%"><feGaussianBlur stdDeviation="3.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+<rect x="0" y="0" width="1600" height="900" fill="url(#pcsky-${id})"/>${id === 'vault' ? '' : `<rect x="0" y="${G - 260}" width="1600" height="300" fill="url(#pchz)"/><rect class="sground" x="0" y="${G}" width="1600" height="${900 - G}"/>`}${SCENES[id]()}</svg>`;
   }
   return sceneCache[id];
 }
@@ -2529,6 +3442,8 @@ function titleCfg() {
   const saved = loadGame();
   return {
     name: TITLE_NAME,
+    lines: ['PumaCity', 'Nip\u00a0Wars'],
+    scene: true,
     primary: saved ? 'resume' : 'quick',
     items: [
       saved && { act: 'resume', label: 'Resume game', key: 'R', meta: `Day ${saved.day} of ${saved.days} · ${fmt(netWorth(saved))}` },
@@ -2543,6 +3458,326 @@ function titleCfg() {
   };
 }
 function toTitle() { titleView = 'title'; render(); revealTitle(); }
+/* ---- the title's scene: the beach drive at dusk, after Miami Vice, seen
+ * from out on the water. A sun sinking in slats behind the skyline's neon and
+ * PVN Tower; at the city's foot the shops, bars and clubs lit for the night,
+ * the traffic going by in front of them and the palms across the street;
+ * then the beach, the surf, and the water we're on, all of it shimmering in it. One canvas, redrawn by the
+ * clock; still under reduced motion, and it stops once the title is gone. */
+const VICE = { pink: '#ff4fa3', cyan: '#3ff0ff', ink: '#0a0412', tower: '#170a28' };
+function viceHash(a, b) {
+  let h = (a * 374761393 + b * 668265263) | 0;
+  h = Math.imul(h ^ (h >>> 13), 1274126177);
+  return ((h ^ (h >>> 16)) >>> 0) / 4294967296;
+}
+function viceScene(host) {
+  const cv = document.createElement('canvas');
+  host.appendChild(cv);
+  const g = cv.getContext('2d'), still = reduced();
+  const city = document.createElement('canvas'), cg = city.getContext('2d');
+  let W = 0, H = 0, dpr = 1, hz = 0, shoreY = 0, cityEpoch = -1, last = 0;
+  // the same skyline every visit
+  let sd = 1984;
+  const rnd = () => (sd = sd * 16807 % 2147483647) / 2147483647;
+  const towers = [];
+  for (let x = -0.01; x < 1.01;) {
+    const w = 0.016 + rnd() * 0.036, h = 0.035 + rnd() * rnd() * 0.19, r = rnd();
+    towers.push({ x, w, h, top: r < 0.3 ? 'step' : r < 0.45 ? 'spire' : 'flat', neon: rnd() < 0.2 ? (rnd() < 0.55 ? VICE.pink : VICE.cyan) : null, id: rnd() * 1e6 | 0 });
+    x += w + rnd() * 0.005;
+  }
+  const stars = Array.from({ length: 80 }, () => ({ x: rnd(), y: rnd() * 0.42, p: rnd() * 6.3, s: rnd() < 0.15 ? 1.6 : 1 }));
+  const gulls = Array.from({ length: 3 }, (_, i) => ({ y: 0.14 + i * 0.07 + rnd() * 0.04, v: 0.006 + rnd() * 0.004, p: rnd(), f: rnd() * 6 }));
+  // the waterfront: shops, bars and clubs along the city's foot, lit for the night
+  const GLOW = ['#ffb45e', '#ffb45e', '#ffd27a', '#ff4fa3', '#3ff0ff', '#b46bff'];
+  const shops = [];
+  for (let x = -0.01; x < 1.01;) {
+    const w = 0.012 + rnd() * 0.03;
+    shops.push({ x, w, h: 0.02 + rnd() * 0.032, lit: rnd() < 0.85, glow: GLOW[rnd() * GLOW.length | 0],
+      sign: rnd() < 0.45 ? (rnd() < 0.5 ? VICE.pink : VICE.cyan) : null, awn: rnd() < 0.4, id: rnd() * 1e6 | 0 });
+    x += w + rnd() * 0.002;
+  }
+  // a few of them are clubs, their fronts pulsing on the theme's beat
+  const clubs = shops.filter(Sh => Sh.sign && Sh.lit).filter((_, i) => i % 3 === 0);
+  // palms on the beach side of the street: the tall one in the middle, the
+  // short one in front of PVN Tower
+  const palms = [0.03, 0.11, 0.19, 0.27, 0.35, 0.43, 0.5, 0.58, 0.66, 0.73, 0.8, 0.88, 0.96].map((x, i) =>
+    ({ x, h: x === 0.5 ? 0.13 : x === 0.8 ? 0.1 : 0.065 + rnd() * 0.025, lean: (rnd() - 0.5) * 0.2, ph: rnd() * 6.3 }));
+  // traffic, both ways: [direction, seconds between, offset]
+  const cars = [[1, 11, 0], [-1, 14, 5], [1, 17, 9], [-1, 9, 2]];
+  const pvn = () => ({ x: W * 0.8, w: Math.max(34, H * 0.075), h: H * 0.37 });
+
+  function windows(c, x, top, w, bottom, id, epoch) {
+    let n = 0;
+    for (let y = top + 6; y < bottom - 4; y += 7) for (let wx = x + 3; wx < x + w - 4; wx += 6) {
+      const k = n++, lit = (viceHash(id, k) < 0.2) !== (viceHash(id + epoch * 7919, k) < 0.03);
+      if (!lit) continue;
+      const hue = viceHash(id, k + 999);
+      c.fillStyle = hue < 0.75 ? 'rgba(255,196,107,.55)' : hue < 0.9 ? 'rgba(255,111,181,.6)' : 'rgba(111,243,255,.6)';
+      c.fillRect(wx, y, 2, 3);
+    }
+  }
+  /* the skyline, drawn to its own canvas, and again every few seconds as
+     a few windows go on and off */
+  function drawCity(epoch) {
+    cityEpoch = epoch;
+    const c = cg;
+    c.setTransform(dpr, 0, 0, dpr, 0, 0);
+    c.clearRect(0, 0, W, H);
+    for (const T of towers) {
+      const x = T.x * W, w = T.w * W, h = T.h * H, top = hz - h;
+      c.fillStyle = VICE.tower;
+      c.beginPath();
+      c.rect(x, top, w, h);
+      if (T.top === 'step') { c.rect(x + w * 0.18, top - h * 0.07, w * 0.64, h * 0.07); c.rect(x + w * 0.34, top - h * 0.13, w * 0.32, h * 0.06); }
+      if (T.top === 'spire') c.rect(x + w / 2 - 1, top - h * 0.22, 2, h * 0.22);
+      c.fill();
+      windows(c, x, top, w, hz, T.id, epoch);
+      if (T.neon) {
+        c.save();
+        c.strokeStyle = T.neon; c.lineWidth = 1.5; c.shadowColor = T.neon; c.shadowBlur = 10; c.globalAlpha = 0.85;
+        c.beginPath(); c.moveTo(x + 0.75, hz); c.lineTo(x + 0.75, top + 0.75); c.lineTo(x + w - 0.75, top + 0.75); c.lineTo(x + w - 0.75, hz); c.stroke();
+        c.restore();
+      }
+    }
+    // PVN Tower: art deco, three setbacks, the penthouse lit
+    const P = pvn(), px = P.x - P.w / 2, ptop = hz - P.h;
+    c.fillStyle = '#1b0b2f';
+    c.beginPath();
+    c.rect(px, ptop, P.w, P.h);
+    c.rect(px + P.w * 0.12, ptop - P.h * 0.08, P.w * 0.76, P.h * 0.08);
+    c.rect(px + P.w * 0.26, ptop - P.h * 0.15, P.w * 0.48, P.h * 0.07);
+    c.rect(px + P.w * 0.4, ptop - P.h * 0.2, P.w * 0.2, P.h * 0.05);
+    c.rect(px + P.w / 2 - 1, ptop - P.h * 0.32, 2, P.h * 0.12);
+    c.fill();
+    windows(c, px, ptop + P.h * 0.06, P.w, hz, 7777, epoch);
+    c.fillStyle = 'rgba(111,243,255,.8)';
+    for (let i = 0; i < 5; i++) c.fillRect(px + P.w * 0.3 + i * P.w * 0.09, ptop - P.h * 0.13, P.w * 0.05, P.h * 0.03);
+    c.save();
+    c.strokeStyle = VICE.pink; c.lineWidth = 2; c.shadowColor = VICE.pink; c.shadowBlur = 14;
+    c.beginPath();
+    c.moveTo(px + 1, hz); c.lineTo(px + 1, ptop + 1);
+    c.lineTo(px + P.w * 0.12, ptop + 1); c.lineTo(px + P.w * 0.12, ptop - P.h * 0.08);
+    c.lineTo(px + P.w * 0.26, ptop - P.h * 0.08); c.lineTo(px + P.w * 0.26, ptop - P.h * 0.15);
+    c.lineTo(px + P.w * 0.74, ptop - P.h * 0.15); c.lineTo(px + P.w * 0.74, ptop - P.h * 0.08);
+    c.lineTo(px + P.w * 0.88, ptop - P.h * 0.08); c.lineTo(px + P.w * 0.88, ptop + 1);
+    c.lineTo(px + P.w - 1, ptop + 1); c.lineTo(px + P.w - 1, hz);
+    c.stroke();
+    c.restore();
+    for (const Sh of shops) {
+      const x = Sh.x * W, w = Sh.w * W, h = Sh.h * H, top = hz - h, fh = h * 0.45, fy = hz - fh;
+      c.fillStyle = '#1a0a2a';
+      c.fillRect(x, top, w, h);
+      if (h > H * 0.032) windows(c, x, top, w, fy - 2, Sh.id, epoch);
+      const open = Sh.lit !== (viceHash(Sh.id + epoch, 1) < 0.04);
+      if (open) {
+        c.save();
+        c.fillStyle = Sh.glow; c.shadowColor = Sh.glow; c.shadowBlur = 8; c.globalAlpha = 0.75;
+        c.fillRect(x + w * 0.1, fy, w * 0.8, fh);
+        c.restore();
+        c.fillStyle = 'rgba(26,10,42,.65)';
+        for (let mx = x + w * 0.1 + 5; mx < x + w * 0.88; mx += 6) c.fillRect(mx, fy, 1, fh);
+      }
+      if (Sh.awn) { c.globalAlpha = 0.5; c.fillStyle = open ? Sh.glow : '#3a1a40'; c.fillRect(x + w * 0.05, fy - 2, w * 0.9, 2); c.globalAlpha = 1; }
+      if (Sh.sign) {
+        c.save();
+        c.fillStyle = Sh.sign; c.shadowColor = Sh.sign; c.shadowBlur = 10;
+        c.fillRect(x + w * 0.2, top + h * 0.12, w * 0.6, Math.max(2, h * 0.08));
+        c.restore();
+      }
+    }
+  }
+  function fit() {
+    dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+    W = cv.clientWidth || innerWidth; H = cv.clientHeight || innerHeight;
+    cv.width = city.width = Math.round(W * dpr);
+    cv.height = city.height = Math.round(H * dpr);
+    hz = Math.round(H * 0.6); shoreY = Math.round(H * 0.66);
+    cityEpoch = -1;
+  }
+  function sun(t) {
+    const r = Math.min(H * 0.25, W * 0.19), cx = W * 0.64, cy = hz - r * 0.4;
+    const glow = g.createRadialGradient(cx, cy, r * 0.7, cx, cy, r * 2.4);
+    glow.addColorStop(0, 'rgba(255,80,140,.38)'); glow.addColorStop(1, 'rgba(255,80,140,0)');
+    g.fillStyle = glow; g.fillRect(cx - r * 2.4, cy - r * 2.4, r * 4.8, r * 4.8);
+    const fill = g.createLinearGradient(0, cy - r, 0, cy + r);
+    fill.addColorStop(0, '#ffe27a'); fill.addColorStop(0.42, '#ff9a4a'); fill.addColorStop(0.8, '#ff3d7f'); fill.addColorStop(1, '#d81b7a');
+    g.save();
+    g.beginPath(); g.arc(cx, cy, r, 0, Math.PI * 2); g.clip();
+    g.fillStyle = fill;
+    // the slats: bands drifting down, the gaps widening toward the water
+    const P = r * 0.13, off = still ? 0.5 : (t / 2600) % 1;
+    g.fillRect(cx - r, cy - r, r * 2, r + (off - 1) * P);
+    for (let i = 0; i < 9; i++) {
+      const y0 = cy + (i - 1 + off) * P, k = Math.max(0, (y0 - cy) / r);
+      g.fillRect(cx - r, y0, r * 2, P * (1 - Math.min(0.85, 0.1 + k * 0.95)));
+    }
+    g.restore();
+    return { r, cx };
+  }
+  function palm(bx, by, h, lean, t, ph) {
+    const sway = still ? 0 : Math.sin(t / 1300 + ph) * 0.05;
+    const cx = bx + lean * h + sway * h * 0.4, cy = by - h, mx = bx + lean * h * 0.15, my = by - h * 0.55;
+    g.strokeStyle = VICE.ink; g.fillStyle = VICE.ink; g.lineCap = 'round';
+    for (let i = 0; i < 16; i++) {
+      const u0 = i / 16, u1 = (i + 1) / 16, q = (u, a, b, c) => (1 - u) * (1 - u) * a + 2 * (1 - u) * u * b + u * u * c;
+      g.lineWidth = h * (0.05 - 0.028 * u0);
+      g.beginPath(); g.moveTo(q(u0, bx, mx, cx), q(u0, by, my, cy)); g.lineTo(q(u1, bx, mx, cx), q(u1, by, my, cy)); g.stroke();
+    }
+    // the fronds: solid leaves, each a spine drooping under its own weight,
+    // widest a third of the way out, its edges ragged with hanging leaflets
+    for (let k = 0; k < 11; k++) {
+      const a = (-192 + k * 20.4) * Math.PI / 180 + sway * (1.5 + (k % 3) * 0.4) + (still ? 0 : Math.sin(t / 700 + k + ph) * 0.03);
+      const L = h * (0.3 + 0.1 * Math.abs(Math.cos(k * 1.7))), droop = L * (0.6 + 0.25 * Math.abs(Math.cos(a)));
+      const N = 22, spine = [];
+      for (let j = 0; j <= N; j++) {
+        const u = j / N;
+        spine.push([cx + Math.cos(a) * L * u, cy + Math.sin(a) * L * u + droop * u * u]);
+      }
+      const side = sgn => spine.map(([x, y], j) => {
+        const u = j / N, [x0, y0] = spine[Math.max(0, j - 1)], [x1, y1] = spine[Math.min(N, j + 1)];
+        const dx = x1 - x0, dy = y1 - y0, n = Math.hypot(dx, dy) || 1;
+        // ragged: every other point a leaflet's tip, swept back and hanging
+        const w = L * 0.16 * Math.pow(Math.sin(Math.PI * Math.min(1, u * 1.1)), 0.8) * (j % 2 ? 1 : 0.72) * (sgn > 0 ? 1 : 0.8);
+        return [x - dy / n * w * sgn - dx / n * w * 0.3, y + dx / n * w * sgn - dy / n * w * 0.3 + w * 0.6];
+      });
+      const A = side(1), B = side(-1).reverse();
+      g.beginPath();
+      g.moveTo(cx, cy);
+      for (const [x, y] of A) g.lineTo(x, y);
+      for (const [x, y] of B) g.lineTo(x, y);
+      g.closePath();
+      g.fill();
+      g.lineWidth = Math.max(0.8, h * 0.014);
+      g.beginPath(); g.moveTo(cx, cy); for (const [x, y] of spine) g.lineTo(x, y); g.stroke();
+    }
+    for (const [ox, oy] of [[-1, 1], [1, 1.2], [0, 2]]) { g.beginPath(); g.arc(cx + ox * h * 0.03, cy + oy * h * 0.03, h * 0.018, 0, Math.PI * 2); g.fill(); }
+  }
+  /* a car across the street from the water: a low dark shape, its
+     headlights throwing a little light ahead, its tail lights red; dir is
+     1 for left to right, -1 for back */
+  function car(x, y, L, dir) {
+    const hh = L * 0.3;
+    g.save();
+    g.translate(x, y);
+    g.scale(dir, 1);
+    const beam = g.createLinearGradient(L * 0.5, 0, L * 1.7, 0);
+    beam.addColorStop(0, 'rgba(255,240,200,.4)'); beam.addColorStop(1, 'rgba(255,240,200,0)');
+    g.fillStyle = beam;
+    g.beginPath(); g.moveTo(L * 0.48, -hh * 0.5); g.lineTo(L * 1.7, -hh * 0.8); g.lineTo(L * 1.7, hh * 0.15); g.lineTo(L * 0.48, -hh * 0.25); g.fill();
+    g.fillStyle = '#0c0616';
+    g.beginPath();
+    g.moveTo(-L / 2, -hh * 0.1); g.lineTo(-L / 2, -hh * 0.55); g.lineTo(-L * 0.2, -hh * 0.62); g.lineTo(-L * 0.05, -hh);
+    g.lineTo(L * 0.15, -hh); g.lineTo(L * 0.28, -hh * 0.62); g.lineTo(L * 0.5, -hh * 0.5); g.lineTo(L * 0.5, -hh * 0.1);
+    g.closePath(); g.fill();
+    g.shadowBlur = 6;
+    g.fillStyle = g.shadowColor = '#fff2d0'; g.fillRect(L * 0.44, -hh * 0.48, 2.5, 1.5);
+    g.fillStyle = g.shadowColor = '#ff2a3a'; g.fillRect(-L * 0.5, -hh * 0.5, 2.5, 1.5);
+    g.restore();
+  }
+  function frame(t) {
+    if (!cv.isConnected) return;
+    if (!still) requestAnimationFrame(frame);
+    if (t - last < 28) return;   // about thirty frames a second is plenty
+    last = t;
+    if ((cv.clientWidth || innerWidth) !== W || (cv.clientHeight || innerHeight) !== H) fit();
+    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    // the sky
+    const sky = g.createLinearGradient(0, 0, 0, hz);
+    sky.addColorStop(0, '#12062a'); sky.addColorStop(0.45, '#3a0f55'); sky.addColorStop(0.78, '#a3236f'); sky.addColorStop(1, '#ff7240');
+    g.fillStyle = sky; g.fillRect(0, 0, W, hz + 1);
+    for (const s of stars) {
+      g.globalAlpha = (1 - s.y / 0.42) * (0.25 + 0.45 * (still ? 0.5 : (Math.sin(t / 900 + s.p) + 1) / 2));
+      g.fillStyle = '#fff'; g.fillRect(s.x * W, s.y * H, s.s, s.s);
+    }
+    g.globalAlpha = 1;
+    const S = sun(t);
+    for (const b of gulls) {
+      const x = ((b.p + (still ? 0 : t / 1000 * b.v)) % 1.2 - 0.1) * W, y = b.y * H + Math.sin(t / 2000 + b.f) * 6, s = Math.max(5, H * 0.009);
+      const flap = still ? 0.5 : Math.sin(t / 160 + b.f);
+      g.strokeStyle = '#2a0d36'; g.lineWidth = 1.6;
+      g.beginPath(); g.moveTo(x - s, y - s * 0.35 * flap); g.quadraticCurveTo(x - s * 0.4, y - s * 0.5, x, y); g.quadraticCurveTo(x + s * 0.4, y - s * 0.5, x + s, y - s * 0.35 * flap); g.stroke();
+    }
+    const epoch = still ? 0 : Math.floor(t / 3500);
+    if (epoch !== cityEpoch) drawCity(epoch);
+    g.drawImage(city, 0, 0, W, H);
+    // the PVN sign, vertical down the tower's face, flickering now and then
+    const P = pvn(), fl = still ? 1 : (viceHash(Math.floor(t / 90), 3) < 0.04 ? 0.25 : 1);
+    g.save();
+    g.globalAlpha = 0.95 * fl; g.fillStyle = '#ffd1ea'; g.shadowColor = VICE.pink; g.shadowBlur = 16;
+    g.font = `700 ${Math.round(P.w * 0.34)}px ui-monospace,Menlo,Consolas,monospace`; g.textAlign = 'center';
+    'PVN'.split('').forEach((ch, i) => g.fillText(ch, P.x, hz - P.h * 0.93 + i * P.w * 0.4));
+    g.restore();
+    const blink = still || (t % 1800) < 900;
+    if (blink) { g.save(); g.fillStyle = '#ff2a3a'; g.shadowColor = '#ff2a3a'; g.shadowBlur = 10; g.beginPath(); g.arc(P.x, hz - P.h * 1.32, 2.2, 0, Math.PI * 2); g.fill(); g.restore(); }
+    // the clubs, pulsing on the beat (the theme is at 100: a beat every 600 ms)
+    const beat = still ? 0 : Math.pow(1 - (t % 600) / 600, 2);
+    for (const Sh of clubs) {
+      const w = Sh.w * W, fh = Sh.h * H * 0.45;
+      g.globalAlpha = 0.45 * beat; g.fillStyle = Sh.sign;
+      g.fillRect(Sh.x * W + w * 0.1, hz - fh, w * 0.8, fh);
+    }
+    g.globalAlpha = 1;
+    // the street in front of them, too edge-on from out here to see: only
+    // the traffic on it, the far lane first
+    g.fillStyle = '#0a0414'; g.fillRect(0, hz, W, H * 0.012);
+    const L = Math.max(16, H * 0.04);
+    if (!still) for (const [dir, every, off] of [...cars].sort((a, b) => a[0] - b[0])) {
+      const u = ((t / 1000 + off) % every) / 9;
+      if (u <= 1) car(dir > 0 ? -L + u * (W + 2 * L) : W + L - u * (W + 2 * L), hz + H * (dir > 0 ? 0.01 : 0.006), L, dir);
+    }
+    // the beach, warm with the last of the sun, and the palms along its top
+    const sand = g.createLinearGradient(0, hz + H * 0.012, 0, shoreY);
+    sand.addColorStop(0, '#2c0f36'); sand.addColorStop(1, '#5a1d4a');
+    g.fillStyle = sand; g.fillRect(0, hz + H * 0.012, W, shoreY - hz);
+    for (const p of palms) palm(p.x * W, hz + H * 0.014, p.h * H, p.lean, t, p.ph);
+    // the water, out where we are, and everything lit on shore in it
+    const run = still ? 0 : Math.sin(t / 2600) * H * 0.006, edge = x => shoreY + run + Math.sin(x / 37 + t / 900) * 1.6 + Math.sin(x / 11 - t / 600) * 0.8;
+    const sea = g.createLinearGradient(0, shoreY, 0, H);
+    sea.addColorStop(0, '#2a0d40'); sea.addColorStop(0.4, '#14072a'); sea.addColorStop(1, '#05030c');
+    g.fillStyle = sea;
+    g.beginPath(); g.moveTo(0, H); for (let x = 0; x <= W; x += 8) g.lineTo(x, edge(x)); g.lineTo(W, H); g.fill();
+    g.strokeStyle = 'rgba(255,214,236,.6)'; g.lineWidth = 1.6;
+    g.beginPath(); for (let x = 0; x <= W; x += 8) (x ? g.lineTo : g.moveTo).call(g, x, edge(x) - 0.5); g.stroke();
+    for (let y = shoreY + 5, i = 0; y < H; i++) {
+      const k = (y - shoreY) / (H - shoreY), step = 3 + k * 10;
+      const wob = still ? 0.75 : 0.55 + 0.45 * Math.sin(t / 620 + i * 0.9);
+      const w = S.r * (0.7 + 1.0 * k) * wob, dx = still ? 0 : Math.sin(t / 1100 + i * 0.4) * S.r * 0.08;
+      g.globalAlpha = 0.6 * (1 - 0.65 * k);
+      g.fillStyle = k < 0.3 ? '#ff8a4a' : '#ff3d8b';
+      g.fillRect(S.cx - w / 2 + dx, y, w, Math.max(1, step * 0.42));
+      for (const T of towers) if (T.neon && viceHash(T.id, i) < 0.55) {
+        g.fillStyle = T.neon;
+        g.globalAlpha = 0.2 * (1 - k * 0.7);
+        g.fillRect(T.x * W + (still ? 0 : Math.sin(t / 500 + i) * (2 + k * 6)), y, T.w * W * (0.5 + 0.6 * viceHash(T.id + i, epoch)), Math.max(1, step * 0.3));
+      }
+      for (const Sh of shops) if (Sh.lit && k < 0.85 && viceHash(Sh.id, i) < 0.4) {
+        g.fillStyle = Sh.glow;
+        g.globalAlpha = 0.16 * (1 - k);
+        g.fillRect(Sh.x * W + (still ? 0 : Math.sin(t / 520 + i + Sh.id) * (1 + k * 5)), y, Sh.w * W * (0.4 + 0.5 * viceHash(Sh.id + i, epoch)), Math.max(1, step * 0.3));
+      }
+      g.fillStyle = VICE.pink;
+      g.globalAlpha = 0.28 * (1 - k * 0.6);
+      if (viceHash(i, 77) < 0.7) g.fillRect(P.x - P.w * 0.3 + (still ? 0 : Math.sin(t / 450 + i) * (2 + k * 8)), y, P.w * 0.6, Math.max(1, step * 0.3));
+      y += step;
+    }
+    g.globalAlpha = 1;
+  }
+  requestAnimationFrame(frame);
+}
+
+/* The integrated intro (games-meta STANDARD.md §14) runs once a page load;
+ * after it, a title mounted again (back from a run, or from Custom game) gets
+ * the switches and ticks on its own, and the theme picks up again. */
+let introDone = false, titleSw = null;
+const titleToggles = {
+  sound: { get: () => !muted, set: on => setMuted(!on) },
+  music: { get: () => musicOn, set: on => setMusic(on) },
+};
+const titleTick = () => { if (!muted && audio()) gkTick(AC, OUT, { freq: 2200, gain: 0.1 }); };
+function mountedTitle(t) {
+  viceScene(t.querySelector(':scope > .scene'));
+  titleSw = gkIntegrate(t, { toggles: titleToggles, tick: titleTick });
+}
 function scoresHTML() {
   return `<h1 id="pc-mt">High scores · ${presetName(prefs.preset)}</h1>
   <div class="tabs">${CONFIG.lengths.map(d => `<button data-act="scoretab" data-v="${d}" aria-pressed="${scoreTab === d}">${d} days</button>`).join('')}</div>
@@ -2560,9 +3795,12 @@ function settingsHTML() {
   <h2>Sound</h2>
   <div class="row"><button data-act="sound" data-v="1" aria-pressed="${!muted}">On</button><button data-act="sound" data-v="0" aria-pressed="${muted}">Off</button></div>
   <p class="note"><kbd>M</kbd> switches it anywhere, and the game's header has a switch too.</p>
+  <h2>Music</h2>
+  <div class="row"><button data-act="music" data-v="1" aria-pressed="${musicOn}">On</button><button data-act="music" data-v="0" aria-pressed="${!musicOn}">Off</button></div>
+  <p class="note">The title theme. Sound off silences it too.</p>
   <h2>This browser</h2>
   <div class="row"><button class="danger" data-act="forget">Forget everything</button></div>
-  <p class="note">Clears everything PumaCity keeps in this browser: the run in progress, every high score, your name, the difficulty and run length you last chose, the sound setting, and the coach's tips.</p>
+  <p class="note">Clears everything PumaCity keeps in this browser: the run in progress, every high score, your name, the difficulty and run length you last chose, the sound and music settings, and the coach's tips.</p>
   <div class="acts"><button data-act="close"><kbd>Esc</kbd>Close</button></div>`;
 }
 function confirmForgetHTML() {
@@ -3417,7 +4655,18 @@ function render() {
     ui.encUntil = performance.now() + ENC_LOCK_MS;
     ui.encFresh = true;
   }
-  root.innerHTML = (S || titleView === 'setup' ? `<div class="stage">${S ? gameHTML() : setupHTML()}</div>` : titleHTML(titleCfg())) + modal;
+  const titleStr = !S && titleView === 'title' ? titleHTML(titleCfg()) : null;
+  const keepTitle = titleStr && root.dataset.title === titleStr && root.querySelector(':scope > .gk-title');
+  if (keepTitle) {
+    const old = root.querySelector(':scope > .back');
+    if (old) old.remove();
+    if (modal) root.insertAdjacentHTML('beforeend', modal);
+    if (titleSw) titleSw.refresh();
+  } else {
+    root.innerHTML = (titleStr || `<div class="stage">${S ? gameHTML() : setupHTML()}</div>`) + modal;
+    if (titleStr) { root.dataset.title = titleStr; mountedTitle(root.querySelector('.gk-title')); } else delete root.dataset.title;
+  }
+  if (S) stopTheme(); else if (introDone) startTheme();
   if (ui.arrived) { const h = root.querySelector('.place-name'); if (h) h.classList.add('arrive'); ui.arrived = false; }
   const log = document.getElementById('pc-log');
   if (log) log.scrollTop = log.scrollHeight;
@@ -3552,6 +4801,7 @@ root.addEventListener('click', e => {
     case 'settings': ui.modal = { kind: 'settings' }; render(); return;
     case 'sound': if ((v === '0') !== muted) setMuted(v === '0'); return;
     case 'mute': setMuted(!muted); return;
+    case 'music': if ((v === '1') !== musicOn) setMusic(v === '1'); return;
     case 'forget': ui.modal = { kind: 'confirmForget' }; render(); return;
     case 'forgetconfirm': forgetEverything(); return;
     case 'about': ui.modal = { kind: 'about' }; render(); return;
@@ -3773,11 +5023,20 @@ window.__PC = {
 };
 
 S = null;
-/* the boot plays over the title, which is drawn underneath it at once:
- * PumaCity is one file and has nothing else to load */
-const boot = runBoot({ lines: [bootReloadLine(), 'one file: nothing to fetch'] });
+/* The integrated intro (games-meta STANDARD.md §14): the boot with the meow,
+ * the hold for a press, then the title fading up over the waterfront with
+ * its theme. The title is drawn underneath at once: PumaCity is one file and
+ * has nothing else to load. */
+const intro = startIntro({ lines: [bootReloadLine(), 'one file: nothing to fetch'], audio, bootSound: muted ? false : gkBootSound });
 render();
-boot.finish([(s => s ? `run in progress: day ${s.day} of ${s.days}` : 'no run in progress')(loadGame())]).then(revealTitle);
+intro.finish({
+  more: [(s => s ? `run in progress: day ${s.day} of ${s.days}` : 'no run in progress')(loadGame()), 'title theme: A minor at 100'],
+  hold: new URLSearchParams(location.search).get('hold') || 'auto',
+  name: 'lines',
+  onContinue: () => audio(),
+  onTitle: () => { introDone = true; startTheme(); },
+  onDone: () => { introDone = true; if (titleSw) titleSw.refresh(); },
+});
 </script>
 </body>
 </html>
