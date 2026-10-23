@@ -3018,16 +3018,18 @@ function recordScore(st) {
 }
 
 /* First-run coach: two steps (buy something cheap, then travel), shown once
- * ever. Anyone who already has a finished run on the board is no newcomer. */
+ * ever. Anyone who already has a finished run on the board, or a run in
+ * progress from a build before the coach, is no newcomer; and a run that
+ * ends, however it ends, retires it, so the next run never opens mid-coach. */
 if (prefs.coachDone == null) {
   const all = scores();
-  prefs.coachDone = Object.keys(all).some(k => Array.isArray(all[k]) && all[k].length > 0);
+  prefs.coachDone = Object.keys(all).some(k => Array.isArray(all[k]) && all[k].length > 0) || loadGame() !== null;
 }
 function coachStep(a) {
   if (prefs.coachDone || !a) return;
   if (a.t === 'buy' && !S.enc) prefs.coachTraded = true;
   if (a.t === 'travel') prefs.coachTravelled = true;
-  if (prefs.coachTraded && prefs.coachTravelled) prefs.coachDone = true;
+  if ((prefs.coachTraded && prefs.coachTravelled) || S.over) prefs.coachDone = true;
   save(KEY_PREFS, prefs);
 }
 
@@ -3088,6 +3090,8 @@ function undoLast() {
 function startRun() {
   const nameEl = document.getElementById('pc-name');
   if (nameEl) prefs.name = Array.from(nameEl.value.trim()).slice(0, 16).join('');
+  // A run abandoned mid-coach hands the next one no half-finished steps.
+  if (!prefs.coachDone) { delete prefs.coachTraded; delete prefs.coachTravelled; }
   save(KEY_PREFS, prefs);
   const seed = (Date.now() ^ Math.floor(Math.random() * 0x7fffffff)) | 0;
   S = newGame({ seed, days: prefs.days, name: prefs.name, preset: prefs.preset, custom: prefs.custom });
